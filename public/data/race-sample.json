@@ -1,0 +1,349 @@
+{
+  "raceId": "sample-001",
+  "raceName": "AJOCC第5戦 桶川クロス",
+  "category": "E1",
+  "updatedAt": "2026-08-29T05:00:00Z",
+  "promotionZoneRank": 3,
+  "riders": [
+    {
+      "riderId": "rider-01",
+      "name": "山田 太郎",
+      "finalPosition": 1,
+      "dataQuality": "ok",
+      "laps": [
+        {
+          "lapNumber": 1,
+          "lapTimeSec": 320,
+          "cumulativeTimeSec": 320,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 2,
+          "lapTimeSec": 315,
+          "cumulativeTimeSec": 635,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 3,
+          "lapTimeSec": 310,
+          "cumulativeTimeSec": 945,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 4,
+          "lapTimeSec": 308,
+          "cumulativeTimeSec": 1253,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 5,
+          "lapTimeSec": 305,
+          "cumulativeTimeSec": 1558,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 6,
+          "lapTimeSec": 303,
+          "cumulativeTimeSec": 1861,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 7,
+          "lapTimeSec": 302,
+          "cumulativeTimeSec": 2163,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 8,
+          "lapTimeSec": 300,
+          "cumulativeTimeSec": 2463,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 9,
+          "lapTimeSec": 299,
+          "cumulativeTimeSec": 2762,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 10,
+          "lapTimeSec": 298,
+          "cumulativeTimeSec": 3060,
+          "rankAtLap": 1
+        }
+      ]
+    },
+    {
+      "riderId": "rider-02",
+      "name": "佐藤 次郎",
+      "finalPosition": 2,
+      "dataQuality": "ok",
+      "laps": [
+        {
+          "lapNumber": 1,
+          "lapTimeSec": 310,
+          "cumulativeTimeSec": 310,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 2,
+          "lapTimeSec": 312,
+          "cumulativeTimeSec": 622,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 3,
+          "lapTimeSec": 313,
+          "cumulativeTimeSec": 935,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 4,
+          "lapTimeSec": 312,
+          "cumulativeTimeSec": 1247,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 5,
+          "lapTimeSec": 310,
+          "cumulativeTimeSec": 1557,
+          "rankAtLap": 1
+        },
+        {
+          "lapNumber": 6,
+          "lapTimeSec": 308,
+          "cumulativeTimeSec": 1865,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 7,
+          "lapTimeSec": 307,
+          "cumulativeTimeSec": 2172,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 8,
+          "lapTimeSec": 306,
+          "cumulativeTimeSec": 2478,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 9,
+          "lapTimeSec": 305,
+          "cumulativeTimeSec": 2783,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 10,
+          "lapTimeSec": 304,
+          "cumulativeTimeSec": 3087,
+          "rankAtLap": 2
+        }
+      ]
+    },
+    {
+      "riderId": "rider-03",
+      "name": "鈴木 三郎",
+      "finalPosition": 3,
+      "dataQuality": "ok",
+      "laps": [
+        {
+          "lapNumber": 1,
+          "lapTimeSec": 325,
+          "cumulativeTimeSec": 325,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 2,
+          "lapTimeSec": 320,
+          "cumulativeTimeSec": 645,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 3,
+          "lapTimeSec": 318,
+          "cumulativeTimeSec": 963,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 4,
+          "lapTimeSec": 316,
+          "cumulativeTimeSec": 1279,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 5,
+          "lapTimeSec": 314,
+          "cumulativeTimeSec": 1593,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 6,
+          "lapTimeSec": 313,
+          "cumulativeTimeSec": 1906,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 7,
+          "lapTimeSec": 312,
+          "cumulativeTimeSec": 2218,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 8,
+          "lapTimeSec": 311,
+          "cumulativeTimeSec": 2529,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 9,
+          "lapTimeSec": 310,
+          "cumulativeTimeSec": 2839,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 10,
+          "lapTimeSec": 309,
+          "cumulativeTimeSec": 3148,
+          "rankAtLap": 3
+        }
+      ]
+    },
+    {
+      "riderId": "rider-04",
+      "name": "高橋 四郎",
+      "finalPosition": 4,
+      "dataQuality": "ok",
+      "laps": [
+        {
+          "lapNumber": 1,
+          "lapTimeSec": 315,
+          "cumulativeTimeSec": 315,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 2,
+          "lapTimeSec": 314,
+          "cumulativeTimeSec": 629,
+          "rankAtLap": 2
+        },
+        {
+          "lapNumber": 3,
+          "lapTimeSec": 317,
+          "cumulativeTimeSec": 946,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 4,
+          "lapTimeSec": 320,
+          "cumulativeTimeSec": 1266,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 5,
+          "lapTimeSec": 325,
+          "cumulativeTimeSec": 1591,
+          "rankAtLap": 3
+        },
+        {
+          "lapNumber": 6,
+          "lapTimeSec": 330,
+          "cumulativeTimeSec": 1921,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 7,
+          "lapTimeSec": 335,
+          "cumulativeTimeSec": 2256,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 8,
+          "lapTimeSec": 338,
+          "cumulativeTimeSec": 2594,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 9,
+          "lapTimeSec": 340,
+          "cumulativeTimeSec": 2934,
+          "rankAtLap": 4
+        },
+        {
+          "lapNumber": 10,
+          "lapTimeSec": 342,
+          "cumulativeTimeSec": 3276,
+          "rankAtLap": 4
+        }
+      ]
+    },
+    {
+      "riderId": "rider-05",
+      "name": "田中 五郎",
+      "finalPosition": 5,
+      "dataQuality": "ok",
+      "laps": [
+        {
+          "lapNumber": 1,
+          "lapTimeSec": 335,
+          "cumulativeTimeSec": 335,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 2,
+          "lapTimeSec": 333,
+          "cumulativeTimeSec": 668,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 3,
+          "lapTimeSec": 332,
+          "cumulativeTimeSec": 1000,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 4,
+          "lapTimeSec": 330,
+          "cumulativeTimeSec": 1330,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 5,
+          "lapTimeSec": 329,
+          "cumulativeTimeSec": 1659,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 6,
+          "lapTimeSec": 328,
+          "cumulativeTimeSec": 1987,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 7,
+          "lapTimeSec": 327,
+          "cumulativeTimeSec": 2314,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 8,
+          "lapTimeSec": 326,
+          "cumulativeTimeSec": 2640,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 9,
+          "lapTimeSec": 325,
+          "cumulativeTimeSec": 2965,
+          "rankAtLap": 5
+        },
+        {
+          "lapNumber": 10,
+          "lapTimeSec": 324,
+          "cumulativeTimeSec": 3289,
+          "rankAtLap": 5
+        }
+      ]
+    }
+  ]
+}
