@@ -101,6 +101,17 @@ export function getRiderSummary(
   };
 }
 
+/**
+ * レース全体の周回番号一覧を、1位の選手（＝必ず全周回を完走している）を基準に取得する。
+ * 比較対象のサブセット（前後N人等）の中で一番良い順位の選手を基準にすると、
+ * その選手がたまたま完走周回数の少ないデータだった場合にグラフ全体が
+ * 短く切り詰められてしまうため、レース全体で最も信頼できる1位選手を使う。
+ */
+export function getRaceLapNumbers(race: RaceResult): number[] {
+  const topRider = getRiderByPosition(race, 1);
+  return topRider?.laps.map((l) => l.lapNumber) ?? [];
+}
+
 /** 基準選手(baseRiderId)を±0とした、各対象選手の周回ごとのギャップ推移。 */
 export interface GapSeriesPoint {
   lapNumber: number;
@@ -128,6 +139,43 @@ export function buildGapSeries(
       const lap = rider?.laps[i];
       if (lap) {
         point[riderId] = lap.cumulativeTimeSec - baseCumulative;
+      }
+    }
+    points.push(point);
+  }
+
+  return points;
+}
+
+/**
+ * 基準選手(baseRiderId)に対する、各対象選手の周回ごとの「その周だけのペース差」。
+ * プラス＝その周は相手の方がラップタイムが長かった（差が縮む方向）、
+ * マイナス＝相手の方が速かった（差が広がる方向）。
+ */
+export function buildPaceDeltaSeries(
+  race: RaceResult,
+  baseRiderId: string,
+  targetRiderIds: string[],
+): GapSeriesPoint[] {
+  const baseRider = getRiderById(race, baseRiderId);
+  if (!baseRider) return [];
+
+  const lapCount = baseRider.laps.length;
+  // 1周目の記録が無いレースでは最初の記録済み周回が複数周分の合算になるため、
+  // 「その周だけのペース差」としては意味を持たない値になる。表示から除外する。
+  const startIndex = baseRider.laps[0]?.lapNumber === 1 ? 0 : 1;
+  const points: GapSeriesPoint[] = [];
+
+  for (let i = startIndex; i < lapCount; i++) {
+    const lapNumber = baseRider.laps[i].lapNumber;
+    const baseLapTime = baseRider.laps[i].lapTimeSec;
+    const point: GapSeriesPoint = { lapNumber };
+
+    for (const riderId of targetRiderIds) {
+      const rider = getRiderById(race, riderId);
+      const lap = rider?.laps[i];
+      if (lap) {
+        point[riderId] = lap.lapTimeSec - baseLapTime;
       }
     }
     points.push(point);

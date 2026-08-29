@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import type { RaceResult, Rider } from "@/lib/types";
+import { getRaceLapNumbers } from "@/lib/dataTransform";
 import { RankBumpChart } from "@/components/RankBumpChart";
 import { GapChart } from "@/components/GapChart";
+import { PaceChart } from "@/components/PaceChart";
 import { LapTimeChart } from "@/components/LapTimeChart";
 
-type TabKey = "rank" | "gap" | "lap";
+type TabKey = "rank" | "gap" | "pace" | "lap";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "rank", label: "順位" },
   { key: "gap", label: "ギャップ" },
+  { key: "pace", label: "ペース" },
   { key: "lap", label: "ラップ" },
 ];
 
@@ -31,6 +34,7 @@ export function ChartTabs({
   const otherRiders = comparisonRiders.filter(
     (r) => r.riderId !== selfRider.riderId,
   );
+  const raceLapNumbers = getRaceLapNumbers(race);
 
   return (
     <div className="rounded-lg border border-paper-line bg-white p-2 shadow-sm sm:p-3">
@@ -55,10 +59,19 @@ export function ChartTabs({
           riders={comparisonRiders}
           selfRiderId={selfRider.riderId}
           colors={colors}
+          raceLapNumbers={raceLapNumbers}
         />
       )}
       {activeTab === "gap" && (
         <GapChart
+          race={race}
+          baseRider={selfRider}
+          otherRiders={otherRiders}
+          colors={colors}
+        />
+      )}
+      {activeTab === "pace" && (
+        <PaceChart
           race={race}
           baseRider={selfRider}
           otherRiders={otherRiders}
@@ -70,6 +83,7 @@ export function ChartTabs({
           riders={comparisonRiders}
           selfRiderId={selfRider.riderId}
           colors={colors}
+          raceLapNumbers={raceLapNumbers}
         />
       )}
     </div>

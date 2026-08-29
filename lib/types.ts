@@ -1,5 +1,8 @@
 export type DataQuality = "ok" | "error";
 
+/** "finished": 完走。 "dnf": 途中棄権（完走者の後ろに連番の順位が割り当てられる）。 */
+export type RiderStatus = "finished" | "dnf";
+
 export interface LapRecord {
   lapNumber: number;
   lapTimeSec: number;
@@ -11,6 +14,7 @@ export interface Rider {
   riderId: string;
   name: string;
   finalPosition: number;
+  status: RiderStatus;
   laps: LapRecord[];
   dataQuality: DataQuality;
 }

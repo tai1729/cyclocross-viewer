@@ -12,22 +12,22 @@ import {
   YAxis,
 } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
-import { buildGapSeries, formatGapSec } from "@/lib/dataTransform";
+import { buildPaceDeltaSeries, formatGapSec } from "@/lib/dataTransform";
 
-interface GapChartProps {
+interface PaceChartProps {
   race: RaceResult;
   baseRider: Rider;
   otherRiders: Rider[];
   colors: Record<string, string>;
 }
 
-export function GapChart({
+export function PaceChart({
   race,
   baseRider,
   otherRiders,
   colors,
-}: GapChartProps) {
-  const data = buildGapSeries(
+}: PaceChartProps) {
+  const data = buildPaceDeltaSeries(
     race,
     baseRider.riderId,
     otherRiders.map((r) => r.riderId),
@@ -76,21 +76,21 @@ export function GapChart({
           {otherRiders.map((rider) => (
             <Line
               key={rider.riderId}
-              type="monotone"
+              type="linear"
               dataKey={rider.riderId}
               name={rider.name}
               stroke={colors[rider.riderId] ?? "#71717a"}
               strokeWidth={2}
-              dot={false}
+              dot={isCrowded ? false : { r: 2.5 }}
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
-      {isCrowded && (
-        <p className="mt-1 text-center text-xs text-ink/40">
-          全{otherRiders.length}名を表示中
-        </p>
-      )}
+      <p className="mt-1 text-center text-xs text-ink/40">
+        {isCrowded
+          ? `全${otherRiders.length}名を表示中。プラス＝その周はあなたが速かった（差が縮む）`
+          : "プラス＝その周はあなたが速かった（差が縮む）、マイナス＝相手が速かった（差が広がる）"}
+      </p>
     </div>
   );
 }

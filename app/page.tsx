@@ -2,17 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { useRaceData } from "@/hooks/useRaceData";
-import { useComparisonRiders } from "@/hooks/useComparisonRiders";
+import {
+  useComparisonRiders,
+  type ComparisonMode,
+} from "@/hooks/useComparisonRiders";
 import { getRiderById, getRiderSummary } from "@/lib/dataTransform";
 import { buildRiderColorMap } from "@/lib/chartColors";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
+import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ChartTabs } from "@/components/ChartTabs";
 
 export default function Home() {
   const { race, isLoading, error } = useRaceData();
   const [selfRiderId, setSelfRiderId] = useState<string | null>(null);
+  const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(2);
 
   // dataQualityが異常な選手はMVP-0では単純に比較対象・選択肢から除外する
   const validRiders = useMemo(
@@ -20,7 +25,11 @@ export default function Home() {
     [race],
   );
 
-  const comparisonRiders = useComparisonRiders(validRiders, selfRiderId);
+  const comparisonRiders = useComparisonRiders(
+    validRiders,
+    selfRiderId,
+    comparisonMode,
+  );
   const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
 
   if (isLoading) {
@@ -50,6 +59,10 @@ export default function Home() {
       {summary && selfRider ? (
         <>
           <SummaryCard summary={summary} />
+          <ComparisonAdjuster
+            mode={comparisonMode}
+            onChange={setComparisonMode}
+          />
           <ChartTabs
             race={race}
             selfRider={selfRider}

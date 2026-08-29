@@ -1,19 +1,17 @@
 import { useMemo } from "react";
 import type { Rider } from "@/lib/types";
 
-interface UseComparisonRidersOptions {
-  /** 自分の前後何名を比較対象に含めるか（デフォルト2） */
-  spread?: number;
-}
+/** 自分の前後何名を比較対象にするか。"all"なら全選手を対象にする。 */
+export type ComparisonMode = 2 | 3 | 4 | 5 | "all";
 
 /**
- * 自分(selfRiderId)を選択すると、最終順位を基準に前後spread名を
+ * 自分(selfRiderId)を選択すると、最終順位を基準に前後mode名（またはmode="all"なら全員）を
  * 自動的に比較対象として選出する。
  */
 export function useComparisonRiders(
   riders: Rider[] | null,
   selfRiderId: string | null,
-  { spread = 2 }: UseComparisonRidersOptions = {},
+  mode: ComparisonMode = 2,
 ): Rider[] {
   return useMemo(() => {
     if (!riders || !selfRiderId) return [];
@@ -24,8 +22,10 @@ export function useComparisonRiders(
     const selfIndex = sorted.findIndex((r) => r.riderId === selfRiderId);
     if (selfIndex === -1) return [];
 
-    const start = Math.max(0, selfIndex - spread);
-    const end = Math.min(sorted.length, selfIndex + spread + 1);
+    if (mode === "all") return sorted;
+
+    const start = Math.max(0, selfIndex - mode);
+    const end = Math.min(sorted.length, selfIndex + mode + 1);
     return sorted.slice(start, end);
-  }, [riders, selfRiderId, spread]);
+  }, [riders, selfRiderId, mode]);
 }

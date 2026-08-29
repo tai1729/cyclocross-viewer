@@ -9,6 +9,7 @@
       "riderId": "rider-01",
       "name": "山田 太郎",
       "finalPosition": 1,
+      "status": "finished",
       "dataQuality": "ok",
       "laps": [
         {
@@ -77,6 +78,7 @@
       "riderId": "rider-02",
       "name": "佐藤 次郎",
       "finalPosition": 2,
+      "status": "finished",
       "dataQuality": "ok",
       "laps": [
         {
@@ -145,6 +147,7 @@
       "riderId": "rider-03",
       "name": "鈴木 三郎",
       "finalPosition": 3,
+      "status": "finished",
       "dataQuality": "ok",
       "laps": [
         {
@@ -213,6 +216,7 @@
       "riderId": "rider-04",
       "name": "高橋 四郎",
       "finalPosition": 4,
+      "status": "finished",
       "dataQuality": "ok",
       "laps": [
         {
@@ -281,6 +285,7 @@
       "riderId": "rider-05",
       "name": "田中 五郎",
       "finalPosition": 5,
+      "status": "finished",
       "dataQuality": "ok",
       "laps": [
         {
