@@ -35,7 +35,7 @@ export function PaceChart({
   const isCrowded = otherRiders.length > 8;
 
   return (
-    <div className="h-64 w-full sm:h-80">
+    <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
@@ -76,7 +76,7 @@ export function PaceChart({
           {otherRiders.map((rider) => (
             <Line
               key={rider.riderId}
-              type="linear"
+              type="monotone"
               dataKey={rider.riderId}
               name={rider.name}
               stroke={colors[rider.riderId] ?? "#71717a"}
@@ -86,11 +86,11 @@ export function PaceChart({
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-center text-xs text-ink/40">
-        {isCrowded
-          ? `全${otherRiders.length}名を表示中。プラス＝その周はあなたが速かった（差が縮む）`
-          : "プラス＝その周はあなたが速かった（差が縮む）、マイナス＝相手が速かった（差が広がる）"}
-      </p>
+      {isCrowded && (
+        <p className="mt-1 text-center text-xs text-ink/40">
+          全{otherRiders.length}名を表示中
+        </p>
+      )}
     </div>
   );
 }

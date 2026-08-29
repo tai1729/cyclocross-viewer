@@ -10,11 +10,29 @@ import { LapTimeChart } from "@/components/LapTimeChart";
 
 type TabKey = "rank" | "gap" | "pace" | "lap";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "rank", label: "順位" },
-  { key: "gap", label: "ギャップ" },
-  { key: "pace", label: "ペース" },
-  { key: "lap", label: "ラップ" },
+const TABS: { key: TabKey; label: string; howToRead: string }[] = [
+  {
+    key: "rank",
+    label: "順位",
+    howToRead: "周回ごとの順位の変化を線で表示。上にあるほど順位が良いです",
+  },
+  {
+    key: "gap",
+    label: "ギャップ",
+    howToRead:
+      "±0があなたの基準。線がプラスならその選手はあなたより遅れ、マイナスなら先行しています",
+  },
+  {
+    key: "pace",
+    label: "ペース",
+    howToRead:
+      "その周だけのタイム差。プラスならその周はあなたが速く（差が縮む）、マイナスなら相手が速い（差が広がる）です",
+  },
+  {
+    key: "lap",
+    label: "ラップ",
+    howToRead: "各選手の1周ごとのタイム推移。太い線があなたです",
+  },
 ];
 
 interface ChartTabsProps {
@@ -35,6 +53,7 @@ export function ChartTabs({
     (r) => r.riderId !== selfRider.riderId,
   );
   const raceLapNumbers = getRaceLapNumbers(race);
+  const activeTabDef = TABS.find((t) => t.key === activeTab) ?? TABS[0];
 
   return (
     <div className="rounded-lg border border-paper-line bg-white p-2 shadow-sm sm:p-3">
@@ -53,6 +72,8 @@ export function ChartTabs({
           </button>
         ))}
       </div>
+
+      <p className="mb-2 text-xs text-ink/45">{activeTabDef.howToRead}</p>
 
       {activeTab === "rank" && (
         <RankBumpChart

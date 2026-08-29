@@ -47,34 +47,41 @@ export default function Home() {
   const summary = selfRiderId ? getRiderSummary(race, selfRiderId) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-3 p-3 sm:max-w-2xl sm:p-4">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-3 p-3 sm:max-w-2xl sm:p-4 lg:max-w-6xl">
       <RaceHeader race={race} />
 
-      <RiderSelector
-        riders={validRiders}
-        selectedRiderId={selfRiderId}
-        onSelect={setSelfRiderId}
-      />
-
-      {summary && selfRider ? (
-        <>
-          <SummaryCard summary={summary} />
-          <ComparisonAdjuster
-            mode={comparisonMode}
-            onChange={setComparisonMode}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[360px_1fr] lg:items-start lg:gap-4">
+        <div className="flex flex-col gap-3">
+          <RiderSelector
+            riders={validRiders}
+            selectedRiderId={selfRiderId}
+            onSelect={setSelfRiderId}
           />
+
+          {summary && (
+            <>
+              <SummaryCard summary={summary} />
+              <ComparisonAdjuster
+                mode={comparisonMode}
+                onChange={setComparisonMode}
+              />
+            </>
+          )}
+        </div>
+
+        {summary && selfRider ? (
           <ChartTabs
             race={race}
             selfRider={selfRider}
             comparisonRiders={comparisonRiders}
             colors={colors}
           />
-        </>
-      ) : (
-        <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">
-          選手を選択してください
-        </div>
-      )}
+        ) : (
+          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">
+            選手を選択してください
+          </div>
+        )}
+      </div>
     </div>
   );
 }
