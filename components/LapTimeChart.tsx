@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import type { Rider } from "@/lib/types";
+import { formatSecToClock } from "@/lib/dataTransform";
 
 interface LapTimeChartProps {
   riders: Rider[];
@@ -24,15 +25,22 @@ export function LapTimeChart({
   colors,
 }: LapTimeChartProps) {
   const lapCount = riders[0]?.laps.length ?? 0;
-  const data = Array.from({ length: lapCount }, (_, i) => {
+
+  // レースの周回記録が1周目から始まっていない場合、最初の記録済み周回は
+  // 「それ以前の周回の合算」が紛れ込んだ数値になるため、誤解を招かないよう表示から除外する
+  const firstLapNumber = riders[0]?.laps[0]?.lapNumber ?? 1;
+  const startIndex = firstLapNumber === 1 ? 0 : 1;
+
+  const data = [];
+  for (let i = startIndex; i < lapCount; i++) {
     const lapNumber = riders[0]?.laps[i]?.lapNumber ?? i + 1;
     const point: Record<string, number> = { lapNumber };
     for (const rider of riders) {
       const lap = rider.laps[i];
       if (lap) point[rider.riderId] = lap.lapTimeSec;
     }
-    return point;
-  });
+    data.push(point);
+  }
 
   return (
     <div className="h-64 w-full sm:h-80">
@@ -54,30 +62,28 @@ export function LapTimeChart({
           />
           <YAxis
             tick={{ fontSize: 11 }}
-            width={36}
-            label={{
-              value: "秒",
-              angle: -90,
-              position: "insideLeft",
-              fontSize: 11,
-            }}
+            width={40}
+            tickFormatter={(v) => formatSecToClock(v)}
           />
           <Tooltip
-            formatter={(value) => `${value}秒`}
+            formatter={(value) => formatSecToClock(Number(value))}
             labelFormatter={(l) => `${l}周目`}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
-          {riders.map((rider) => (
-            <Line
-              key={rider.riderId}
-              type="monotone"
-              dataKey={rider.riderId}
-              name={rider.name}
-              stroke={colors[rider.riderId] ?? "#71717a"}
-              strokeWidth={rider.riderId === selfRiderId ? 3 : 1.5}
-              dot={false}
-            />
-          ))}
+          {riders.map((rider) => {
+            const isSelf = rider.riderId === selfRiderId;
+            return (
+              <Line
+                key={rider.riderId}
+                type="monotone"
+                dataKey={rider.riderId}
+                name={isSelf ? `${rider.name}（あなた）` : rider.name}
+                stroke={colors[rider.riderId] ?? "#71717a"}
+                strokeWidth={isSelf ? 3.5 : 1.5}
+                dot={isSelf ? { r: 3 } : false}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

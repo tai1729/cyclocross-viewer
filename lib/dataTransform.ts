@@ -21,6 +21,25 @@ export function getTotalTimeSec(rider: Rider): number {
 }
 
 /**
+ * riderの最終周回とreferenceの同じ周回番号の累積タイムを比較してギャップを出す。
+ * riderが周回遅れ（referenceより完走周回数が少ない）の場合、単純な合計タイム差だと
+ * 「完走できなかった分」だけマイナスの値になってしまうため、riderが最後に記録した
+ * 周回と同じ周回番号の時点でreferenceと比較する。
+ */
+export function getGapAtRiderFinish(rider: Rider, reference: Rider): number {
+  const riderLastLap = rider.laps[rider.laps.length - 1];
+  if (!riderLastLap) return 0;
+
+  const referenceLapAtSamePoint = reference.laps.find(
+    (l) => l.lapNumber === riderLastLap.lapNumber,
+  );
+  const referenceCumulative =
+    referenceLapAtSamePoint?.cumulativeTimeSec ?? getTotalTimeSec(reference);
+
+  return riderLastLap.cumulativeTimeSec - referenceCumulative;
+}
+
+/**
  * 秒数を "+1'23"" のような表記に変換する。
  * gapSecが0の場合は "±0"" を返す。
  */
@@ -33,6 +52,14 @@ export function formatGapSec(gapSec: number): string {
     return `${sign}${sec}"`;
   }
   return `${sign}${min}'${String(sec).padStart(2, "0")}"`;
+}
+
+/** 秒数を "7:32" のような mm:ss 表記に変換する（ラップタイム表示用）。 */
+export function formatSecToClock(sec: number): string {
+  const abs = Math.max(0, Math.round(sec));
+  const min = Math.floor(abs / 60);
+  const s = abs % 60;
+  return `${min}:${String(s).padStart(2, "0")}`;
 }
 
 export interface RiderSummary {
@@ -57,10 +84,9 @@ export function getRiderSummary(
       ? getRiderByPosition(race, race.promotionZoneRank)
       : undefined;
 
-  const riderTotal = getTotalTimeSec(rider);
-  const topGapSec = topRider ? riderTotal - getTotalTimeSec(topRider) : 0;
+  const topGapSec = topRider ? getGapAtRiderFinish(rider, topRider) : 0;
   const promotionGapSec = promotionRider
-    ? riderTotal - getTotalTimeSec(promotionRider)
+    ? getGapAtRiderFinish(rider, promotionRider)
     : 0;
 
   return {

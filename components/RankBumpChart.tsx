@@ -14,10 +14,15 @@ import type { Rider } from "@/lib/types";
 
 interface RankBumpChartProps {
   riders: Rider[];
+  selfRiderId: string;
   colors: Record<string, string>;
 }
 
-export function RankBumpChart({ riders, colors }: RankBumpChartProps) {
+export function RankBumpChart({
+  riders,
+  selfRiderId,
+  colors,
+}: RankBumpChartProps) {
   const lapCount = riders[0]?.laps.length ?? 0;
   const data = Array.from({ length: lapCount }, (_, i) => {
     const lapNumber = riders[0]?.laps[i]?.lapNumber ?? i + 1;
@@ -64,17 +69,21 @@ export function RankBumpChart({ riders, colors }: RankBumpChartProps) {
             labelFormatter={(l) => `${l}周目`}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
-          {riders.map((rider) => (
-            <Line
-              key={rider.riderId}
-              type="stepAfter"
-              dataKey={rider.riderId}
-              name={rider.name}
-              stroke={colors[rider.riderId] ?? "#71717a"}
-              strokeWidth={2}
-              dot={{ r: 3 }}
-            />
-          ))}
+          {riders.map((rider) => {
+            const isSelf = rider.riderId === selfRiderId;
+            return (
+              <Line
+                key={rider.riderId}
+                type="monotone"
+                dataKey={rider.riderId}
+                name={isSelf ? `${rider.name}（あなた）` : rider.name}
+                stroke={colors[rider.riderId] ?? "#71717a"}
+                strokeWidth={isSelf ? 3.5 : 1.75}
+                dot={{ r: isSelf ? 4 : 2.5 }}
+                activeDot={{ r: isSelf ? 6 : 4 }}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

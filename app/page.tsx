@@ -24,7 +24,7 @@ export default function Home() {
   const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
 
   if (isLoading) {
-    return <div className="p-4 text-center text-zinc-500">読み込み中...</div>;
+    return <div className="p-4 text-center text-ink/50">読み込み中...</div>;
   }
   if (error || !race) {
     return (
@@ -58,7 +58,7 @@ export default function Home() {
           />
         </>
       ) : (
-        <div className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500">
+        <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">
           選手を選択してください
         </div>
       )}

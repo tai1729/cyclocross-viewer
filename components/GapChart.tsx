@@ -56,7 +56,17 @@ export function GapChart({
             width={44}
             tickFormatter={(v) => formatGapSec(v)}
           />
-          <ReferenceLine y={0} stroke="#c3c2b7" />
+          <ReferenceLine
+            y={0}
+            stroke="#c3c2b7"
+            strokeWidth={2}
+            label={{
+              value: `${baseRider.name}（あなた）`,
+              position: "insideBottomLeft",
+              fontSize: 11,
+              fill: "#71717a",
+            }}
+          />
           <Tooltip
             formatter={(value) => formatGapSec(Number(value))}
             labelFormatter={(l) => `${l}周目`}
@@ -75,9 +85,6 @@ export function GapChart({
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-center text-xs text-zinc-500">
-        基準: {baseRider.name}（±0）
-      </p>
     </div>
   );
 }

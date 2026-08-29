@@ -15,21 +15,25 @@ export function SummaryCard({ summary }: SummaryCardProps) {
   } = summary;
 
   return (
-    <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
-      <SummaryItem label="順位" value={`${position}位 / ${totalRiders}名`} />
+    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg bg-ink shadow-sm">
+      <SummaryItem
+        label="順位"
+        value={`${position}`}
+        unit={`/${totalRiders}`}
+      />
       <SummaryItem
         label="トップ差"
-        value={position === 1 ? "―" : formatGapSec(topGapSec)}
+        value={position === 1 ? "—" : formatGapSec(topGapSec)}
       />
       <SummaryItem
         label={
           promotionZoneRank !== null
-            ? `昇格圏(${promotionZoneRank}位)差`
-            : "昇格圏差"
+            ? `昇格圏(${promotionZoneRank}位)`
+            : "昇格圏"
         }
         value={
           promotionZoneRank === null
-            ? "―"
+            ? "—"
             : isInPromotionZone
               ? "圏内"
               : formatGapSec(promotionGapSec)
@@ -43,21 +47,30 @@ export function SummaryCard({ summary }: SummaryCardProps) {
 function SummaryItem({
   label,
   value,
+  unit,
   emphasize,
 }: {
   label: string;
   value: string;
+  unit?: string;
   emphasize?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center text-center">
-      <span className="text-xs text-zinc-500 sm:text-sm">{label}</span>
+    <div className="flex flex-col items-center gap-1.5 bg-ink-soft px-2 py-4">
+      <span className="text-[10px] font-medium tracking-widest text-paper/45 uppercase">
+        {label}
+      </span>
       <span
-        className={`text-lg font-bold tabular-nums sm:text-xl ${
-          emphasize ? "text-emerald-600" : "text-zinc-900"
+        className={`font-mono text-2xl font-bold tabular-nums sm:text-3xl ${
+          emphasize ? "text-flag" : "text-paper"
         }`}
       >
         {value}
+        {unit && (
+          <span className="ml-0.5 text-xs font-normal text-paper/40">
+            {unit}
+          </span>
+        )}
       </span>
     </div>
   );

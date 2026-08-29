@@ -33,16 +33,16 @@ export function ChartTabs({
   );
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-2 shadow-sm sm:p-3">
-      <div className="mb-2 flex gap-1">
+    <div className="rounded-lg border border-paper-line bg-white p-2 shadow-sm sm:p-3">
+      <div className="mb-3 flex border-b border-paper-line">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex-1 border-b-2 px-2 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "bg-zinc-900 text-white"
-                : "bg-zinc-100 text-zinc-600"
+                ? "border-flag text-ink"
+                : "border-transparent text-ink/40"
             }`}
           >
             {tab.label}
@@ -51,7 +51,11 @@ export function ChartTabs({
       </div>
 
       {activeTab === "rank" && (
-        <RankBumpChart riders={comparisonRiders} colors={colors} />
+        <RankBumpChart
+          riders={comparisonRiders}
+          selfRiderId={selfRider.riderId}
+          colors={colors}
+        />
       )}
       {activeTab === "gap" && (
         <GapChart
