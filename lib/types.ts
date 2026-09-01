@@ -32,3 +32,18 @@ export interface RaceResult {
   promotionZoneRank?: number;
   riders: Rider[];
 }
+
+export interface MeetCategory {
+  raceId: string;
+  name: string;
+  order: number;
+}
+
+export interface MeetEntry {
+  meetId: string;
+  season: string;
+  meetDate: string;
+  series: string;
+  meetName: string;
+  categories: MeetCategory[];
+}

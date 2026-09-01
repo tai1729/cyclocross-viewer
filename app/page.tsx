@@ -1,87 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRaceData } from "@/hooks/useRaceData";
-import {
-  useComparisonRiders,
-  type ComparisonMode,
-} from "@/hooks/useComparisonRiders";
-import { getRiderById, getRiderSummary } from "@/lib/dataTransform";
-import { buildRiderColorMap } from "@/lib/chartColors";
-import { RaceHeader } from "@/components/RaceHeader";
-import { RiderSelector } from "@/components/RiderSelector";
-import { SummaryCard } from "@/components/SummaryCard";
-import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
-import { ChartTabs } from "@/components/ChartTabs";
+import { MeetSelector } from "@/components/MeetSelector";
+import { useMeetData } from "@/hooks/useMeetData";
 
 export default function Home() {
-  const { race, isLoading, error } = useRaceData();
-  const [selfRiderId, setSelfRiderId] = useState<string | null>(null);
-  const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(2);
+  const { meets, isLoading, error } = useMeetData();
 
-  // dataQualityが異常な選手はMVP-0では単純に比較対象・選択肢から除外する
-  const validRiders = useMemo(
-    () => race?.riders.filter((r) => r.dataQuality === "ok") ?? [],
-    [race],
-  );
+  if (isLoading) return <div className="p-4 text-center text-ink/50">大会一覧を読み込み中…</div>;
+  if (error) return <div className="p-4 text-center text-red-600">{error}</div>;
 
-  const comparisonRiders = useComparisonRiders(
-    validRiders,
-    selfRiderId,
-    comparisonMode,
-  );
-  const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
-
-  if (isLoading) {
-    return <div className="p-4 text-center text-ink/50">読み込み中...</div>;
-  }
-  if (error || !race) {
-    return (
-      <div className="p-4 text-center text-red-600">
-        データの取得に失敗しました: {error}
-      </div>
-    );
-  }
-
-  const selfRider = selfRiderId ? getRiderById(race, selfRiderId) : undefined;
-  const summary = selfRiderId ? getRiderSummary(race, selfRiderId) : null;
-
-  return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-3 p-3 sm:max-w-2xl sm:p-4 lg:max-w-6xl">
-      <RaceHeader race={race} />
-
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[360px_1fr] lg:items-start lg:gap-4">
-        <div className="flex flex-col gap-3">
-          <RiderSelector
-            riders={validRiders}
-            selectedRiderId={selfRiderId}
-            onSelect={setSelfRiderId}
-          />
-
-          {summary && (
-            <>
-              <SummaryCard summary={summary} />
-              <ComparisonAdjuster
-                mode={comparisonMode}
-                onChange={setComparisonMode}
-              />
-            </>
-          )}
-        </div>
-
-        {summary && selfRider ? (
-          <ChartTabs
-            race={race}
-            selfRider={selfRider}
-            comparisonRiders={comparisonRiders}
-            colors={colors}
-          />
-        ) : (
-          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">
-            選手を選択してください
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <main className="mx-auto w-full max-w-4xl p-3 sm:p-4"><MeetSelector meets={meets} /></main>;
 }
