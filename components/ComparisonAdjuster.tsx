@@ -1,6 +1,8 @@
 "use client";
 
 import type { ComparisonMode } from "@/hooks/useComparisonRiders";
+import { Field, FieldTitle } from "@/components/ui/field";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ComparisonAdjusterProps {
   mode: ComparisonMode;
@@ -22,23 +24,29 @@ export function ComparisonAdjuster({
   onChange,
 }: ComparisonAdjusterProps) {
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="shrink-0 text-ink/45">比較対象</span>
-      <div className="flex gap-1 overflow-x-auto">
+    <Field orientation="responsive" className="items-center">
+      <FieldTitle>比較対象</FieldTitle>
+      <div className="overflow-x-auto">
+        <ToggleGroup
+          value={[String(mode)]}
+          onValueChange={(values) => {
+            const value = values[0];
+            onChange(value === "all" ? "all" : Number(value) as ComparisonMode);
+          }}
+          spacing={1}
+        >
         {OPTIONS.map((opt) => (
-          <button
+          <ToggleGroupItem
             key={opt.mode}
-            onClick={() => onChange(opt.mode)}
-            className={`shrink-0 rounded-full border px-2.5 py-1 font-medium transition-colors ${
-              mode === opt.mode
-                ? "border-flag bg-flag-soft text-flag"
-                : "border-paper-line bg-white text-ink/50"
-            }`}
+            value={String(opt.mode)}
+            variant="outline"
+            size="sm"
           >
             {opt.label}
-          </button>
+          </ToggleGroupItem>
         ))}
+        </ToggleGroup>
       </div>
-    </div>
+    </Field>
   );
 }

@@ -16,6 +16,9 @@ import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ChartTabs } from "@/components/ChartTabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RaceViewerProps {
   meet: MeetEntry;
@@ -51,7 +54,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   }
 
   if (!selectedCategory) {
-    return <div className="p-4 text-center text-red-600">この大会にはカテゴリーがありません。</div>;
+    return <Alert variant="destructive"><AlertTitle>カテゴリーがありません</AlertTitle><AlertDescription>この大会にはカテゴリー情報がありません。</AlertDescription></Alert>;
   }
 
   if (isLoading) return <div className="p-4 text-center text-ink/50">リザルトを読み込み中…</div>;
@@ -72,20 +75,32 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-3 p-3 sm:max-w-2xl sm:p-4 lg:max-w-6xl">
+    <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8 2xl:px-12">
       <div className="flex items-center justify-between gap-3 text-sm">
         <Link href="/" className="text-flag underline">← 大会一覧</Link>
         <span className="truncate text-right text-ink/55">{meet.meetName}</span>
       </div>
-      <label className="flex items-center gap-2 text-sm font-medium text-ink">
-        カテゴリー
-        <select value={selectedCategory.raceId} onChange={(event) => changeCategory(event.target.value)} className="min-w-0 flex-1 rounded-md border border-paper-line bg-white px-3 py-2 font-normal focus:border-flag focus:outline-none">
-          {categories.map((category) => <option key={category.raceId} value={category.raceId}>{category.name || category.raceId}</option>)}
-        </select>
-      </label>
+      <Field orientation="responsive">
+        <FieldLabel>カテゴリー</FieldLabel>
+        <Select
+          items={categories.map((category) => ({
+            label: category.name || category.raceId,
+            value: category.raceId,
+          }))}
+          value={selectedCategory.raceId}
+          onValueChange={(value) => changeCategory(String(value))}
+        >
+          <SelectTrigger className="min-w-0 flex-1"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {categories.map((category) => <SelectItem key={category.raceId} value={category.raceId}>{category.name || category.raceId}</SelectItem>)}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
       <RaceHeader race={race} />
 
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[360px_1fr] lg:items-start lg:gap-4">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-3">
           <RiderSelector riders={race.riders} selectedRiderId={selfRiderId} onSelect={setSelfRiderId} />
           {summary && (
@@ -96,17 +111,13 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           )}
         </div>
         {selfRider && !hasValidData ? (
-          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/55">
-            この選手の周回データには異常があるため、グラフを表示できません。
-          </div>
+          <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
         ) : selfRider && !hasLapData ? (
-          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/55">
-            この選手には周回データがないため、グラフを表示できません。
-          </div>
+          <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
         ) : summary && selfRider ? (
           <ChartTabs race={race} selfRider={selfRider} comparisonRiders={comparisonRiders} colors={colors} />
         ) : (
-          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">選手を選択してください</div>
+          <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
         )}
       </div>
     </div>

@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Rider } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface RiderSelectorProps {
   riders: Rider[];
@@ -54,17 +58,19 @@ export function RiderSelector({
   if (!isOpen && selectedRider) {
     return (
       <div className="flex items-center gap-2">
-        <button
+        <Button
           onClick={() => prevRider && handleSelect(prevRider.riderId)}
           disabled={!prevRider}
           aria-label="一つ上の順位の選手へ"
-          className="shrink-0 rounded-lg border border-paper-line bg-white px-2.5 py-2.5 text-ink/60 disabled:opacity-30"
+          variant="outline"
+          size="icon"
         >
           ▲
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={openSelector}
-          className="flex min-w-0 flex-1 items-center justify-between rounded-lg border border-paper-line bg-white px-3 py-2.5 text-left"
+          variant="outline"
+          className="min-w-0 flex-1 justify-between"
         >
           <span className="flex items-baseline gap-2 truncate">
             <span
@@ -79,15 +85,16 @@ export function RiderSelector({
             </span>
           </span>
           <span className="shrink-0 text-xs font-medium text-flag">変更</span>
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => nextRider && handleSelect(nextRider.riderId)}
           disabled={!nextRider}
           aria-label="一つ下の順位の選手へ"
-          className="shrink-0 rounded-lg border border-paper-line bg-white px-2.5 py-2.5 text-ink/60 disabled:opacity-30"
+          variant="outline"
+          size="icon"
         >
           ▼
-        </button>
+        </Button>
       </div>
     );
   }
@@ -95,14 +102,18 @@ export function RiderSelector({
   const filtered = sorted.filter((r) => r.name.includes(query));
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-paper-line bg-white p-2">
-      <input
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>選手を選ぶ</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+      <Input
         type="text"
         autoFocus={selectedRider !== null && shouldFocusSearch}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="選手を検索"
-        className="w-full rounded-md border border-paper-line bg-paper px-3 py-2 text-sm text-ink focus:border-flag focus:outline-none"
+        className="w-full"
       />
       <div className="flex max-h-64 flex-col overflow-y-auto">
         {filtered.map((rider) => {
@@ -112,27 +123,30 @@ export function RiderSelector({
               key={rider.riderId}
               ref={isSelected ? selectedRowRef : undefined}
               onClick={() => handleSelect(rider.riderId)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                isSelected ? "bg-flag-soft" : "hover:bg-paper"
-              }`}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                isSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted",
+              )}
             >
               <span
-                className={`w-8 shrink-0 font-mono text-xs ${
-                  rider.status === "dnf" ? "text-flag" : "text-ink/45"
-                }`}
+                className={cn(
+                  "w-8 shrink-0 font-mono text-xs",
+                  rider.status === "dnf" ? "text-primary" : "text-muted-foreground",
+                )}
               >
                 {positionLabel(rider)}
               </span>
-              <span className="truncate text-ink">{rider.name}</span>
+              <span className="truncate text-foreground">{rider.name}</span>
             </button>
           );
         })}
         {filtered.length === 0 && (
-          <p className="px-3 py-2 text-sm text-ink/40">
+          <p className="px-3 py-2 text-sm text-muted-foreground">
             該当する選手がいません
           </p>
         )}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { MeetEntry } from "@/lib/types";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface MeetSelectorProps {
   meets: MeetEntry[];
@@ -21,6 +24,14 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
   const filtered = filteredBySeason
     .filter((meet) => !series || meet.series === series)
     .sort((a, b) => b.meetDate.localeCompare(a.meetDate));
+  const seasonItems = [
+    { label: "すべてのシーズン", value: null },
+    ...seasons.map((value) => ({ label: value, value })),
+  ];
+  const seriesItems = [
+    { label: "すべてのシリーズ", value: null },
+    ...seriesOptions.map((value) => ({ label: value, value })),
+  ];
 
   function changeSeason(value: string) {
     setSeason(value);
@@ -35,25 +46,29 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
         <p className="mt-1 text-sm text-ink/55">シーズンとシリーズから大会を絞り込めます。</p>
       </div>
 
-      <div className="grid gap-3 rounded-lg border border-paper-line bg-white p-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          シーズン
-          <select value={season} onChange={(event) => changeSeason(event.target.value)} className="rounded-md border border-paper-line bg-paper px-3 py-2 font-normal focus:border-flag focus:outline-none">
-            <option value="">すべてのシーズン</option>
-            {seasons.map((value) => <option key={value} value={value}>{value}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          シリーズ
-          <select value={series} onChange={(event) => setSeries(event.target.value)} className="rounded-md border border-paper-line bg-paper px-3 py-2 font-normal focus:border-flag focus:outline-none">
-            <option value="">すべてのシリーズ</option>
-            {seriesOptions.map((value) => <option key={value} value={value}>{value}</option>)}
-          </select>
-        </label>
-      </div>
+      <Card size="sm">
+        <CardContent>
+          <FieldGroup className="sm:flex-row">
+            <Field>
+              <FieldLabel>シーズン</FieldLabel>
+              <Select items={seasonItems} value={season || null} onValueChange={(value) => changeSeason(value ?? "")}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectGroup><SelectItem value={null}>すべてのシーズン</SelectItem>{seasons.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectGroup></SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>シリーズ</FieldLabel>
+              <Select items={seriesItems} value={series || null} onValueChange={(value) => setSeries(value ?? "")}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectGroup><SelectItem value={null}>すべてのシリーズ</SelectItem>{seriesOptions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectGroup></SelectContent>
+              </Select>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
 
-      <div className="overflow-hidden rounded-lg border border-paper-line bg-white">
-        <div className="border-b border-paper-line px-3 py-2 text-sm text-ink/55">{filtered.length}大会</div>
+      <Card>
+        <CardHeader className="border-b"><span className="text-sm text-muted-foreground">{filtered.length}大会</span></CardHeader>
         {filtered.length > 0 ? (
           <div className="overflow-x-auto overscroll-x-contain">
             <div className="min-w-[42rem] divide-y divide-paper-line sm:min-w-0">
@@ -67,9 +82,9 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
             </div>
           </div>
         ) : (
-          <p className="px-3 py-8 text-center text-sm text-ink/50">条件に一致する大会がありません。</p>
+          <p className="px-3 py-8 text-center text-sm text-muted-foreground">条件に一致する大会がありません。</p>
         )}
-      </div>
+      </Card>
     </section>
   );
 }

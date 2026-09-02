@@ -1,4 +1,6 @@
 import { formatGapSec, type RiderSummary } from "@/lib/dataTransform";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface SummaryCardProps {
   summary: RiderSummary;
@@ -15,16 +17,19 @@ export function SummaryCard({ summary }: SummaryCardProps) {
   } = summary;
 
   return (
-    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg bg-ink shadow-sm">
+    <Card size="sm">
+      <CardContent className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3">
       <SummaryItem
         label="順位"
         value={`${position}`}
         unit={`/${totalRiders}`}
       />
+      <Separator orientation="vertical" />
       <SummaryItem
         label="トップ差"
         value={position === 1 ? "—" : formatGapSec(topGapSec)}
       />
+      <Separator orientation="vertical" />
       <SummaryItem
         label={
           promotionZoneRank !== null
@@ -40,7 +45,8 @@ export function SummaryCard({ summary }: SummaryCardProps) {
         }
         emphasize={isInPromotionZone}
       />
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -56,18 +62,18 @@ function SummaryItem({
   emphasize?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 bg-ink-soft px-2 py-4">
-      <span className="text-[10px] font-medium tracking-widest text-paper/45 uppercase">
+    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+      <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
         {label}
       </span>
       <span
         className={`font-mono text-2xl font-bold tabular-nums sm:text-3xl ${
-          emphasize ? "text-flag" : "text-paper"
+          emphasize ? "text-primary" : "text-foreground"
         }`}
       >
         {value}
         {unit && (
-          <span className="ml-0.5 text-xs font-normal text-paper/40">
+          <span className="ml-0.5 text-xs font-normal text-muted-foreground">
             {unit}
           </span>
         )}
