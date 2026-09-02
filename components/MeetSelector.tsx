@@ -55,14 +55,16 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
       <div className="overflow-hidden rounded-lg border border-paper-line bg-white">
         <div className="border-b border-paper-line px-3 py-2 text-sm text-ink/55">{filtered.length}大会</div>
         {filtered.length > 0 ? (
-          <div className="divide-y divide-paper-line">
-            {filtered.map((meet) => (
-              <Link key={meet.meetId} href={`/race/${encodeURIComponent(meet.meetId)}`} className="grid grid-cols-[6.5rem_5rem_1fr] gap-2 px-3 py-3 text-sm transition-colors hover:bg-flag-soft focus:bg-flag-soft focus:outline-none sm:grid-cols-[8rem_7rem_1fr]">
-                <time dateTime={meet.meetDate} className="font-mono text-ink/65">{meet.meetDate}</time>
-                <span className="text-flag">{meet.series || "—"}</span>
-                <span className="min-w-0 truncate font-medium text-ink">{meet.meetName}</span>
-              </Link>
-            ))}
+          <div className="overflow-x-auto overscroll-x-contain">
+            <div className="min-w-[42rem] divide-y divide-paper-line sm:min-w-0">
+              {filtered.map((meet) => (
+                <Link key={meet.meetId} href={`/race/${encodeURIComponent(meet.meetId)}`} className="grid min-w-full grid-cols-[6.5rem_5rem_max-content] gap-2 px-3 py-3 text-sm transition-colors hover:bg-flag-soft focus:bg-flag-soft focus:outline-none sm:grid-cols-[8rem_7rem_minmax(0,1fr)]">
+                  <time dateTime={meet.meetDate} className="font-mono text-ink/65">{meet.meetDate}</time>
+                  <span className="text-flag">{meet.series || "—"}</span>
+                  <span className="whitespace-nowrap font-medium text-ink sm:min-w-0 sm:truncate">{meet.meetName}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         ) : (
           <p className="px-3 py-8 text-center text-sm text-ink/50">条件に一致する大会がありません。</p>
