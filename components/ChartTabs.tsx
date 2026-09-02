@@ -84,20 +84,28 @@ export function ChartTabs({
         />
       )}
       {activeTab === "gap" && (
-        <GapChart
-          race={race}
-          baseRider={selfRider}
-          otherRiders={otherRiders}
-          colors={colors}
-        />
+        otherRiders.length > 0 ? (
+          <GapChart
+            race={race}
+            baseRider={selfRider}
+            otherRiders={otherRiders}
+            colors={colors}
+          />
+        ) : (
+          <NoComparisonRiders />
+        )
       )}
       {activeTab === "pace" && (
-        <PaceChart
-          race={race}
-          baseRider={selfRider}
-          otherRiders={otherRiders}
-          colors={colors}
-        />
+        otherRiders.length > 0 ? (
+          <PaceChart
+            race={race}
+            baseRider={selfRider}
+            otherRiders={otherRiders}
+            colors={colors}
+          />
+        ) : (
+          <NoComparisonRiders />
+        )
       )}
       {activeTab === "lap" && (
         <LapTimeChart
@@ -107,6 +115,14 @@ export function ChartTabs({
           raceLapNumbers={raceLapNumbers}
         />
       )}
+    </div>
+  );
+}
+
+function NoComparisonRiders() {
+  return (
+    <div className="flex h-[416px] items-center justify-center rounded-md border border-dashed border-paper-line px-4 text-center text-sm text-ink/45">
+      比較できる周回データを持つ選手がほかにいません。
     </div>
   );
 }

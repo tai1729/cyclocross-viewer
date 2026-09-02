@@ -38,7 +38,11 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     () => race?.riders.filter((rider) => rider.dataQuality === "ok") ?? [],
     [race],
   );
-  const comparisonRiders = useComparisonRiders(validRiders, selfRiderId, comparisonMode);
+  const graphableRiders = useMemo(
+    () => validRiders.filter((rider) => rider.laps.length > 0),
+    [validRiders],
+  );
+  const comparisonRiders = useComparisonRiders(graphableRiders, selfRiderId, comparisonMode);
   const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
 
   function changeCategory(value: string) {
@@ -61,7 +65,11 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   }
 
   const selfRider = selfRiderId ? getRiderById(race, selfRiderId) : undefined;
-  const summary = selfRiderId ? getRiderSummary(race, selfRiderId) : null;
+  const hasValidData = selfRider?.dataQuality === "ok";
+  const hasLapData = (selfRider?.laps.length ?? 0) > 0;
+  const summary = selfRiderId && hasValidData && hasLapData
+    ? getRiderSummary(race, selfRiderId)
+    : null;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-3 p-3 sm:max-w-2xl sm:p-4 lg:max-w-6xl">
@@ -79,7 +87,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[360px_1fr] lg:items-start lg:gap-4">
         <div className="flex flex-col gap-3">
-          <RiderSelector riders={validRiders} selectedRiderId={selfRiderId} onSelect={setSelfRiderId} />
+          <RiderSelector riders={race.riders} selectedRiderId={selfRiderId} onSelect={setSelfRiderId} />
           {summary && (
             <>
               <SummaryCard summary={summary} />
@@ -87,7 +95,15 @@ export function RaceViewer({ meet }: RaceViewerProps) {
             </>
           )}
         </div>
-        {summary && selfRider ? (
+        {selfRider && !hasValidData ? (
+          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/55">
+            この選手の周回データには異常があるため、グラフを表示できません。
+          </div>
+        ) : selfRider && !hasLapData ? (
+          <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/55">
+            この選手には周回データがないため、グラフを表示できません。
+          </div>
+        ) : summary && selfRider ? (
           <ChartTabs race={race} selfRider={selfRider} comparisonRiders={comparisonRiders} colors={colors} />
         ) : (
           <div className="rounded-lg border border-dashed border-paper-line p-4 text-center text-sm text-ink/45">選手を選択してください</div>
