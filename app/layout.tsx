@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AJOCC ラップタイムビューア",
+  title: "AJOCCラップタイムビューア",
   description: "AJOCCシクロクロス ラップタイム比較ビューア",
 };
 
