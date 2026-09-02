@@ -16,6 +16,7 @@ export function RiderSelector({
 }: RiderSelectorProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(selectedRiderId === null);
+  const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
 
   const sorted = [...riders].sort((a, b) => a.finalPosition - b.finalPosition);
@@ -35,6 +36,11 @@ export function RiderSelector({
     onSelect(riderId);
     setQuery("");
     setIsOpen(false);
+  }
+
+  function openSelector() {
+    setShouldFocusSearch(window.matchMedia("(min-width: 768px)").matches);
+    setIsOpen(true);
   }
 
   useEffect(() => {
@@ -57,7 +63,7 @@ export function RiderSelector({
           ▲
         </button>
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={openSelector}
           className="flex min-w-0 flex-1 items-center justify-between rounded-lg border border-paper-line bg-white px-3 py-2.5 text-left"
         >
           <span className="flex items-baseline gap-2 truncate">
@@ -92,7 +98,7 @@ export function RiderSelector({
     <div className="flex flex-col gap-2 rounded-lg border border-paper-line bg-white p-2">
       <input
         type="text"
-        autoFocus={selectedRider !== null}
+        autoFocus={selectedRider !== null && shouldFocusSearch}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="選手を検索"
