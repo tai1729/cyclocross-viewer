@@ -1,4 +1,4 @@
-import type { RaceResult, Rider } from "@/lib/types";
+import type { LapRecord, RaceResult, Rider } from "@/lib/types";
 
 export function getRiderById(
   race: RaceResult,
@@ -14,10 +14,57 @@ export function getRiderByPosition(
   return race.riders.find((r) => r.finalPosition === position);
 }
 
-/** そのライダーの最終周回時点の累積タイム（秒）。 */
+function hasValidCheckpointShape(lap: LapRecord): boolean {
+  return (
+    Number.isInteger(lap.lapNumber) &&
+    lap.lapNumber > 0 &&
+    Number.isFinite(lap.cumulativeTimeSec) &&
+    Number.isFinite(lap.rankAtLap)
+  );
+}
+
+/** 周回番号を一意に確定できる、有効なチェックポイントだけを返す。 */
+export function getValidCheckpoints(rider: Rider): LapRecord[] {
+  const candidateLaps = rider.laps.filter(hasValidCheckpointShape);
+  const counts = new Map<number, number>();
+
+  for (const lap of candidateLaps) {
+    counts.set(lap.lapNumber, (counts.get(lap.lapNumber) ?? 0) + 1);
+  }
+
+  return candidateLaps
+    .filter((lap) => counts.get(lap.lapNumber) === 1)
+    .sort((a, b) => a.lapNumber - b.lapNumber);
+}
+
+/** 単周タイムとして意味を持つ、有効な周回だけを返す。 */
+export function getValidTimedLaps(rider: Rider): LapRecord[] {
+  const checkpoints = getValidCheckpoints(rider);
+  const checkpointNumbers = new Set(checkpoints.map((lap) => lap.lapNumber));
+
+  return checkpoints.filter(
+    (lap) =>
+      Number.isFinite(lap.lapTimeSec) &&
+      lap.lapTimeSec > 0 &&
+      (lap.lapNumber === 1 || checkpointNumbers.has(lap.lapNumber - 1)),
+  );
+}
+
+export function buildLapMap(
+  rider: Rider,
+  timedOnly = false,
+): Map<number, LapRecord> {
+  const laps = timedOnly ? getValidTimedLaps(rider) : getValidCheckpoints(rider);
+  return new Map(laps.map((lap) => [lap.lapNumber, lap]));
+}
+
+function getLastCheckpoint(rider: Rider): LapRecord | undefined {
+  return getValidCheckpoints(rider).at(-1);
+}
+
+/** そのライダーの最終有効チェックポイント時点の累積タイム（秒）。 */
 export function getTotalTimeSec(rider: Rider): number {
-  const lastLap = rider.laps[rider.laps.length - 1];
-  return lastLap ? lastLap.cumulativeTimeSec : 0;
+  return getLastCheckpoint(rider)?.cumulativeTimeSec ?? 0;
 }
 
 /**
@@ -26,17 +73,19 @@ export function getTotalTimeSec(rider: Rider): number {
  * 「完走できなかった分」だけマイナスの値になってしまうため、riderが最後に記録した
  * 周回と同じ周回番号の時点でreferenceと比較する。
  */
-export function getGapAtRiderFinish(rider: Rider, reference: Rider): number {
-  const riderLastLap = rider.laps[rider.laps.length - 1];
-  if (!riderLastLap) return 0;
+export function getGapAtRiderFinish(
+  rider: Rider,
+  reference: Rider,
+): number | null {
+  const riderLastLap = getLastCheckpoint(rider);
+  if (!riderLastLap) return null;
 
-  const referenceLapAtSamePoint = reference.laps.find(
-    (l) => l.lapNumber === riderLastLap.lapNumber,
+  const referenceLapAtSamePoint = buildLapMap(reference).get(
+    riderLastLap.lapNumber,
   );
-  const referenceCumulative =
-    referenceLapAtSamePoint?.cumulativeTimeSec ?? getTotalTimeSec(reference);
+  if (!referenceLapAtSamePoint) return null;
 
-  return riderLastLap.cumulativeTimeSec - referenceCumulative;
+  return riderLastLap.cumulativeTimeSec - referenceLapAtSamePoint.cumulativeTimeSec;
 }
 
 /**
@@ -62,12 +111,91 @@ export function formatSecToClock(sec: number): string {
   return `${min}:${String(s).padStart(2, "0")}`;
 }
 
+export type RiderResult =
+  | {
+      kind: "finished";
+      position: number;
+      totalTimeSec: number;
+      gapToLeaderSec: number;
+      completedLapNumber: number;
+    }
+  | {
+      kind: "lapped";
+      position: number;
+      lapDeficit: number;
+      completedLapNumber: number;
+    }
+  | {
+      kind: "dnf";
+      completedLapNumber: number | null;
+      finalCheckpointRank: number | null;
+      gapToLeaderAtCheckpointSec: number | null;
+    }
+  | {
+      kind: "unavailable";
+      reason: "data-quality" | "no-checkpoints" | "no-leader";
+    };
+
+export function getRiderResult(
+  race: RaceResult,
+  riderId: string,
+): RiderResult | null {
+  const rider = getRiderById(race, riderId);
+  if (!rider) return null;
+
+  if (rider.dataQuality === "error") {
+    return { kind: "unavailable", reason: "data-quality" };
+  }
+
+  const riderLastLap = getLastCheckpoint(rider);
+  const leader = getRiderByPosition(race, 1);
+  const leaderLastLap = leader ? getLastCheckpoint(leader) : undefined;
+
+  if (rider.status === "dnf") {
+    return {
+      kind: "dnf",
+      completedLapNumber: riderLastLap?.lapNumber ?? null,
+      finalCheckpointRank: riderLastLap?.rankAtLap ?? null,
+      gapToLeaderAtCheckpointSec:
+        riderLastLap && leader ? getGapAtRiderFinish(rider, leader) : null,
+    };
+  }
+
+  if (!riderLastLap) {
+    return { kind: "unavailable", reason: "no-checkpoints" };
+  }
+  if (!leader || !leaderLastLap) {
+    return { kind: "unavailable", reason: "no-leader" };
+  }
+
+  if (riderLastLap.lapNumber < leaderLastLap.lapNumber) {
+    return {
+      kind: "lapped",
+      position: rider.finalPosition,
+      lapDeficit: leaderLastLap.lapNumber - riderLastLap.lapNumber,
+      completedLapNumber: riderLastLap.lapNumber,
+    };
+  }
+
+  const gapToLeaderSec = getGapAtRiderFinish(rider, leader);
+  if (gapToLeaderSec === null) {
+    return { kind: "unavailable", reason: "no-leader" };
+  }
+
+  return {
+    kind: "finished",
+    position: rider.finalPosition,
+    totalTimeSec: riderLastLap.cumulativeTimeSec,
+    gapToLeaderSec,
+    completedLapNumber: riderLastLap.lapNumber,
+  };
+}
+
 export interface RiderSummary {
-  position: number;
+  result: RiderResult;
   totalRiders: number;
-  topGapSec: number;
   promotionZoneRank: number | null;
-  promotionGapSec: number;
+  promotionGapSec: number | null;
   isInPromotionZone: boolean;
 }
 
@@ -77,39 +205,41 @@ export function getRiderSummary(
 ): RiderSummary | null {
   const rider = getRiderById(race, riderId);
   if (!rider) return null;
+  const result = getRiderResult(race, riderId);
+  if (!result) return null;
 
-  const topRider = getRiderByPosition(race, 1);
   const promotionRider =
     race.promotionZoneRank !== undefined
       ? getRiderByPosition(race, race.promotionZoneRank)
       : undefined;
 
-  const topGapSec = topRider ? getGapAtRiderFinish(rider, topRider) : 0;
   const promotionGapSec = promotionRider
     ? getGapAtRiderFinish(rider, promotionRider)
-    : 0;
+    : null;
+  const hasOfficialPosition =
+    result.kind === "finished" || result.kind === "lapped";
 
   return {
-    position: rider.finalPosition,
+    result,
     totalRiders: race.riders.length,
-    topGapSec,
     promotionZoneRank: race.promotionZoneRank ?? null,
     promotionGapSec,
     isInPromotionZone:
+      hasOfficialPosition &&
       race.promotionZoneRank !== undefined &&
       rider.finalPosition <= race.promotionZoneRank,
   };
 }
 
-/**
- * レース全体の周回番号一覧を、1位の選手（＝必ず全周回を完走している）を基準に取得する。
- * 比較対象のサブセット（前後N人等）の中で一番良い順位の選手を基準にすると、
- * その選手がたまたま完走周回数の少ないデータだった場合にグラフ全体が
- * 短く切り詰められてしまうため、レース全体で最も信頼できる1位選手を使う。
- */
+/** レース内の有効チェックポイントにある周回番号を和集合で返す。 */
 export function getRaceLapNumbers(race: RaceResult): number[] {
-  const topRider = getRiderByPosition(race, 1);
-  return topRider?.laps.map((l) => l.lapNumber) ?? [];
+  const lapNumbers = new Set<number>();
+  for (const rider of race.riders) {
+    for (const lap of getValidCheckpoints(rider)) {
+      lapNumbers.add(lap.lapNumber);
+    }
+  }
+  return [...lapNumbers].sort((a, b) => a - b);
 }
 
 /** 基準選手(baseRiderId)を±0とした、各対象選手の周回ごとのギャップ推移。 */
@@ -126,19 +256,27 @@ export function buildGapSeries(
   const baseRider = getRiderById(race, baseRiderId);
   if (!baseRider) return [];
 
-  const lapCount = baseRider.laps.length;
+  const baseMap = buildLapMap(baseRider);
+  const targetMaps = new Map(
+    targetRiderIds.map((riderId) => {
+      const rider = getRiderById(race, riderId);
+      return [riderId, rider ? buildLapMap(rider) : new Map<number, LapRecord>()];
+    }),
+  );
   const points: GapSeriesPoint[] = [];
 
-  for (let i = 0; i < lapCount; i++) {
-    const lapNumber = baseRider.laps[i].lapNumber;
-    const baseCumulative = baseRider.laps[i].cumulativeTimeSec;
+  for (const lapNumber of getRaceLapNumbers(race)) {
     const point: GapSeriesPoint = { lapNumber };
+    const baseLap = baseMap.get(lapNumber);
+    if (!baseLap) {
+      points.push(point);
+      continue;
+    }
 
     for (const riderId of targetRiderIds) {
-      const rider = getRiderById(race, riderId);
-      const lap = rider?.laps[i];
+      const lap = targetMaps.get(riderId)?.get(lapNumber);
       if (lap) {
-        point[riderId] = lap.cumulativeTimeSec - baseCumulative;
+        point[riderId] = lap.cumulativeTimeSec - baseLap.cumulativeTimeSec;
       }
     }
     points.push(point);
@@ -160,22 +298,27 @@ export function buildPaceDeltaSeries(
   const baseRider = getRiderById(race, baseRiderId);
   if (!baseRider) return [];
 
-  const lapCount = baseRider.laps.length;
-  // 1周目の記録が無いレースでは最初の記録済み周回が複数周分の合算になるため、
-  // 「その周だけのペース差」としては意味を持たない値になる。表示から除外する。
-  const startIndex = baseRider.laps[0]?.lapNumber === 1 ? 0 : 1;
+  const baseMap = buildLapMap(baseRider, true);
+  const targetMaps = new Map(
+    targetRiderIds.map((riderId) => {
+      const rider = getRiderById(race, riderId);
+      return [riderId, rider ? buildLapMap(rider, true) : new Map<number, LapRecord>()];
+    }),
+  );
   const points: GapSeriesPoint[] = [];
 
-  for (let i = startIndex; i < lapCount; i++) {
-    const lapNumber = baseRider.laps[i].lapNumber;
-    const baseLapTime = baseRider.laps[i].lapTimeSec;
+  for (const lapNumber of getRaceLapNumbers(race)) {
     const point: GapSeriesPoint = { lapNumber };
+    const baseLap = baseMap.get(lapNumber);
+    if (!baseLap) {
+      points.push(point);
+      continue;
+    }
 
     for (const riderId of targetRiderIds) {
-      const rider = getRiderById(race, riderId);
-      const lap = rider?.laps[i];
+      const lap = targetMaps.get(riderId)?.get(lapNumber);
       if (lap) {
-        point[riderId] = lap.lapTimeSec - baseLapTime;
+        point[riderId] = lap.lapTimeSec - baseLap.lapTimeSec;
       }
     }
     points.push(point);

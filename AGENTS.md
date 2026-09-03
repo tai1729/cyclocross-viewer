@@ -1,70 +1,375 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Project Instructions
 
-# This is NOT the Next.js you know
+This repository inherits the global autonomous development protocol.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+Project-specific instructions in this file take precedence when applicable.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+---
 
-<!-- END:nextjs-agent-rules -->
+## Source of Truth
 
-# 開発者について
+Before substantial implementation work, read:
 
-個人開発者。予算に限りがあるため、コストと品質のバランスを重視する。
+- `docs/PRODUCT.md`
+- `docs/DESIGN.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/SPEC_AUDIT.md`
 
-# モデル運用方針
+These documents are the authoritative source for product behavior,
+architecture, implementation scope, and acceptance criteria.
 
-- 通常のコーディング作業（実装・デバッグ・リファクタ）はTerraを使用する
-- 単純作業（フォーマット、簡単な文字列置換、ログ確認、一問一答の質問）はLunaに切り替えて良い
-- 大規模な変更やアーキテクチャ判断が必要な場合は、着手前に必ず計画（Plan）を提示し、承認を得てから実行する
-- 迷ったら軽い方に倒さず、実装の正しさを優先する（手戻りの方がコストが高いため）
+If conversation history conflicts with the approved project documents,
+follow the project documents unless the user explicitly changes the requirement.
 
-# 作業の進め方
+Important implementation decisions must be written back into the project documents.
 
-- 複数ファイルにまたがる変更や、破壊的な変更（ファイル削除、DBスキーマ変更、依存関係の大規模更新など）を行う前は、必ず確認を取ってから実行する
-- 不明点がある場合は、憶測で進めずに質問する
-- 変更後は可能な範囲で自己検証する（テストがあれば実行、なければ簡単な動作確認の手順を示す）
+---
 
-# コーディングスタイル全般
+## Project Commands
 
-- コメントは必要最小限にし、コードの意図が分かりにくい箇所にのみ書く
-- 既存のコードスタイル・命名規則がある場合はそれに合わせる（迷ったらプロジェクト側のAGENTS.mdを優先）
+Replace the commands below with the actual commands used by this repository.
 
-# 触ってはいけないもの
+### Install
 
-- `.env` や認証情報を含むファイルは読み書きしない・出力しない
-- gitの設定（`.git`内部）を直接操作しない
+Example:
 
-# コミュニケーション
+    npm install
 
-- 説明は簡潔に。長い前置きは不要
-- 日本語で応答する
+### Development
 
-# 2026-09-01 作業記録
+Example:
 
-## 完了した内容
+    npm run dev
 
-- 大会選択画面を追加した。開催日の降順で開催日・シリーズ・大会名を表示し、シーズンとシリーズで絞り込める。
-- 大会を選ぶと `/race/[meetId]` のリザルト可視化画面へ遷移する。
-- リザルト画面でカテゴリーを選択でき、AJOCCの大会ページに掲載されているカテゴリー順をそのまま利用する。
-- データ収集側で `meets.json` を生成し、ビューアが大会一覧とカテゴリー情報を取得する構成にした。
-- 25-26シーズンの実データを収集・検証した。66大会、1,192カテゴリー分のJSONがあり、対応するリザルトJSONの欠落は0件。
-- 変更は以下のコミットで反映済み。
-  - 設計書: `b4faf39 docs: add meet filter design`
-  - データ収集側: `9a2bfb9 feat: add season meet metadata and results`
-  - ビューア側: `c7e2d47 feat: add meet and category selection`
-- ビューアはVercel本番環境へデプロイ済み。公開URLは `https://cyclocross-viewer.vercel.app/`。
-- ビューアのlint・build、データJSONの整合性確認を実施済み。
+### Test
 
-## 次回の優先作業
+Example:
 
-1. 公開環境で大会一覧の読み込み、シーズン・シリーズ絞り込み、大会遷移、カテゴリー切り替えを実際に操作してデバッグする。
-2. 25-26シーズンの代表的なシリーズ・カテゴリーで、表示名とカテゴリー順がAJOCCの大会ページと一致するか確認する。
-3. GitHub Actionsの定期実行と手動実行を確認し、新しい大会・カテゴリーが追加された場合に `meets.json` とリザルトJSONが更新されることを確認する。
-4. 取得失敗した大会の扱い（現在はカテゴリー情報が取れない3大会）を確認し、必要なら再取得やエラー表示を改善する。
+    npm test
 
-## 注意事項
+### Typecheck
 
-- ビューアは `https://raw.githubusercontent.com/tai1729/cyclocross-data-collector/main` から `meets.json` とリザルトJSONを取得する。
-- ローカル作業時にGitのsafe.directoryエラーが出る場合は、各コマンドに `git -c safe.directory=C:/Users/tai/projects/<repo>` を付ける。
-- `AGENTS.md` と `next.config.ts` には今回の機能以外の既存未コミット変更があるため、次回も内容を確認してから扱う。
+Example:
+
+    npm run typecheck
+
+If this repository has no separate typecheck command,
+replace this section with the appropriate validation command or remove it.
+
+### Lint
+
+Example:
+
+    npm run lint
+
+### Build
+
+Example:
+
+    npm run build
+
+---
+
+## Required Validation
+
+Before substantial implementation work is considered complete,
+run every applicable validation command defined above.
+
+At minimum, verify:
+
+- relevant tests pass
+- type checking passes when available
+- linting passes when available
+- production build passes when applicable
+
+Do not declare completion while a required validation command is failing.
+
+If a validation command cannot be executed,
+report:
+
+- which command could not run
+- why it could not run
+- what validation was performed instead
+- remaining risk
+
+---
+
+## Repository Constraints
+
+Follow the repository's existing conventions before introducing new patterns.
+
+Unless explicitly approved in `docs/DESIGN.md`:
+
+- preserve existing public API compatibility
+- preserve existing data contracts
+- preserve existing routing behavior
+- preserve existing persistence formats
+- avoid unnecessary production dependencies
+- avoid unrelated refactors
+- avoid renaming unrelated files or symbols
+- do not manually edit generated files
+- do not modify deployment configuration unless required by the task
+
+Prefer the smallest maintainable change that satisfies the approved design.
+
+---
+
+## Architecture Changes
+
+Do not silently introduce architectural changes.
+
+Examples include:
+
+- replacing a major library
+- changing state-management strategy
+- changing persistence strategy
+- changing API boundaries
+- adding a new service
+- restructuring major directories
+- changing authentication or authorization architecture
+- introducing a new framework-level abstraction
+
+If implementation reveals that an architecture change is necessary:
+
+1. stop the conflicting implementation work
+2. report the conflict to the Commander
+3. update `docs/DESIGN.md`
+4. update affected tasks in `docs/IMPLEMENTATION_PLAN.md`
+5. resume implementation only after the decision is recorded
+
+---
+
+## Product Requirement Ambiguity
+
+Implementers must not guess product behavior when multiple reasonable
+interpretations would produce meaningfully different results.
+
+If an important ambiguity is found:
+
+1. mark the task as blocked
+2. describe the unresolved question
+3. explain why it affects implementation
+4. escalate through the global autonomous development protocol
+
+Once resolved, write the decision into the appropriate project document.
+
+Do not leave important decisions only in agent conversation history.
+
+---
+
+## Implementation Scope
+
+Each implementation task should be bounded.
+
+An implementation worker should receive:
+
+- objective
+- relevant design section
+- scope
+- expected files or components
+- dependencies
+- do-not-change boundaries
+- acceptance criteria
+- verification commands
+
+Do not expand the task merely because additional improvements are possible.
+
+Potential improvements outside the approved scope should be reported separately.
+
+---
+
+## Parallel Work
+
+Parallel implementation is encouraged only when it is safe.
+
+Tasks may run in parallel when:
+
+- dependencies are satisfied
+- requirements are independently specified
+- file ownership does not substantially overlap
+- one task does not depend on uncommitted behavior from another
+
+Avoid assigning multiple workers to modify the same file concurrently.
+
+Prefer:
+
+    dependency layer
+    -> parallel implementation
+    -> integration and verification
+    -> next dependency layer
+
+---
+
+## UI / UX Changes
+
+For user-visible changes, verify all supported layouts and interaction states.
+
+Unless this project's documentation says otherwise, check:
+
+- normal desktop layout
+- narrow/mobile layout
+- loading state
+- empty state
+- error state
+- long or unusual content
+- disabled or unavailable states where applicable
+
+Do not consider a UI change complete based only on the happy path.
+
+---
+
+## Error Handling
+
+New or changed behavior must define expected failure behavior.
+
+Do not silently swallow errors unless the approved design explicitly requires it.
+
+When relevant, verify:
+
+- network failure
+- invalid input
+- missing data
+- unexpected server response
+- partial data
+- retry/recovery behavior
+- user-visible error messaging
+
+---
+
+## Tests
+
+Add or update tests when the implementation changes behavior that can reasonably
+be protected by automated tests.
+
+Prioritize tests for:
+
+- acceptance criteria
+- regressions
+- edge cases
+- fixed bugs
+- important business logic
+- state transitions
+- parsing and transformation logic
+
+Do not add low-value tests solely to increase test count.
+
+---
+
+## Documentation
+
+Update project documentation when implementation changes:
+
+- product behavior
+- architecture
+- public interfaces
+- configuration
+- required commands
+- deployment procedure
+- important operational assumptions
+
+Documentation should describe the resulting system, not merely the implementation process.
+
+---
+
+## Generated Files
+
+Do not manually edit generated files unless this repository explicitly requires it.
+
+When a generated artifact must change:
+
+1. identify its source
+2. change the source
+3. run the appropriate generation command
+4. verify the generated result
+
+---
+
+## Dependencies
+
+Do not add a new production dependency when the existing stack can reasonably
+solve the problem without significant complexity.
+
+When a new production dependency is justified, verify:
+
+- it is actively maintained
+- it is compatible with the existing stack
+- its license is acceptable for the project
+- the functionality is not already available in the repository
+- the dependency is necessary for the approved design
+
+Record significant dependency decisions in `docs/DESIGN.md`.
+
+---
+
+## Security
+
+Do not weaken existing security controls to make implementation easier.
+
+Pay particular attention to changes involving:
+
+- authentication
+- authorization
+- secrets
+- user-controlled input
+- file handling
+- network requests
+- database queries
+- HTML rendering
+- redirects
+- external URLs
+- command execution
+
+If the task has security implications not covered by the design,
+escalate the decision instead of silently choosing a weaker behavior.
+
+---
+
+## Git / Change Hygiene
+
+Keep changes focused on the approved task.
+
+Before reporting completion:
+
+- inspect the final diff
+- remove accidental debug code
+- remove temporary files
+- remove unused imports
+- remove commented-out experimental code
+- verify unrelated files were not modified unintentionally
+
+Do not rewrite unrelated history or make destructive Git operations
+unless explicitly requested.
+
+---
+
+## Definition of Done
+
+A substantial implementation is complete only when all applicable conditions are met:
+
+- approved implementation tasks are complete
+- required tests pass
+- required type checks pass
+- required lint checks pass
+- required builds pass
+- acceptance criteria in `docs/DESIGN.md` pass
+- independent review returns `PASS`
+- no known blocking issue remains
+- important implementation decisions are reflected in project documentation
+
+If any required condition is not satisfied, the work is not `DONE`.
+
+---
+
+## Project-Specific Rules
+
+Add rules below that apply only to this repository.
+
+Examples:
+
+- Supported Node.js version is defined in `.nvmrc`.
+- UI-visible changes must be checked at 390x844 and 320x568.
+- API response types in `src/types/` are treated as public contracts.
+- Database migrations that have shipped must never be modified in place.
+- Files under `src/generated/` must not be edited manually.
+
+Replace these examples with the actual constraints for this project.

@@ -11,13 +11,13 @@ import {
   YAxis,
 } from "recharts";
 import type { Rider } from "@/lib/types";
-import { formatSecToClock } from "@/lib/dataTransform";
+import { buildLapMap, formatSecToClock } from "@/lib/dataTransform";
 
 interface LapTimeChartProps {
   riders: Rider[];
   selfRiderId: string;
   colors: Record<string, string>;
-  /** レース全体の周回番号一覧（1位選手基準）。X軸の基準に使う。 */
+  /** レース全体の有効チェックポイントにある周回番号の和集合。 */
   raceLapNumbers: number[];
 }
 
@@ -27,16 +27,15 @@ export function LapTimeChart({
   colors,
   raceLapNumbers,
 }: LapTimeChartProps) {
-  // レースの周回記録が1周目から始まっていない場合、最初の記録済み周回は
-  // 「それ以前の周回の合算」が紛れ込んだ数値になるため、誤解を招かないよう表示から除外する
-  const startIndex = raceLapNumbers[0] === 1 ? 0 : 1;
+  const riderLapMaps = new Map(
+    riders.map((rider) => [rider.riderId, buildLapMap(rider, true)]),
+  );
 
   const data = [];
-  for (let i = startIndex; i < raceLapNumbers.length; i++) {
-    const lapNumber = raceLapNumbers[i];
+  for (const lapNumber of raceLapNumbers) {
     const point: Record<string, number> = { lapNumber };
     for (const rider of riders) {
-      const lap = rider.laps.find((l) => l.lapNumber === lapNumber);
+      const lap = riderLapMaps.get(rider.riderId)?.get(lapNumber);
       if (lap) point[rider.riderId] = lap.lapTimeSec;
     }
     data.push(point);
@@ -79,20 +78,22 @@ export function LapTimeChart({
             return (
               <Line
                 key={rider.riderId}
-                type="monotone"
+                type="linear"
                 dataKey={rider.riderId}
-                name={isSelf ? `${rider.name}（あなた）` : rider.name}
+                name={isSelf ? `${rider.name}（注目選手）` : rider.name}
                 stroke={colors[rider.riderId] ?? "#71717a"}
                 strokeWidth={isSelf ? 3.5 : 1.5}
-                dot={isSelf ? { r: 3 } : false}
+                dot={isSelf ? { r: 3.5 } : riders.length > 8 ? false : { r: 2 }}
+                activeDot={{ r: isSelf ? 5.5 : 4 }}
+                connectNulls={false}
               />
             );
           })}
         </LineChart>
       </ResponsiveContainer>
       {riders.length > 8 && (
-        <p className="mt-1 text-center text-xs text-ink/40">
-          全{riders.length}名を表示中（あなたの線のみ強調表示）
+        <p className="mt-1 text-center text-xs text-muted-foreground">
+          全{riders.length}名を表示中（注目選手の線のみ強調表示）
         </p>
       )}
     </div>

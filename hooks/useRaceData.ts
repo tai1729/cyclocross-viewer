@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RaceResult } from "@/lib/types";
+import { DataLoadError, fetchRaceResult } from "@/lib/dataSource";
 
 interface UseRaceDataResult {
   race: RaceResult | null;
   isLoading: boolean;
-  error: string | null;
+  error: DataLoadError | null;
+  retry: () => void;
+}
+
+interface RaceDataState {
+  dataUrl: string | null;
+  race: RaceResult | null;
+  error: DataLoadError | null;
 }
 
 /**
@@ -19,35 +27,47 @@ const DEFAULT_DATA_URL =
 export function useRaceData(
   dataUrl: string = DEFAULT_DATA_URL,
 ): UseRaceDataResult {
-  const [race, setRace] = useState<RaceResult | null>(null);
+  const [result, setResult] = useState<RaceDataState>({
+    dataUrl: null,
+    race: null,
+    error: null,
+  });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    const requestUrl = dataUrl;
+    inFlightRef.current = true;
 
     async function load() {
       setIsLoading(true);
-      setError(null);
       try {
-        const res = await fetch(dataUrl);
-        if (!res.ok) {
-          throw new Error(
-            `レースデータの取得に失敗しました (status: ${res.status})`,
-          );
+        const data = await fetchRaceResult(requestUrl, controller.signal);
+        if (controller.signal.aborted) return;
+        setResult({ dataUrl: requestUrl, race: data, error: null });
+      } catch (cause) {
+        if (
+          controller.signal.aborted ||
+          (cause instanceof Error && cause.name === "AbortError")
+        ) {
+          return;
         }
-        const data: RaceResult = await res.json();
-        if (!cancelled) {
-          setRace(data);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(
-            e instanceof Error ? e.message : "不明なエラーが発生しました",
-          );
-        }
+        setResult({
+          dataUrl: requestUrl,
+          race: null,
+          error:
+            cause instanceof DataLoadError
+              ? cause
+              : new DataLoadError(
+                  "network",
+                  "レースデータの取得に失敗しました。",
+                ),
+        });
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
+          inFlightRef.current = false;
           setIsLoading(false);
         }
       }
@@ -55,9 +75,23 @@ export function useRaceData(
 
     load();
     return () => {
-      cancelled = true;
+      controller.abort();
     };
-  }, [dataUrl]);
+  }, [attempt, dataUrl]);
 
-  return { race, isLoading, error };
+  const retry = useCallback(() => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    setIsLoading(true);
+    setAttempt((current) => current + 1);
+  }, []);
+
+  const isCurrentResult = result.dataUrl === dataUrl;
+
+  return {
+    race: isCurrentResult ? result.race : null,
+    isLoading: !isCurrentResult || isLoading,
+    error: isCurrentResult ? result.error : null,
+    retry,
+  };
 }

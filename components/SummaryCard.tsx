@@ -8,26 +8,80 @@ interface SummaryCardProps {
 
 export function SummaryCard({ summary }: SummaryCardProps) {
   const {
-    position,
+    result,
     totalRiders,
-    topGapSec,
     promotionZoneRank,
     promotionGapSec,
     isInPromotionZone,
   } = summary;
+  if (result.kind === "dnf") {
+    return (
+      <Card size="sm">
+        <CardContent className="grid grid-cols-2 items-stretch gap-4 sm:grid-cols-4">
+          <SummaryItem label="状態" value="DNF" />
+          <SummaryItem
+            label="到達周回"
+            value={
+              result.completedLapNumber === null
+                ? "記録なし"
+                : `${result.completedLapNumber}周目`
+            }
+          />
+          <SummaryItem
+            label="最終通過"
+            value={
+              result.finalCheckpointRank === null
+                ? "—"
+                : `${result.finalCheckpointRank}位`
+            }
+          />
+          <SummaryItem
+            label="離脱時点の差"
+            value={
+              result.gapToLeaderAtCheckpointSec === null
+                ? "—"
+                : formatGapSec(result.gapToLeaderAtCheckpointSec)
+            }
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (result.kind === "unavailable") {
+    return (
+      <Card size="sm">
+        <CardContent>
+          <SummaryItem
+            label="結果"
+            value={
+              result.reason === "data-quality" ? "分析不可" : "周回記録なし"
+            }
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const topGap =
+    result.kind === "lapped"
+      ? `-${result.lapDeficit}周`
+      : result.position === 1
+        ? "—"
+        : formatGapSec(result.gapToLeaderSec);
 
   return (
     <Card size="sm">
       <CardContent className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3">
       <SummaryItem
         label="順位"
-        value={`${position}`}
+        value={String(result.position)}
         unit={`/${totalRiders}`}
       />
       <Separator orientation="vertical" />
       <SummaryItem
         label="トップ差"
-        value={position === 1 ? "—" : formatGapSec(topGapSec)}
+        value={topGap}
       />
       <Separator orientation="vertical" />
       <SummaryItem
@@ -41,7 +95,9 @@ export function SummaryCard({ summary }: SummaryCardProps) {
             ? "—"
             : isInPromotionZone
               ? "圏内"
-              : formatGapSec(promotionGapSec)
+              : promotionGapSec === null
+                ? "—"
+                : formatGapSec(promotionGapSec)
         }
         emphasize={isInPromotionZone}
       />

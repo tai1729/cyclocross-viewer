@@ -10,7 +10,7 @@
   --color-paper-line: #e2ddcd;
   --color-ink: #17160f;
   --color-ink-soft: #26241a;
-  --color-flag: #e8571f;
+  --color-flag: #a83a12;
   --color-flag-soft: #fbe2d3;
   --color-good: #0c7a3a;
   --color-good-soft: #dcf0e2;
@@ -70,7 +70,7 @@ body {
   --card-foreground: #17160f;
   --popover: #ffffff;
   --popover-foreground: #17160f;
-  --primary: #e8571f;
+  --primary: #a83a12;
   --primary-foreground: #ffffff;
   --secondary: #f0ede4;
   --secondary-foreground: #17160f;
@@ -81,8 +81,8 @@ body {
   --destructive: #b42318;
   --border: #e2ddcd;
   --input: #e2ddcd;
-  --ring: #e8571f;
-  --chart-1: #e8571f;
+  --ring: #a83a12;
+  --chart-1: #a83a12;
   --chart-2: #17160f;
   --chart-3: #0c7a3a;
   --chart-4: #92622b;
@@ -90,12 +90,12 @@ body {
   --radius: 0.625rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #17160f;
-  --sidebar-primary: #e8571f;
+  --sidebar-primary: #a83a12;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #fbe2d3;
   --sidebar-accent-foreground: #17160f;
   --sidebar-border: #e2ddcd;
-  --sidebar-ring: #e8571f;
+  --sidebar-ring: #a83a12;
 }
 
 .dark {

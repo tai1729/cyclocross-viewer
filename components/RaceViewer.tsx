@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRaceData } from "@/hooks/useRaceData";
-import { DATA_BASE_URL } from "@/hooks/useMeetData";
 import {
+  DATA_BASE_URL,
+  describeDataLoadError,
+} from "@/lib/dataSource";
+import {
+  MAX_ALL_COMPARISON_RIDERS,
   useComparisonRiders,
   type ComparisonMode,
 } from "@/hooks/useComparisonRiders";
@@ -12,17 +16,21 @@ import { getRiderById, getRiderSummary } from "@/lib/dataTransform";
 import { buildRiderColorMap } from "@/lib/chartColors";
 import type { MeetEntry } from "@/lib/types";
 import { RaceHeader } from "@/components/RaceHeader";
+import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ChartTabs } from "@/components/ChartTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RaceViewerProps {
   meet: MeetEntry;
 }
+
+const ANALYSIS_REGION_ID = "race-analysis";
 
 export function RaceViewer({ meet }: RaceViewerProps) {
   const categories = useMemo(
@@ -31,7 +39,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   );
   const [categoryId, setCategoryId] = useState(categories[0]?.raceId ?? "");
   const selectedCategory = categories.find((category) => category.raceId === categoryId) ?? categories[0];
-  const { race, isLoading, error } = useRaceData(
+  const { race, isLoading, error, retry } = useRaceData(
     selectedCategory ? `${DATA_BASE_URL}/data/race-${selectedCategory.raceId}.json` : undefined,
   );
   const [selfRiderId, setSelfRiderId] = useState<string | null>(null);
@@ -51,19 +59,50 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   function changeCategory(value: string) {
     setCategoryId(value);
     setSelfRiderId(null);
+    setComparisonMode(2);
   }
 
   if (!selectedCategory) {
     return <Alert variant="destructive"><AlertTitle>カテゴリーがありません</AlertTitle><AlertDescription>この大会にはカテゴリー情報がありません。</AlertDescription></Alert>;
   }
 
-  if (isLoading) return <div className="p-4 text-center text-ink/50">リザルトを読み込み中…</div>;
+  if (isLoading && !error) return <div className="p-4 text-center text-muted-foreground" role="status">リザルトを読み込み中…</div>;
   if (error || !race) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 p-4 text-center">
-        <p className="text-red-600">{meet.meetName} / {selectedCategory.name || "選択カテゴリー"} の取得に失敗しました。</p>
-        <Link href={`/race/${encodeURIComponent(meet.meetId)}`} className="text-sm text-flag underline">再試行</Link>
-      </div>
+      <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+        <Alert variant="destructive">
+          <AlertTitle>レースデータを取得できませんでした</AlertTitle>
+          <AlertDescription className="flex flex-col items-start gap-3">
+            <span>
+              {error
+                ? describeDataLoadError(
+                    error,
+                    `${meet.meetName} / ${selectedCategory.name || "選択カテゴリー"}`,
+                  )
+                : "レースデータを表示できません。"}
+            </span>
+            <span className="flex w-full flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                onClick={retry}
+                disabled={isLoading}
+                className="min-h-11"
+              >
+                {isLoading ? "再試行中…" : "再試行"}
+              </Button>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-3 font-medium text-foreground outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                大会一覧へ戻る
+              </Link>
+            </span>
+            <span className="sr-only" aria-live="polite">
+              {isLoading ? "レースデータを再取得しています" : ""}
+            </span>
+          </AlertDescription>
+        </Alert>
+      </main>
     );
   }
 
@@ -76,12 +115,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8 2xl:px-12">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <Link href="/" className="text-flag underline">← 大会一覧</Link>
-        <span className="truncate text-right text-ink/55">{meet.meetName}</span>
+      <div className="flex items-start justify-between gap-3 text-sm">
+        <Link href="/" className="inline-flex min-h-11 shrink-0 items-center rounded-sm text-flag underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:min-h-8">← 大会一覧</Link>
+        <span className="min-w-0 flex-1 break-words text-right text-muted-foreground sm:truncate">{meet.meetName}</span>
       </div>
       <Field orientation="responsive">
-        <FieldLabel>カテゴリー</FieldLabel>
+        <FieldLabel htmlFor="category-select">カテゴリー</FieldLabel>
         <Select
           items={categories.map((category) => ({
             label: category.name || category.raceId,
@@ -90,23 +129,56 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           value={selectedCategory.raceId}
           onValueChange={(value) => changeCategory(String(value))}
         >
-          <SelectTrigger className="min-w-0 flex-1"><SelectValue /></SelectTrigger>
+          <SelectTrigger id="category-select" aria-describedby="category-select-description" className="min-h-11 min-w-0 flex-1 sm:min-h-8"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {categories.map((category) => <SelectItem key={category.raceId} value={category.raceId}>{category.name || category.raceId}</SelectItem>)}
             </SelectGroup>
           </SelectContent>
         </Select>
+        <FieldDescription id="category-select-description">この大会のカテゴリーを選択します。</FieldDescription>
       </Field>
       <RaceHeader race={race} />
+      <RaceResultsTable
+        race={race}
+        selectedRiderId={selfRiderId}
+        onSelect={setSelfRiderId}
+        analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
+      />
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6">
+      {race.riders.length > 0 ? (
+      <section
+        id={ANALYSIS_REGION_ID}
+        tabIndex={-1}
+        aria-labelledby="race-analysis-heading"
+        className="flex flex-col gap-4 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6"
+      >
+        <h2 id="race-analysis-heading" className="sr-only">
+          周回分析
+        </h2>
         <div className="flex flex-col gap-3">
-          <RiderSelector riders={race.riders} selectedRiderId={selfRiderId} onSelect={setSelfRiderId} />
+          <RiderSelector
+            riders={race.riders}
+            categoryName={race.category}
+            selectedRiderId={selfRiderId}
+            onSelect={setSelfRiderId}
+          />
           {summary && (
             <>
               <SummaryCard summary={summary} />
-              <ComparisonAdjuster mode={comparisonMode} onChange={setComparisonMode} />
+              <ComparisonAdjuster
+                mode={comparisonMode}
+                displayedCount={comparisonRiders.length}
+                totalRiderCount={graphableRiders.length}
+                onChange={(mode) => {
+                  if (
+                    mode !== "all" ||
+                    graphableRiders.length <= MAX_ALL_COMPARISON_RIDERS
+                  ) {
+                    setComparisonMode(mode);
+                  }
+                }}
+              />
             </>
           )}
         </div>
@@ -119,7 +191,8 @@ export function RaceViewer({ meet }: RaceViewerProps) {
         ) : (
           <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
         )}
-      </div>
+      </section>
+      ) : null}
     </div>
   );
 }

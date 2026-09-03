@@ -59,10 +59,10 @@ export function GapChart({
           />
           <ReferenceLine
             y={0}
-            stroke="#c3c2b7"
+            stroke="#6b685d"
             strokeWidth={2}
             label={{
-              value: `${baseRider.name}（あなた）`,
+              value: `${baseRider.name}（注目選手）`,
               position: "insideBottomLeft",
               fontSize: 11,
               fill: "#71717a",
@@ -76,18 +76,20 @@ export function GapChart({
           {otherRiders.map((rider) => (
             <Line
               key={rider.riderId}
-              type="monotone"
+              type="linear"
               dataKey={rider.riderId}
               name={rider.name}
               stroke={colors[rider.riderId] ?? "#71717a"}
               strokeWidth={2}
-              dot={false}
+              dot={isCrowded ? false : { r: 2.5 }}
+              activeDot={{ r: 4 }}
+              connectNulls={false}
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
       {isCrowded && (
-        <p className="mt-1 text-center text-xs text-ink/40">
+        <p className="mt-1 text-center text-xs text-muted-foreground">
           全{otherRiders.length}名を表示中
         </p>
       )}
