@@ -1,7 +1,11 @@
 # Implementation Plan
 
 Status: COMPLETE
-Active implementation plan: Phase 2 Slice 8 — data provenance and freshness metadata (complete)
+Active implementation plan: None — Phase 2 Slice 8 is complete
+
+Next planning gate: Phase 3 user-demand evidence; no implementation is
+approved until a task-based user test or equivalent usage evidence is
+available.
 
 ## Phase 2 Slice 8 task graph
 

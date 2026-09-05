@@ -1,8 +1,8 @@
 # Specification Audit
 
-Current Change: Phase 2 Slice 8 — data provenance and freshness metadata
+Current Change: None (last closed change: Phase 2 Slice 8 — data provenance and freshness metadata)
 
-## Current audit - Phase 2 Slice 8
+## Last audit - Phase 2 Slice 8
 
 This audit governs the provenance and freshness metadata slice. Auditors must
 inspect the current `PRODUCT.md`, `DESIGN.md`, `IMPLEMENTATION_PLAN.md`,

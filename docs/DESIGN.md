@@ -1,7 +1,7 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
 Status: CLOSED
-Active Change: Phase 2 Slice 8 — data provenance and freshness metadata (closed)
+Active Change: None — Phase 2 is complete; Phase 3 is gated on evidence
 
 ## Closed design - Phase 2 Slice 8: data provenance and freshness metadata
 
