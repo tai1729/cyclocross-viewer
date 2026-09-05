@@ -291,5 +291,6 @@ AJOCCシクロクロスの公開結果は大会・カテゴリーごとの結果
 - `docs/2026-09-03-integrated-product-improvement-roadmap.md`
 - `docs/2026-09-03-phase-1-implementation-plan.md`
 - `docs/2026-09-03-phase-1-ux-regression-review.md`
+- `docs/2026-09-05-phase-3-1-time-difference-spike.md`
 
 これらは作成時点の設計・レビュー・履歴資産であり、削除しない。現在の挙動と矛盾する記述（例: Phase 1実装前の公開版評価、当時存在しなかったtest script）は、日付付きの履歴として解釈し、現在の実装と本書を優先する。
