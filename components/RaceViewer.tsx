@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRaceData } from "@/hooks/useRaceData";
 import {
   DATA_BASE_URL,
@@ -31,6 +31,10 @@ import {
   type ComparisonMode,
   type UrlStatePatch,
 } from "@/lib/urlState";
+import {
+  getRaceNavigationOptions,
+  type RaceNavigationAction,
+} from "@/lib/raceNavigation";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
@@ -50,6 +54,67 @@ interface RaceViewerProps {
 }
 
 const ANALYSIS_REGION_ID = "race-analysis";
+
+function isCurrentVisibleFocusTarget(element: Element | null): element is HTMLElement {
+  if (!(element instanceof HTMLElement) || !element.isConnected) return false;
+  if (
+    element.matches(":disabled, [aria-disabled=\"true\"]") ||
+    element.closest("fieldset:disabled") ||
+    element.closest("[hidden], [aria-hidden=\"true\"]")
+  ) return false;
+  const style = window.getComputedStyle(element);
+  if (style.display === "none" || style.visibility === "hidden" || element.getClientRects().length === 0) {
+    return false;
+  }
+
+  if (element.getAttribute("role") === "tab") {
+    return element.getAttribute("aria-selected") === "true";
+  }
+  if (element.hasAttribute("aria-pressed")) {
+    return element.getAttribute("aria-pressed") === "true";
+  }
+
+  if (element.matches("[data-race-category-trigger], #category-select")) return true;
+
+  return Boolean(
+    element.closest(`#${ANALYSIS_REGION_ID}`) &&
+    element.matches(
+      [
+        "button",
+        "input",
+        "select",
+        "textarea",
+        "a[href]",
+        '[role="button"]',
+        '[role="checkbox"]',
+        '[role="combobox"]',
+        '[role="listbox"]',
+        '[role="menuitem"]',
+        '[role="menuitemcheckbox"]',
+        '[role="menuitemradio"]',
+        '[role="option"]',
+        '[role="radio"]',
+        '[role="searchbox"]',
+        '[role="slider"]',
+        '[role="spinbutton"]',
+        '[role="switch"]',
+        '[role="textbox"]',
+      ].join(", "),
+    ),
+  );
+}
+
+function focusCurrentAnalysisControl(): void {
+  const analysisRegion = document.getElementById(ANALYSIS_REGION_ID);
+  const target = analysisRegion?.querySelector<HTMLElement>(
+    '[role="tab"][aria-selected="true"], [data-race-rider-trigger], input',
+  );
+  if (target && !target.hasAttribute("disabled")) {
+    target.focus({ preventScroll: true });
+  } else if (analysisRegion instanceof HTMLElement) {
+    analysisRegion.focus({ preventScroll: true });
+  }
+}
 
 interface RaceViewState {
   categoryId: string;
@@ -113,6 +178,14 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     raceId: string;
     lapNumber: number;
   } | null>(null);
+  const isPopstateRef = useRef(false);
+  const isProgrammaticNavigationRef = useRef(false);
+  const isCanonicalizationRef = useRef(false);
+  const pendingCanonicalQueryRef = useRef<string | null>(null);
+  const previousNavigationRef = useRef({
+    categoryId: resolvedCategoryId,
+    queryString,
+  });
 
   const { race, isLoading, error, retry } = useRaceData(
     selectedCategory ? `${DATA_BASE_URL}/data/race-${selectedCategory.raceId}.json` : undefined,
@@ -169,7 +242,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
     const canonicalQuery = updateRaceCategoryQuery(searchParams, canonicalCategory);
     if (canonicalQuery !== queryString) {
-      void router.replace(canonicalQuery ? `${pathname}?${canonicalQuery}` : pathname);
+      isCanonicalizationRef.current = true;
+      pendingCanonicalQueryRef.current = canonicalQuery;
+      void router.replace(
+        canonicalQuery ? `${pathname}?${canonicalQuery}` : pathname,
+        { scroll: false },
+      );
     }
   }, [categories, error, isLoading, pathname, queryString, race, router, searchParams, selectedCategory, urlState.category]);
 
@@ -183,9 +261,63 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       series: context.series,
     });
     if (canonicalQuery !== queryString) {
-      void router.replace(canonicalQuery ? `${pathname}?${canonicalQuery}` : pathname);
+      isCanonicalizationRef.current = true;
+      pendingCanonicalQueryRef.current = canonicalQuery;
+      void router.replace(
+        canonicalQuery ? `${pathname}?${canonicalQuery}` : pathname,
+        { scroll: false },
+      );
     }
   }, [meet, normalizedUrlState, pathname, queryString, race, router, urlState]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      isPopstateRef.current = true;
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const previousNavigation = previousNavigationRef.current;
+    const queryChanged = previousNavigation.queryString !== queryString;
+    const isProgrammaticNavigation = isProgrammaticNavigationRef.current;
+    const isCanonicalization = isCanonicalizationRef.current;
+    const isCanonicalizationResult = pendingCanonicalQueryRef.current === queryString;
+    if (isProgrammaticNavigation || isCanonicalization || isCanonicalizationResult) {
+      isProgrammaticNavigationRef.current = false;
+      isCanonicalizationRef.current = false;
+      if (isCanonicalizationResult) pendingCanonicalQueryRef.current = null;
+      isPopstateRef.current = false;
+      previousNavigationRef.current = { categoryId: resolvedCategoryId, queryString };
+      return;
+    }
+    if (!isPopstateRef.current && !queryChanged) return;
+    if (!race || isLoading || error || !normalizedUrlState) return;
+
+    const context = getReturnContext(urlState, meet);
+    const canonicalQuery = serializeRaceUrlState({
+      ...normalizedUrlState,
+      season: context.season,
+      series: context.series,
+    });
+    if (canonicalQuery !== queryString) {
+      isPopstateRef.current = false;
+      previousNavigationRef.current = { categoryId: resolvedCategoryId, queryString };
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (previousNavigation.categoryId !== resolvedCategoryId) {
+        document.querySelector<HTMLElement>("[data-race-category-trigger]")?.focus({ preventScroll: true });
+      } else if (!isCurrentVisibleFocusTarget(document.activeElement)) {
+        focusCurrentAnalysisControl();
+      }
+      isPopstateRef.current = false;
+      previousNavigationRef.current = { categoryId: resolvedCategoryId, queryString };
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [error, isLoading, meet, normalizedUrlState, queryString, race, resolvedCategoryId, urlState]);
 
   const selfRiderId = currentViewState.selfRiderId;
   const pinnedRiderIds = currentViewState.pinnedRiderIds;
@@ -197,7 +329,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     pinnedRiderIds,
   );
 
-  function pushRaceUrl(patch: UrlStatePatch) {
+  function pushRaceUrl(patch: UrlStatePatch, action: RaceNavigationAction) {
     const context = getReturnContext(urlState, meet);
     const currentQuery = searchParams.toString();
     const nextQuery = updateRaceUrlQuery(searchParams, {
@@ -207,12 +339,16 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     });
     if (nextQuery === currentQuery) return;
     setHoverState(null);
-    void router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    isProgrammaticNavigationRef.current = true;
+    void router.push(
+      nextQuery ? `${pathname}?${nextQuery}` : pathname,
+      getRaceNavigationOptions(action, selfRiderId !== null),
+    );
   }
 
   function selectPrimaryRider(riderId: string) {
     const nextPinnedRiderIds = pinnedRiderIds.filter((pinnedId) => pinnedId !== riderId);
-    pushRaceUrl({ rider: riderId, fixed: nextPinnedRiderIds });
+    pushRaceUrl({ rider: riderId, fixed: nextPinnedRiderIds }, "rider");
   }
 
   function addPinnedRider(riderId: string) {
@@ -222,12 +358,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       pinnedRiderIds.length >= MAX_PINNED_FIXED_RIDERS
     ) return;
     const nextPinnedRiderIds = [...pinnedRiderIds, riderId];
-    pushRaceUrl({ fixed: nextPinnedRiderIds });
+    pushRaceUrl({ fixed: nextPinnedRiderIds }, "comparison");
   }
 
   function removePinnedRider(riderId: string) {
     const nextPinnedRiderIds = pinnedRiderIds.filter((pinnedId) => pinnedId !== riderId);
-    pushRaceUrl({ fixed: nextPinnedRiderIds });
+    pushRaceUrl({ fixed: nextPinnedRiderIds }, "comparison");
   }
 
   function changeCategory(value: string) {
@@ -240,17 +376,17 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       fixed: [],
       tab: "rank",
       lap: null,
-    });
+    }, "category");
   }
 
   function changeComparisonMode(mode: ComparisonMode) {
     if (mode === "all" && graphableRiders.length > MAX_ALL_COMPARISON_RIDERS) return;
     const nextPinnedRiderIds = mode === "pinned" ? pinnedRiderIds : [];
-    pushRaceUrl({ compare: mode, fixed: nextPinnedRiderIds });
+    pushRaceUrl({ compare: mode, fixed: nextPinnedRiderIds }, "comparison");
   }
 
   function changeTab(tab: ChartTab) {
-    pushRaceUrl({ tab, lap: currentViewState.pinnedLapNumber });
+    pushRaceUrl({ tab, lap: currentViewState.pinnedLapNumber }, "metric");
   }
 
   function hoverLap(lapNumber: number) {
@@ -260,11 +396,11 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   }
 
   function selectLap(lapNumber: number) {
-    pushRaceUrl({ lap: lapNumber });
+    pushRaceUrl({ lap: lapNumber }, "lap");
   }
 
   function clearLap() {
-    pushRaceUrl({ lap: null });
+    pushRaceUrl({ lap: null }, "lap");
   }
 
   const returnContext = getReturnContext(urlState, meet);
@@ -343,7 +479,14 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           value={selectedCategory.raceId}
           onValueChange={(value) => changeCategory(String(value))}
         >
-          <SelectTrigger id="category-select" aria-describedby="category-select-description" className="min-h-11 min-w-0 flex-1 sm:min-h-8"><SelectValue /></SelectTrigger>
+          <SelectTrigger
+            id="category-select"
+            data-race-category-trigger
+            aria-describedby="category-select-description"
+            className="min-h-11 min-w-0 flex-1 sm:min-h-8"
+          >
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {categories.map((category) => <SelectItem key={category.raceId} value={category.raceId}>{category.name || category.raceId}</SelectItem>)}
@@ -363,6 +506,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       {race.riders.length > 0 ? (
       <section
         id={ANALYSIS_REGION_ID}
+        data-race-analysis-region
         tabIndex={-1}
         aria-labelledby="race-analysis-heading"
         className="flex flex-col gap-4 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6"

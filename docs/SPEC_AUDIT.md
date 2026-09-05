@@ -386,4 +386,35 @@ questions. The Commander resolved them before implementation:
    Browser smoke covers normal display, exact source href, keyboard focus,
    sticky visibility, not-found preservation, and narrow-width wrapping.
 
+## UX2-1 implementation audit — specification resolution (2026-09-05)
+
+Two independent auditors reviewed the UX2-1 implementation boundary against the
+current source and the five required UX documents. The following decisions are
+authoritative for this slice:
+
+1. Category changes are navigation transitions even though they keep the same
+   route path. They use one `push`, clear rider/fixed/tab/lap, reset compare to
+   `2`, show the existing loading branch while the target race loads, and allow
+   normal top navigation.
+2. Rider changes after analysis has started, comparison/fixed changes, metric/tab
+   changes, and deliberate lap changes are same-workspace transitions. They use
+   one `push` with `{ scroll: false }`; the existing URL keys and history entry
+   semantics remain unchanged.
+3. First rider selection from browse retains the existing explicit entry behavior
+   and may move into analysis. Canonical cleanup uses `replace` with
+   `{ scroll: false }` and never steals focus.
+4. The URL remains the only durable state source. No scroll or focus state is
+   serialized. Browser back/forward preserves a valid native focus target when
+   possible; otherwise a visible current analysis control receives focus with
+   `preventScroll`, and category transitions wait until the new race is loaded.
+5. The rider picker may reveal its selected row only inside its bounded list.
+   In-analysis picker selection returns focus to the stable rider trigger;
+   result-table keyboard selection keeps the existing analysis-region focus
+   behavior. No new layout, chart/data semantic, route, dependency, or upstream
+   contract change is authorized.
+6. Automated tests must cover transition classification, router scroll intent,
+   URL round trips and category reset, while browser smoke covers same-analysis
+   no-top-reset, back/forward state/focus, picker focus, direct URLs, and all four
+   required viewport sizes.
+
 STATUS: CLEAR

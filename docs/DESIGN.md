@@ -872,3 +872,28 @@ accessibility, and preservation of all existing data/error semantics. Required
 validation remains tests, typecheck, lint, build, diff hygiene, browser smoke
 at all four viewports, and independent review. At least three first-time users
 should then repeat Tasks 1–5 before a broader rewrite is considered.
+
+## UX2-1 implementation design — workspace state and scroll/focus contract
+
+The active implementation slice is limited to the URL/state and interaction
+foundation described in `docs/ux-redesign-spec-v2.md`. It does not begin the
+chart-first, desktop, mobile, or disclosure redesign slices.
+
+- `RaceViewer` remains the single owner of durable race state and classifies
+  category changes as new-race navigation, while rider changes within analysis
+  and comparison/metric/lap changes are same-workspace updates.
+- Same-workspace URL changes use `router.push(href, { scroll: false })`;
+  category/new-race changes use explicit normal navigation scroll; loaded
+  canonicalization uses `router.replace(href, { scroll: false })`.
+- No scroll position is added to the URL. Existing query keys, history entries,
+  deep links, unknown query parameters, and data semantics remain unchanged.
+- Popstate reconciliation preserves a valid native focus target without forcing
+  page scroll. If the target is stale, the current visible tab/control receives
+  focus with `preventScroll`; category transitions wait for the new race before
+  focusing the category control.
+- `RiderSelector` keeps its existing bounded-list selected-row positioning but
+  returns focus to the stable compact trigger after an in-analysis selection.
+
+This slice is verified by pure navigation/URL contract tests and a browser
+matrix at 1440×900, 1280×720, 390×844, and 320×568. UX2-2 remains blocked until
+these contracts pass review.

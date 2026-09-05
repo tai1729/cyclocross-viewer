@@ -274,3 +274,41 @@ Desktopでは最大2行、Mobileでは最大3行・高さ96pxを目安とする�
   URL、document/page overflow、visible chart frameを記録する。
 - User validation: 少なくとも3名の初見ユーザーでTask 1〜5を再実施し、Time to Value、
   Time to Insight、スクロール回数、操作完了率、読み間違いを現状baselineと比較する。
+
+## UX2-1 execution contract (resolved 2026-09-05)
+
+UX2-1 implements only the state, URL, history, scroll, and focus foundation. It
+does not implement the chart-first composition, compact workspace layout, mobile
+sheet, or disclosure changes assigned to UX2-2 through UX2-5.
+
+### Transition classification
+
+| Transition | Classification | Router call | Scroll | State effect |
+| --- | --- | --- | --- | --- |
+| race link, list return, or another route | Navigation | existing route navigation | normal/top allowed | new page context |
+| category change, including a category query on the same `/race/[meetId]` path | Navigation | `router.push(href, { scroll: true })` | top allowed | clear rider/fixed/tab/lap and set compare to `2`; show loading until the new race succeeds |
+| rider change while a rider is already selected | Analysis context | `router.push(href, { scroll: false })` | preserve workspace | update the selected rider in place |
+| first rider selection from browse | Navigation into analysis | `router.push(href, { scroll: true })` | existing explicit analysis-entry behavior allowed | enter analysis with the selected rider |
+| comparison/fixed-rider change | View preference | `router.push(href, { scroll: false })` | preserve workspace | update comparison mode or fixed IDs |
+| metric/tab or deliberate lap change | View preference | `router.push(href, { scroll: false })` | preserve workspace | update the existing `tab`/`lap` state |
+| canonical cleanup after data validation | Non-user synchronization | `router.replace(href, { scroll: false })` | unchanged | normalize only after the relevant data is available |
+
+The existing query keys, defaults, serialization order, unknown repeated query
+pairs, and durable `push` history semantics remain unchanged. Scroll position is
+not serialized in the URL. Hover remains transient and never writes history.
+
+### Focus and browser traversal
+
+Same-analysis controls retain their native focus when their DOM node remains a
+valid representation of the restored state. A rider picker selection returns
+focus to the stable rider trigger; a keyboard selection from the result table
+keeps the existing analysis-region focus behavior. On browser back/forward, an
+active same-race state keeps a valid focused control when possible; if the old
+control is stale or removed, focus moves to the current visible metric tab or
+another visible analysis control using `focus({ preventScroll: true })`. A
+category back/forward transition focuses the loaded category trigger only after
+the new race has completed; loading and canonicalization do not steal focus.
+
+The existing selected-row `scrollIntoView` behavior remains limited to revealing
+the selected row in the bounded rider list when that picker is opened. It must
+not move page-level scroll as a side effect of a URL-driven rider update.

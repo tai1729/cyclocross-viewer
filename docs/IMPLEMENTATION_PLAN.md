@@ -550,15 +550,16 @@ two spec auditors -> specification resolution -> P2S4-1
   labeled grid layout on narrow screens. The summary is placed after
   `SummaryCard` on the left; the table is above charts on the right.
 
-## UX redesign audit v2 — future implementation plan (not started)
+## UX redesign audit v2 — implementation plan
 
 This plan is the bounded follow-up to the documentation-only audit in
-`docs/ux-redesign-spec-v2.md`. No task below was implemented in the current
-session; product code remains unchanged.
+`docs/ux-redesign-spec-v2.md`. UX2-1 is the active implementation slice;
+UX2-2 through UX2-5 remain blocked until its contract passes verification and
+independent review.
 
 ### UX2-1 — Workspace state and scroll intent
 
-- Status: READY (future phase)
+- Status: DONE (2026-09-05; reviewer PASS)
 - Objective: Derive `browse`/`analyze` from the existing rider URL state and
   separate same-analysis scroll-preserving actions from category/new-route
   navigation.

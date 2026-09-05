@@ -26,6 +26,7 @@ export function RiderSelector({
   const [isOpen, setIsOpen] = useState(selectedRiderId === null);
   const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
+  const riderListRef = useRef<HTMLDivElement | null>(null);
   const selectedControlRef = useRef<HTMLButtonElement | null>(null);
   const restoreFocusAfterSelectionRef = useRef(false);
 
@@ -43,6 +44,7 @@ export function RiderSelector({
   }
 
   function handleSelect(riderId: string) {
+    if (selectedRider) restoreFocusAfterSelectionRef.current = true;
     onSelect(riderId);
     setQuery("");
     setIsOpen(false);
@@ -55,7 +57,17 @@ export function RiderSelector({
 
   useEffect(() => {
     if (isOpen && query === "") {
-      selectedRowRef.current?.scrollIntoView({ block: "center" });
+      const list = riderListRef.current;
+      const row = selectedRowRef.current;
+      if (list && row) {
+        const listRect = list.getBoundingClientRect();
+        const rowRect = row.getBoundingClientRect();
+        if (rowRect.top < listRect.top) {
+          list.scrollTop -= listRect.top - rowRect.top;
+        } else if (rowRect.bottom > listRect.bottom) {
+          list.scrollTop += rowRect.bottom - listRect.bottom;
+        }
+      }
     }
     // 開いた瞬間だけ選択中の行までスクロールしたいので、isOpen変化時のみ実行する
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,6 +95,7 @@ export function RiderSelector({
         </Button>
         <Button
           ref={selectedControlRef}
+          data-race-rider-trigger
           onClick={openSelector}
           variant="outline"
           className="min-h-11 min-w-0 flex-1 justify-between sm:min-h-8"
@@ -142,7 +155,7 @@ export function RiderSelector({
           {categoryName}内の選手名が検索対象です。
         </FieldDescription>
       </Field>
-      <div className="flex max-h-64 flex-col overflow-y-auto">
+      <div ref={riderListRef} className="flex max-h-64 flex-col overflow-y-auto">
         {filtered.map((rider) => {
           const isSelected = rider.riderId === selectedRiderId;
           return (
