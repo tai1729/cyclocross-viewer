@@ -1,7 +1,105 @@
 # Implementation Plan
 
 Status: COMPLETE
-Active implementation plan: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+Active implementation plan: Phase 2 Slice 8 — data provenance and freshness metadata (complete)
+
+## Phase 2 Slice 8 task graph
+
+### P2S8-1 - Pure metadata helpers and tests
+
+- Status: DONE
+- Objective: Add total timestamp formatting and safe collector source URL
+  helpers with behavior tests.
+- Scope: new `lib/raceMetadata.ts`, new `tests/raceMetadata.test.ts`.
+- Dependencies: approved Slice 8 design and completed specification audit.
+- Do-not-change: upstream types, fetch boundaries, React components, routes,
+  and deployment configuration.
+- Acceptance: valid JST formatting, invalid/empty timestamp fallback,
+  encoded nonblank race IDs, and empty-ID link omission are tested.
+- Verification: focused tests and full validation.
+
+### P2S8-2 - Race header provenance and freshness UI
+
+- Status: DONE
+- Objective: Add the compact update/source/non-official metadata row to the
+  existing race header.
+- Scope: `components/RaceHeader.tsx` only.
+- Dependencies: P2S8-1.
+- Do-not-change: existing header summary, result table, analysis, loading/error,
+  not-found, and chart behavior.
+- Acceptance: valid and invalid metadata are understandable, the link is
+  keyboard accessible and correctly labeled, and the row wraps at narrow
+  widths without horizontal overflow.
+- Verification: typecheck, lint, build, and browser smoke.
+
+### P2S8-3 - Canonical documentation and closeout
+
+- Status: DONE
+- Objective: Record the shipped provenance boundary and verification evidence.
+- Scope: `docs/PRODUCT.md`, `docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`,
+  `docs/SPEC_AUDIT.md`, and one dated history document.
+- Dependencies: P2S8-1, P2S8-2, and verification.
+- Do-not-change: historical documents, upstream contracts, and unrelated files.
+- Acceptance: docs state that collector data is not claimed as official and
+  `docs/SPEC_AUDIT.md` ends with exactly `STATUS: CLEAR`.
+- Verification: documentation review and `git diff --check`.
+
+### P2S8-4 - Full verification, independent review, commit, and push
+
+- Status: DONE
+- Objective: Run all required checks and browser smoke, obtain reviewer PASS,
+  then commit and push the completed slice.
+- Scope: tests, typecheck, lint, build, diff hygiene, browser smoke, reviewer,
+  commit, and normal push.
+- Dependencies: P2S8-3.
+- Do-not-change: credentials, deployment configuration, historical docs, and
+  unrelated user changes.
+- Acceptance: all checks pass, reviewer returns `PASS`, and the commit reaches
+  the configured upstream without force-pushing.
+
+## Phase 2 Slice 8 verification evidence
+
+- `npm.cmd test`: 54 tests passed.
+- `npx.cmd tsc --noEmit`: passed.
+- `npm.cmd run lint`: passed.
+- `npm.cmd run build`: passed with Next.js 16.3.3/Turbopack.
+- `git diff --check`: passed.
+- Browser smoke on the local production-like dev page confirmed the JST
+  metadata, exact collector GitHub href, visible non-official disclaimer, and
+  unchanged not-found screen. The implementation smoke also covered desktop,
+  320px, and 390px wrapping; the independent reviewer recorded that fixed
+  viewport screenshots were not captured, leaving only a non-blocking visual
+  verification risk.
+- Independent reviewer result: `PASS`.
+
+## Slice 8 execution order
+
+```text
+two spec auditors -> specification resolution -> P2S8-1 -> P2S8-2
+  -> P2S8-3 -> P2S8-4
+```
+
+## Slice 8 resolved design decisions
+
+- Use the existing `RaceResult.updatedAt`, displayed as collector data update
+  time in JST as zero-padded `YYYY/MM/DD HH:mm JST` (no seconds or weekday).
+  Never label it official publication time.
+- Trim runtime timestamp input and accept parser-compatible finite dates,
+  including the collector's UTC ISO 8601 and offset-based values. Render
+  `更新日時不明` for empty/whitespace-only, malformed, non-date, and
+  out-of-range values.
+- Link only to the matching public collector GitHub JSON file. Do not invent
+  organizer result URLs or add a new upstream field.
+- Always show a text disclaimer that the viewer displays collected data, not an
+  official result. Invalid time is explicit unknown text; empty race IDs have
+  no link.
+- Trim nonblank race IDs before encoding them as one path segment. Use a
+  same-tab link labeled `取得元データ (GitHub)` with visible keyboard focus.
+- Keep the existing RaceHeader title/category/count row and add only a
+  full-width wrapping metadata row inside the sticky header. Render it only
+  for an already successful race; loading/error/not-found/analysis-unavailable
+  branches and all table/chart/route/fetch/data-contract behavior remain
+  unchanged.
 
 ## Phase 2 Slice 7 task graph
 

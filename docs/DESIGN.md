@@ -1,7 +1,143 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
 Status: CLOSED
-Active Change: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+Active Change: Phase 2 Slice 8 — data provenance and freshness metadata (closed)
+
+## Closed design - Phase 2 Slice 8: data provenance and freshness metadata
+
+### Goal
+
+Make the origin and freshness of a displayed race result immediately
+understandable without claiming that collector data is an official organizer
+result. Use only the existing `RaceResult.updatedAt` and the stable public
+collector repository path already implied by `DATA_BASE_URL`.
+
+### Non-goals
+
+- No upstream collector contract, `RaceResult` type, or data-fetch endpoint
+  change.
+- No invented official-result URL, officialness flag, event period, or result
+  status. The viewer must not infer those values from race names or IDs.
+- No new dependency, authentication, persistence, route, or deployment
+  configuration.
+
+### Product behavior
+
+- `RaceHeader` shows a compact full-width metadata row below the existing
+  title/category/count row: the collector data update time in JST, a link
+  labeled `取得元データ (GitHub)`, and visible text stating that the display
+  is not an official result.
+- The timestamp is formatted from `race.updatedAt` using the fixed format
+  `YYYY/MM/DD HH:mm JST` (zero-padded, no seconds) and an explicit Asia/Tokyo
+  timezone. A string is accepted when the JavaScript date parser can produce
+  a finite date; empty, whitespace-only, malformed, or otherwise unparseable
+  values render `更新日時不明` and never throw.
+- The source link targets the public collector file
+  `https://github.com/tai1729/cyclocross-data-collector/blob/main/data/race-{raceId}.json`.
+  The link is an external reference to collected source data, not an official
+  organizer result link.
+- The source link uses the same tab and the existing visible focus treatment;
+  it is not opened in a new context. The metadata is explanatory text and a
+  link, not color-only status. It wraps within the existing sticky header at
+  320px/390px, keeps keyboard focus visible, and does not change the result
+  table or analysis state.
+
+### Architecture and data flow
+
+`lib/raceMetadata.ts` owns the pure timestamp formatter and source URL builder.
+It accepts untrusted runtime values, returns a safe display string or nullable
+URL, and has no fetch or React dependency. `RaceHeader` calls these helpers for
+the already validated `RaceResult`; `RaceViewer` and the data-source boundary
+stay unchanged.
+
+```text
+RaceResult.updatedAt + raceId
+  -> pure metadata helpers
+  -> RaceHeader metadata row
+  -> user can identify freshness and inspect collected source data
+```
+
+### Error and compatibility behavior
+
+- The existing race name, category, rider count, finish/DNF count, sticky
+  header, loading/error/not-found branches, and all chart semantics remain
+  unchanged.
+- Date parsing is total. The helper trims the input before parsing and uses the
+  explicit Asia/Tokyo conversion; dates outside the supported parse range or
+  malformed strings use the explicit unknown-time copy rather than a
+  browser-local time. The upstream `RaceResult.updatedAt` type remains
+  `string`; collector data is expected to use UTC ISO 8601, while offset-based
+  and other parser-compatible values are handled safely.
+- `raceId` is trimmed, then encoded as one URL path segment. Empty or
+  whitespace-only IDs produce no source link; they do not create a malformed
+  or guessed URL.
+- Metadata is rendered only in the existing successful-race `RaceHeader`.
+  Loading, network/http/invalid-data, not-found, and analysis-unavailable
+  surfaces keep their existing behavior.
+- The UI does not call the source link official and does not expose secrets or
+  raw untrusted values as HTML.
+
+### Acceptance criteria
+
+1. A valid `updatedAt` is shown as `YYYY/MM/DD HH:mm JST`, converted from the
+   input instant to Asia/Tokyo.
+2. Invalid/empty `updatedAt` shows an explicit unknown state without throwing.
+3. A valid race ID produces the exact collector GitHub source link with proper
+   path-segment encoding; empty IDs do not produce a link.
+4. The header visibly distinguishes collected data from an official result.
+5. Existing race/result/analysis/error/not-found behavior is unchanged.
+6. Metadata wraps and remains keyboard-usable at desktop and 320px/390px
+   widths without page-level horizontal overflow. The existing title and
+   category/count summary remain the first row, and the metadata occupies the
+   next full-width row inside the sticky header.
+7. Pure helper tests cover UTC, offset conversion, empty/whitespace,
+   malformed/non-date values, and path-segment encoding. Browser smoke covers
+   the normal metadata row, source-link target/focus, not-found preservation,
+   and narrow-width wrapping; existing automated tests cover the other error
+   branches.
+8. Full required validation and independent review pass.
+
+### Validation commands
+
+- `npm.cmd test`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `git diff --check`
+- Browser smoke for valid/invalid metadata, source-link target, not-found, and
+  desktop/320px/390px header wrapping.
+
+### Slice 8 specification audit resolutions
+
+- `updatedAt` is treated as the collector-data update timestamp. The UI uses
+  `データ更新` wording and never calls it the official result publication time.
+  The exact display is zero-padded `YYYY/MM/DD HH:mm JST`, using `ja-JP`
+  numeric parts and `Asia/Tokyo`; seconds and weekday are omitted.
+- The helper trims a runtime value and accepts it when `new Date(value)` yields
+  a finite instant. This accommodates the collector's UTC ISO 8601 sample and
+  offset-based values without silently requiring a stricter upstream contract;
+  empty, whitespace-only, malformed, non-date, or out-of-range values use
+  `更新日時不明`.
+- Because the upstream data has no official result URL or officialness field,
+  the only link is the public collector GitHub file and the non-official note
+  is always visible with the metadata row.
+- Formatting uses `ja-JP` numeric parts with `Asia/Tokyo` and a fixed `JST`
+  suffix; malformed values use `更新日時不明`. This avoids user-machine
+  timezone drift while keeping the helper deterministic.
+- The source URL accepts only a nonblank race ID after trimming and encodes it
+  as one path segment. The visible link label is `取得元データ (GitHub)` and it
+  uses same-tab navigation with no new-tab `target`; no raw query or arbitrary
+  URL is accepted from the data.
+- The existing `RaceHeader` first row keeps its two-column title and summary
+  layout. The metadata is a full-width second row inside the sticky header and
+  may wrap at narrow widths without horizontal overflow. It is rendered only
+  after a successful race response, including when the successful race has an
+  analysis-unavailable rider.
+- The metadata row is owned by `RaceHeader`; no changes are made to fetching,
+  route boundaries, table semantics, chart state, or upstream types. Unit
+  tests provide invalid-input coverage; browser smoke verifies valid display,
+  link href/focus, sticky visibility, not-found preservation, and 320px/390px
+  wrapping.
 
 ## Current design - Phase 2 Slice 7: URL-synchronized filters and analysis state
 

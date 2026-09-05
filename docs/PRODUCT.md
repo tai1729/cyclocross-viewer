@@ -6,8 +6,21 @@
 - The production URL is `https://ajocc-laptime-viewer.vercel.app/`.
 - The verified release is `bab760bea87c2dfc126b70559e375a721b68dd5a`; its Vercel production deployment is READY and reports the same `githubCommitSha`.
 - Phase 1 blockers are zero. Phase 2 Slice 4 lap detail and summary is
-  complete, and Phase 2 Slice 7 URL synchronization is complete and released
-  from the reviewed working tree.
+  complete, Phase 2 Slice 7 URL synchronization is complete, and Phase 2 Slice
+  8 provenance/freshness metadata is complete and released from the reviewed
+  working tree.
+
+## Phase 2 Slice 8 current behavior - data provenance and freshness
+
+Race pages show the collector-data update time in JST, a link to the matching
+public JSON file in the `cyclocross-data-collector` GitHub repository, and a
+visible note that the displayed result is not an official organizer result.
+The timestamp is displayed as zero-padded `YYYY/MM/DD HH:mm JST` using
+Asia/Tokyo. The existing data contract already provides `updatedAt`; no
+official result URL or officialness field is available, so the viewer does not
+infer either. Malformed timestamps show `更新日時不明`, and trimmed source IDs
+are encoded as a single URL path segment. Existing race, analysis, error,
+not-found, and responsive behavior remains unchanged.
 
 ## Phase 2 Slice 7 current behavior - URL-synchronized state
 

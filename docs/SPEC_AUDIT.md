@@ -1,6 +1,31 @@
 # Specification Audit
 
-Current Change: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+Current Change: Phase 2 Slice 8 — data provenance and freshness metadata
+
+## Current audit - Phase 2 Slice 8
+
+This audit governs the provenance and freshness metadata slice. Auditors must
+inspect the current `PRODUCT.md`, `DESIGN.md`, `IMPLEMENTATION_PLAN.md`,
+`lib/types.ts`, `lib/dataSource.ts`, `components/RaceHeader.tsx`, the current
+race route, and relevant tests.
+
+The two independent auditors must identify implementation-significant
+ambiguity about:
+
+1. whether `updatedAt` is an event time, collector update time, or official
+   publication time;
+2. whether an official result URL or officialness can be inferred from the
+   current upstream shape;
+3. exact timestamp timezone/format and malformed-value behavior;
+4. exact source URL construction, encoding, external-link accessibility, and
+   empty-ID behavior;
+5. metadata placement, copy, narrow-width wrapping, keyboard focus, and
+   interactions with existing sticky header/error/not-found surfaces;
+6. test and browser acceptance coverage without changing upstream contracts.
+
+## Audit status
+
+AUDIT COMPLETE
 
 ## Current audit - Phase 2 Slice 7
 
@@ -294,5 +319,35 @@ The resolved design also makes explicit that every deliberate durable action
 uses one `push`, canonical cleanup uses `replace`, and hover never writes the
 URL. No new dependency, route, upstream contract, or chart formula is
 introduced.
+
+## Phase 2 Slice 8 audit findings and resolutions
+
+The two independent auditors raised the following implementation-significant
+questions. The Commander resolved them before implementation:
+
+1. `updatedAt` is collector-data freshness, not event publication time. The
+   fixed display format is zero-padded `YYYY/MM/DD HH:mm JST`, with no seconds
+   or weekday, produced from `ja-JP` numeric parts in `Asia/Tokyo`.
+2. The viewer trims the runtime timestamp value and accepts any value that
+   `new Date(value)` parses to a finite instant. This covers the collector's
+   UTC ISO 8601 sample and offset-based values. Empty, whitespace-only,
+   malformed, non-date, or out-of-range values display `更新日時不明`.
+3. A race ID is valid for the source link only when its trimmed value is
+   nonblank. The trimmed ID is encoded as one path segment; blank IDs omit the
+   link. The upstream `RaceResult.updatedAt: string` contract is unchanged.
+4. The source link is same-tab navigation with the visible label
+   `取得元データ (GitHub)` and the existing keyboard focus treatment. No
+   new-tab attributes or arbitrary data-provided URL are introduced.
+5. The existing title/category/count layout remains the first row. The
+   metadata is a full-width wrapping second row inside the sticky
+   `RaceHeader`; at 320px/390px it must remain readable and avoid page-level
+   horizontal overflow.
+6. Metadata is rendered only in the successful-race branch where
+   `RaceHeader` already renders, including an analysis-unavailable rider.
+   Loading, network/http/invalid-data, and not-found surfaces are unchanged.
+7. Unit tests cover valid UTC and offset conversion, empty/whitespace and
+   malformed values, non-string runtime input, and path-segment encoding.
+   Browser smoke covers normal display, exact source href, keyboard focus,
+   sticky visibility, not-found preservation, and narrow-width wrapping.
 
 STATUS: CLEAR
