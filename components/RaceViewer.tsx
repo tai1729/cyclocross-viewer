@@ -9,10 +9,15 @@ import {
 } from "@/lib/dataSource";
 import {
   MAX_ALL_COMPARISON_RIDERS,
+  MAX_PINNED_FIXED_RIDERS,
   useComparisonRiders,
   type ComparisonMode,
 } from "@/hooks/useComparisonRiders";
-import { getRiderById, getRiderSummary } from "@/lib/dataTransform";
+import {
+  getRiderById,
+  getRiderSummary,
+  getValidCheckpoints,
+} from "@/lib/dataTransform";
 import { buildRiderColorMap } from "@/lib/chartColors";
 import type { MeetEntry } from "@/lib/types";
 import { RaceHeader } from "@/components/RaceHeader";
@@ -20,6 +25,7 @@ import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
+import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { ChartTabs } from "@/components/ChartTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -43,6 +49,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     selectedCategory ? `${DATA_BASE_URL}/data/race-${selectedCategory.raceId}.json` : undefined,
   );
   const [selfRiderId, setSelfRiderId] = useState<string | null>(null);
+  const [pinnedRiderIds, setPinnedRiderIds] = useState<string[]>([]);
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(2);
 
   const validRiders = useMemo(
@@ -50,15 +57,43 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     [race],
   );
   const graphableRiders = useMemo(
-    () => validRiders.filter((rider) => rider.laps.length > 0),
+    () => validRiders.filter((rider) => getValidCheckpoints(rider).length > 0),
     [validRiders],
   );
-  const comparisonRiders = useComparisonRiders(graphableRiders, selfRiderId, comparisonMode);
+  const comparisonRiders = useComparisonRiders(
+    graphableRiders,
+    selfRiderId,
+    comparisonMode,
+    pinnedRiderIds,
+  );
   const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
+
+  function selectPrimaryRider(riderId: string) {
+    setSelfRiderId(riderId);
+    setPinnedRiderIds((current) => current.filter((pinnedId) => pinnedId !== riderId));
+  }
+
+  function addPinnedRider(riderId: string) {
+    setPinnedRiderIds((current) => {
+      if (
+        riderId === selfRiderId ||
+        current.includes(riderId) ||
+        current.length >= MAX_PINNED_FIXED_RIDERS
+      ) {
+        return current;
+      }
+      return [...current, riderId];
+    });
+  }
+
+  function removePinnedRider(riderId: string) {
+    setPinnedRiderIds((current) => current.filter((pinnedId) => pinnedId !== riderId));
+  }
 
   function changeCategory(value: string) {
     setCategoryId(value);
     setSelfRiderId(null);
+    setPinnedRiderIds([]);
     setComparisonMode(2);
   }
 
@@ -108,7 +143,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
   const selfRider = selfRiderId ? getRiderById(race, selfRiderId) : undefined;
   const hasValidData = selfRider?.dataQuality === "ok";
-  const hasLapData = (selfRider?.laps.length ?? 0) > 0;
+  const hasLapData = selfRider
+    ? getValidCheckpoints(selfRider).length > 0
+    : false;
   const summary = selfRiderId && hasValidData && hasLapData
     ? getRiderSummary(race, selfRiderId)
     : null;
@@ -142,7 +179,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       <RaceResultsTable
         race={race}
         selectedRiderId={selfRiderId}
-        onSelect={setSelfRiderId}
+        onSelect={selectPrimaryRider}
         analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
       />
 
@@ -161,7 +198,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
             riders={race.riders}
             categoryName={race.category}
             selectedRiderId={selfRiderId}
-            onSelect={setSelfRiderId}
+            onSelect={selectPrimaryRider}
           />
           {summary && (
             <>
@@ -170,6 +207,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
                 mode={comparisonMode}
                 displayedCount={comparisonRiders.length}
                 totalRiderCount={graphableRiders.length}
+                pinnedCount={pinnedRiderIds.length}
                 onChange={(mode) => {
                   if (
                     mode !== "all" ||
@@ -179,6 +217,15 @@ export function RaceViewer({ meet }: RaceViewerProps) {
                   }
                 }}
               />
+              {comparisonMode === "pinned" && (
+                <ComparisonRiderPicker
+                  riders={graphableRiders}
+                  primaryRiderId={selfRiderId}
+                  pinnedRiderIds={pinnedRiderIds}
+                  onAdd={addPinnedRider}
+                  onRemove={removePinnedRider}
+                />
+              )}
             </>
           )}
         </div>
