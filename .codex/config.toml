@@ -1,0 +1,30 @@
+compact_prompt = """
+Create a continuation-oriented state summary for the next Codex turn after history compaction.
+Prefer what must be remembered to resume the existing work correctly over a chronological conversation recap.
+Keep the summary concise but preserve exact names, paths, commands, identifiers, values, and error text when they matter.
+
+Include these sections:
+- Active goal and objective, including explicit user constraints and acceptance criteria.
+- Current phase or stage and the state of any subagent, reviewer, gate, or approval.
+- Completed work and changed files; important files deliberately left unchanged.
+- Remaining work, current blocker, pending user approval, and the exact next action.
+- Important design decisions and why each decision was made.
+- Tests, lint, build, and browser checks already run, with their results.
+- Current errors, failed approaches, and approaches that must not be retried.
+- Important git state (branch, worktree condition, and relevant uncommitted changes).
+
+Do not invent completion, discard unresolved blockers, or turn this into a new task. Do not repeat completed work after compaction. The result should let the next model continue the active /goal immediately and should remain bounded rather than reproducing full logs, diffs, source files, or unrelated discussion.
+"""
+
+[features]
+goals = true
+hooks = true
+
+[[hooks.SessionStart]]
+matcher = "^compact$"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/session_start_compact.py\""
+command_windows = "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$root = (git rev-parse --show-toplevel 2>$null | Select-Object -First 1); if (-not $root) { $root = (Get-Location).Path }; py -3 (Join-Path $root '.codex\\hooks\\session_start_compact.py')\""
+additionalContextLimit = 5000

@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 /.superpowers/
+/.codex-loop/
+/.codex/hooks/__pycache__/
 
 # debug
 npm-debug.log*
