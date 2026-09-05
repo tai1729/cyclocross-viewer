@@ -145,3 +145,18 @@ test("不正周回、重複、0秒、空配列、dataQuality errorを安全に�
     reason: "data-quality",
   });
 });
+
+test("有効チェックポイントがない選手は分析対象にできない", () => {
+  const invalidOnly = rider("invalid-only", 2, [
+    { ...lap(0, 60, 60), lapNumber: 0 },
+    { ...lap(1, 60, 60), rankAtLap: Number.NaN },
+    lap(2, 60, 120),
+    lap(2, 61, 121),
+  ]);
+
+  assert.deepEqual(getValidCheckpoints(invalidOnly), []);
+  assert.deepEqual(getRiderResult(race([invalidOnly]), "invalid-only"), {
+    kind: "unavailable",
+    reason: "no-checkpoints",
+  });
+});

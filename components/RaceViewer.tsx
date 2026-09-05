@@ -12,7 +12,11 @@ import {
   useComparisonRiders,
   type ComparisonMode,
 } from "@/hooks/useComparisonRiders";
-import { getRiderById, getRiderSummary } from "@/lib/dataTransform";
+import {
+  getRiderById,
+  getRiderSummary,
+  getValidCheckpoints,
+} from "@/lib/dataTransform";
 import { buildRiderColorMap } from "@/lib/chartColors";
 import type { MeetEntry } from "@/lib/types";
 import { RaceHeader } from "@/components/RaceHeader";
@@ -50,7 +54,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     [race],
   );
   const graphableRiders = useMemo(
-    () => validRiders.filter((rider) => rider.laps.length > 0),
+    () => validRiders.filter((rider) => getValidCheckpoints(rider).length > 0),
     [validRiders],
   );
   const comparisonRiders = useComparisonRiders(graphableRiders, selfRiderId, comparisonMode);
@@ -108,7 +112,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
   const selfRider = selfRiderId ? getRiderById(race, selfRiderId) : undefined;
   const hasValidData = selfRider?.dataQuality === "ok";
-  const hasLapData = (selfRider?.laps.length ?? 0) > 0;
+  const hasLapData = selfRider
+    ? getValidCheckpoints(selfRider).length > 0
+    : false;
   const summary = selfRiderId && hasValidData && hasLapData
     ? getRiderSummary(race, selfRiderId)
     : null;
