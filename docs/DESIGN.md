@@ -894,6 +894,106 @@ chart-first, desktop, mobile, or disclosure redesign slices.
 - `RiderSelector` keeps its existing bounded-list selected-row positioning but
   returns focus to the stable compact trigger after an in-analysis selection.
 
-This slice is verified by pure navigation/URL contract tests and a browser
-matrix at 1440×900, 1280×720, 390×844, and 320×568. UX2-2 remains blocked until
-these contracts pass review.
+This slice was verified by pure navigation/URL contract tests and a browser
+matrix at 1440×900, 1280×720, 390×844, and 320×568 before the UX2-2 layout
+work. The resolved UX2-2 design below preserves these contracts.
+
+## UX2-2 implementation design — Desktop analysis workspace (resolved 2026-09-06)
+
+UX2-1 is complete at `d467b08`. This bounded slice changes only the Desktop
+active-analysis composition and keeps `RaceViewer` as the owner of URL state,
+loading boundaries, and transition semantics.
+
+### Goal and non-goals
+
+- Goal: make context, metric controls, and the existing primary chart visible
+  in the initial Desktop viewport while reducing active configuration density.
+- In scope: active Desktop result disclosure, context bar, Desktop two-column
+  workspace, compact selected-rider presentation, chart-before-lap-detail
+  Desktop ordering, and bounded Desktop layout styles.
+- Out of scope: UX2-3 Mobile workspace/sheets/compact header, UX2-4 disclosure
+  redesign, UX2-5 final regression phase, chart/data formulas, URL keys,
+  history semantics, upstream types, or status rules.
+
+### Resolved structure
+
+At `min-width: 1024px`, a valid selected rider derives `analyze` mode. The
+existing full results table is wrapped once in a native disclosure and closed
+by default; browse mode still shows the existing full table. The active
+workspace then renders a compact text context bar followed by a grid with a
+280–320px control rail and a flexible primary column. `ChartTabs` is first in
+the primary column and `LapDetailTable` follows it. The current mobile DOM
+ordering and full-results visibility remain unchanged below `1024px`.
+
+The context bar is intentionally non-sticky in UX2-2 because `RaceHeader` is
+already sticky and the initial collapsed-results layout meets chart visibility
+without a second overlapping sticky layer. This avoids a new offset contract;
+UX2-3 may introduce a measured mobile toolbar later.
+
+### Component/data boundaries
+
+- `RaceViewer`: derives active mode, controls the Desktop-only results
+  disclosure and workspace ordering, and passes existing state/callbacks.
+- `AnalysisContextBar`: presentation-only text context; it does not own URL or
+  data state.
+- `RiderSelector`: retains search, bounded list, keyboard labels, compact
+  trigger, and UX2-1 focus behavior; entering analysis closes its browse list.
+- `ChartTabs` and `LapDetailTable`: retain all data transforms and value
+  semantics; only their Desktop visual placement changes.
+- No new dependency, route, query key, scroll container, or data field.
+
+### Acceptance and verification
+
+- 1440×900: context + metric tabs + at least a readable chart plot frame are
+  visible at initial analysis position with no additional scroll.
+- 1280×720: full results and lap detail do not precede the visible chart;
+  configuration is not the largest visual region.
+- Same-workspace rider/comparison/metric actions preserve UX2-1 scroll/focus/
+  URL behavior, including direct links and browser traversal.
+- 390×844 and 320×568 keep the pre-UX2-3 mobile composition usable with no
+  Desktop sidebar/disclosure leak or horizontal overflow.
+- Run `npm.cmd test`, `npx.cmd tsc --noEmit`, `npm.cmd run lint`,
+  `npm.cmd run build`, `git diff --check`, and CUA browser smoke.
+
+### UX2-2 specification audit resolutions
+
+The two independent auditors' questions are resolved as follows before code:
+
+- `lg`/`min-width: 1024px` is the sole Desktop boundary. A responsive resize
+  retains URL-derived analysis state and the local Desktop results-open
+  preference; viewport detection is presentation-only and is not serialized.
+- In active Desktop analysis, the results disclosure is placed after the
+  workspace, with a native summary trigger and the existing results table
+  rendered once inside it. Browse remains full-result-first; below 1024px the
+  current full-result placement remains, so UX2-3 is not started.
+- The Desktop reading order is context/status, `ChartTabs`,
+  `LapDetailTable`, then the visually-left control rail, then optional
+  results. CSS grid places the rail left without making configuration the
+  first keyboard/screen-reader surface. The context bar carries the primary
+  rider/status summary.
+- The context always shows race/category/rider position-or-status/
+  comparison mode-and-count/metric label. Long values wrap to two lines or,
+  only when unavoidable in a compact trigger, use visible ellipsis plus a full
+  accessible name.
+- Existing results-table internal bounded scrolling is retained. No new page
+  or workspace scroll container and no scroll restoration code is added.
+- Browser acceptance measures at least 100px of chart plot frame plus the tab
+  list at both 1440×900 and 1280×720 without sticky-header obstruction.
+- Analysis-unavailable keeps its existing alert/context and omits chart/lap
+  detail; only valid active analysis receives chart-first ordering.
+- Native disclosure focus remains on its summary; keyboard result-row entry
+  retains the UX2-1 heading focus path, and pointer entry does not add a new
+  focus steal. Resize does not reset focus, URL, history, or local preference.
+- The responsive results surface is structural, not a forced-open `<details>`:
+  below `1024px` the Desktop disclosure/summary is not rendered at all and the
+  existing full results table is rendered before the analysis workspace in the
+  mobile reading order. At or above `1024px`, the same single table is rendered
+  after the workspace inside the closed-by-default disclosure. Unmounting the
+  mobile branch does not write the Desktop open preference, so a default-closed
+  disclosure remains closed after a mobile round trip while an explicitly open
+  one reopens on return to Desktop.
+- The active analysis children also have an explicit responsive reading order:
+  below `1024px` the control rail precedes `LapDetailTable`, which precedes
+  `ChartTabs`; at or above `1024px`, `ChartTabs` precedes `LapDetailTable`,
+  followed by the control rail. CSS grid only changes Desktop placement of the
+  rail and does not rely on CSS order to define the Mobile reading order.

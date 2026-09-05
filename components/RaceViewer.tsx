@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRaceData } from "@/hooks/useRaceData";
 import {
   DATA_BASE_URL,
@@ -16,6 +16,7 @@ import {
 import {
   getRaceLapNumbers,
   getRiderById,
+  getRiderResult,
   getRiderSummary,
   getValidCheckpoints,
 } from "@/lib/dataTransform";
@@ -35,6 +36,11 @@ import {
   getRaceNavigationOptions,
   type RaceNavigationAction,
 } from "@/lib/raceNavigation";
+import {
+  classifyResultsPresentation,
+  getAnalysisPresentationOrder,
+  getResultsDisclosureOpen,
+} from "@/lib/resultsPresentation";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
@@ -44,6 +50,12 @@ import { LapDetailTable } from "@/components/LapDetailTable";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { ChartTabs } from "@/components/ChartTabs";
+import {
+  AnalysisContextBar,
+  getAnalysisComparisonLabel,
+  getAnalysisMetricLabel,
+  getAnalysisRiderStatus,
+} from "@/components/AnalysisContextBar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -116,6 +128,18 @@ function focusCurrentAnalysisControl(): void {
   }
 }
 
+function useIsDesktopPresentation(): boolean {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const mediaQuery = window.matchMedia("(min-width: 1024px)");
+      mediaQuery.addEventListener("change", onStoreChange);
+      return () => mediaQuery.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(min-width: 1024px)").matches,
+    () => false,
+  );
+}
+
 interface RaceViewState {
   categoryId: string;
   selfRiderId: string | null;
@@ -165,6 +189,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
+  const isDesktop = useIsDesktopPresentation();
   const urlState = useMemo(() => parseRaceUrlState(queryString), [queryString]);
   const categories = useMemo(
     () => [...meet.categories].sort((a, b) => a.order - b.order),
@@ -186,6 +211,8 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     categoryId: resolvedCategoryId,
     queryString,
   });
+  const [resultsOpen, setResultsOpen] = useState(false);
+  const wasAnalyzingRef = useRef(urlViewState.selfRiderId !== null);
 
   const { race, isLoading, error, retry } = useRaceData(
     selectedCategory ? `${DATA_BASE_URL}/data/race-${selectedCategory.raceId}.json` : undefined,
@@ -329,6 +356,14 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     pinnedRiderIds,
   );
 
+  useEffect(() => {
+    const isAnalyzing = selfRiderId !== null;
+    if (isAnalyzing && !wasAnalyzingRef.current) {
+      setResultsOpen(false);
+    }
+    wasAnalyzingRef.current = isAnalyzing;
+  }, [selfRiderId]);
+
   function pushRaceUrl(patch: UrlStatePatch, action: RaceNavigationAction) {
     const context = getReturnContext(urlState, meet);
     const currentQuery = searchParams.toString();
@@ -462,6 +497,125 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const fixedRiders = comparisonMode === "pinned"
     ? comparisonRiders.filter((rider) => rider.riderId !== selfRider?.riderId)
     : [];
+  const riderResult = selfRider
+    ? getRiderResult(race, selfRider.riderId)
+    : null;
+  const isAnalysisState = selfRiderId !== null;
+  const analysisPresentationOrder = getAnalysisPresentationOrder(isDesktop);
+  const resultsPresentation = classifyResultsPresentation(isDesktop, isAnalysisState);
+
+  const resultsTable = (
+    <RaceResultsTable
+      race={race}
+      selectedRiderId={selfRiderId}
+      onSelect={selectPrimaryRider}
+      analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
+    />
+  );
+
+  const analysisRail = (
+    <div className="flex min-w-0 flex-col gap-3 lg:col-start-1 lg:row-start-3">
+      <RiderSelector
+        riders={race.riders}
+        categoryName={race.category}
+        selectedRiderId={selfRiderId}
+        onSelect={selectPrimaryRider}
+      />
+      {summary && (
+        <>
+          <SummaryCard summary={summary} />
+          {selfRider && (
+            <LapSummaryCard
+              primaryRider={selfRider}
+              fixedRiders={fixedRiders}
+            />
+          )}
+          <ComparisonAdjuster
+            mode={comparisonMode}
+            displayedCount={comparisonRiders.length}
+            totalRiderCount={graphableRiders.length}
+            pinnedCount={pinnedRiderIds.length}
+            onChange={changeComparisonMode}
+          />
+          {comparisonMode === "pinned" && (
+            <ComparisonRiderPicker
+              riders={graphableRiders}
+              primaryRiderId={selfRiderId}
+              pinnedRiderIds={pinnedRiderIds}
+              onAdd={addPinnedRider}
+              onRemove={removePinnedRider}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  const analysisChart = summary && selfRider ? (
+    <div>
+      <ChartTabs
+        race={race}
+        selfRider={selfRider}
+        comparisonRiders={comparisonRiders}
+        fixedRiderIds={comparisonMode === "pinned" ? pinnedRiderIds : []}
+        isAllMode={comparisonMode === "all"}
+        activeTab={currentViewState.activeTab}
+        activeLapNumber={currentViewState.activeLapNumber}
+        pinnedLapNumber={currentViewState.pinnedLapNumber}
+        onTabChange={changeTab}
+        onLapHover={hoverLap}
+        onLapSelect={selectLap}
+        onLapChange={selectLap}
+        onClearPin={clearLap}
+      />
+    </div>
+  ) : null;
+
+  const analysisLapDetail = summary && selfRider ? (
+    <div>
+      <LapDetailTable
+        primaryRider={selfRider}
+        fixedRiders={fixedRiders}
+      />
+    </div>
+  ) : null;
+
+  const analysisMain = (
+    <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-3">
+      {selfRider && !hasValidData ? (
+        <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
+      ) : selfRider && !hasLapData ? (
+        <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
+      ) : summary && selfRider ? (
+        analysisPresentationOrder.chartTabsBeforeLapDetail ? (
+          <>
+            {analysisChart}
+            {analysisLapDetail}
+          </>
+        ) : (
+          <>
+            {analysisLapDetail}
+            {analysisChart}
+          </>
+        )
+      ) : (
+        <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
+      )}
+    </div>
+  );
+
+  const activeResultsDisclosure = isAnalysisState ? (
+    <details
+      open={getResultsDisclosureOpen(resultsPresentation, resultsOpen)}
+      onToggle={(event) => setResultsOpen(event.currentTarget.open)}
+      className="order-1 min-w-0 lg:order-2"
+    >
+      <summary className="hidden min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 lg:flex sm:min-h-8">
+        結果表を表示
+      </summary>
+      <div className="mt-3">{resultsTable}</div>
+    </details>
+  ) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8 2xl:px-12">
@@ -496,89 +650,47 @@ export function RaceViewer({ meet }: RaceViewerProps) {
         <FieldDescription id="category-select-description">この大会のカテゴリーを選択します。</FieldDescription>
       </Field>
       <RaceHeader race={race} />
-      <RaceResultsTable
-        race={race}
-        selectedRiderId={selfRiderId}
-        onSelect={selectPrimaryRider}
-        analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
-      />
+      {resultsPresentation === "full" ? resultsTable : null}
 
       {race.riders.length > 0 ? (
-      <section
-        id={ANALYSIS_REGION_ID}
-        data-race-analysis-region
-        tabIndex={-1}
-        aria-labelledby="race-analysis-heading"
-        className="flex flex-col gap-4 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-6"
-      >
-        <h2 id="race-analysis-heading" className="sr-only">
-          周回分析
-        </h2>
-        <div className="flex flex-col gap-3">
-          <RiderSelector
-            riders={race.riders}
-            categoryName={race.category}
-            selectedRiderId={selfRiderId}
-            onSelect={selectPrimaryRider}
-          />
-          {summary && (
-            <>
-              <SummaryCard summary={summary} />
-              {selfRider && (
-                <LapSummaryCard
-                  primaryRider={selfRider}
-                  fixedRiders={fixedRiders}
-                />
-              )}
-              <ComparisonAdjuster
-                mode={comparisonMode}
+      <div className="flex min-w-0 flex-col gap-4">
+        <section
+          id={ANALYSIS_REGION_ID}
+          data-race-analysis-region
+          tabIndex={-1}
+          aria-labelledby="race-analysis-heading"
+          className={`flex flex-col gap-4 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${isAnalysisState ? "order-2 lg:order-1" : ""} lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start lg:gap-6`}
+        >
+          <h2 id="race-analysis-heading" tabIndex={-1} className="sr-only lg:col-span-2">
+            周回分析
+          </h2>
+          {isAnalysisState && selfRider ? (
+            <div className="min-w-0 lg:col-span-2">
+              <AnalysisContextBar
+                raceName={race.raceName}
+                categoryName={race.category}
+                riderName={selfRider.name}
+                riderStatus={getAnalysisRiderStatus(selfRider, riderResult)}
+                comparisonMode={getAnalysisComparisonLabel(comparisonMode)}
                 displayedCount={comparisonRiders.length}
-                totalRiderCount={graphableRiders.length}
-                pinnedCount={pinnedRiderIds.length}
-                onChange={changeComparisonMode}
+                activeMetric={getAnalysisMetricLabel(currentViewState.activeTab)}
               />
-              {comparisonMode === "pinned" && (
-                <ComparisonRiderPicker
-                  riders={graphableRiders}
-                  primaryRiderId={selfRiderId}
-                  pinnedRiderIds={pinnedRiderIds}
-                  onAdd={addPinnedRider}
-                  onRemove={removePinnedRider}
-                />
-              )}
+            </div>
+          ) : null}
+          {analysisPresentationOrder.mainBeforeRail ? (
+            <>
+              {analysisMain}
+              {analysisRail}
+            </>
+          ) : (
+            <>
+              {analysisRail}
+              {analysisMain}
             </>
           )}
-        </div>
-        {selfRider && !hasValidData ? (
-          <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
-        ) : selfRider && !hasLapData ? (
-          <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
-        ) : summary && selfRider ? (
-          <div className="flex min-w-0 flex-col gap-4">
-            <LapDetailTable
-              primaryRider={selfRider}
-              fixedRiders={fixedRiders}
-            />
-            <ChartTabs
-              race={race}
-              selfRider={selfRider}
-              comparisonRiders={comparisonRiders}
-              fixedRiderIds={comparisonMode === "pinned" ? pinnedRiderIds : []}
-              isAllMode={comparisonMode === "all"}
-              activeTab={currentViewState.activeTab}
-              activeLapNumber={currentViewState.activeLapNumber}
-              pinnedLapNumber={currentViewState.pinnedLapNumber}
-              onTabChange={changeTab}
-              onLapHover={hoverLap}
-              onLapSelect={selectLap}
-              onLapChange={selectLap}
-              onClearPin={clearLap}
-            />
-          </div>
-        ) : (
-          <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
-        )}
-      </section>
+        </section>
+        {resultsPresentation === "desktop-disclosure" ? activeResultsDisclosure : null}
+      </div>
       ) : null}
     </div>
   );

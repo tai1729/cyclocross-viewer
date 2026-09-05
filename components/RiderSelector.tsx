@@ -29,6 +29,7 @@ export function RiderSelector({
   const riderListRef = useRef<HTMLDivElement | null>(null);
   const selectedControlRef = useRef<HTMLButtonElement | null>(null);
   const restoreFocusAfterSelectionRef = useRef(false);
+  const previousSelectedRiderIdRef = useRef(selectedRiderId);
 
   const sorted = [...riders].sort((a, b) => a.finalPosition - b.finalPosition);
   const selectedIndex = sorted.findIndex((r) => r.riderId === selectedRiderId);
@@ -79,6 +80,13 @@ export function RiderSelector({
       restoreFocusAfterSelectionRef.current = false;
     }
   }, [isOpen, selectedRiderId]);
+
+  useEffect(() => {
+    if (previousSelectedRiderIdRef.current === null && selectedRiderId !== null) {
+      setIsOpen(false);
+    }
+    previousSelectedRiderIdRef.current = selectedRiderId;
+  }, [selectedRiderId]);
 
   if (!isOpen && selectedRider) {
     return (

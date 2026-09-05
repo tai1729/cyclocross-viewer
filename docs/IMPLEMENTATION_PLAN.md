@@ -553,9 +553,8 @@ two spec auditors -> specification resolution -> P2S4-1
 ## UX redesign audit v2 — implementation plan
 
 This plan is the bounded follow-up to the documentation-only audit in
-`docs/ux-redesign-spec-v2.md`. UX2-1 is the active implementation slice;
-UX2-2 through UX2-5 remain blocked until its contract passes verification and
-independent review.
+`docs/ux-redesign-spec-v2.md`. UX2-1 and UX2-2 are complete. UX2-3 through
+UX2-5 remain gated by their stated dependencies.
 
 ### UX2-1 — Workspace state and scroll intent
 
@@ -575,27 +574,47 @@ independent review.
 
 ### UX2-2 — Chart-first workspace composition
 
-- Status: BLOCKED by UX2-1
+- Status: DONE (2026-09-06; reviewer PASS)
 - Objective: Make the active workspace render context/status, `ChartTabs`, then
   `LapDetailTable`, with full results collapsed to an explicit on-demand surface.
-- Scope: `RaceViewer.tsx`, `ChartTabs.tsx`, `LapDetailTable.tsx`, result summary
-  disclosure, stable chart panel sizing.
+- Scope: `RaceViewer.tsx`, new `AnalysisContextBar.tsx`,
+  `RiderSelector.tsx`, Desktop-only result summary disclosure, Desktop ordering
+  and workspace containers; preserve `ChartTabs.tsx` and `LapDetailTable.tsx`
+  value/data behavior.
 - Dependencies: UX2-1.
 - Do not change: chart data, chart tabs, sparse values, DNF/lapped meaning, or
   detail-table value contracts.
-- Acceptance: valid active rider shows chart tab and plot frame in the target
-  viewport; results and detail remain keyboard-reachable and readable.
+- Acceptance: valid active rider shows context, chart tabs, and a meaningful
+  plot frame in the initial 1440×900 and 1280×720 Desktop viewport; full
+  results remain keyboard-reachable through an explicit disclosure; UX2-1 and
+  pre-UX2-3 mobile behavior remain intact.
 - Verification: existing tests, build, browser smoke at 1440×900/1280×720.
+
+#### UX2-2 resolved implementation tasks
+
+1. Add a presentation-only `AnalysisContextBar` with text labels for all
+   active context values; keep `RaceViewer` as the state owner.
+2. Add a Desktop-only native results disclosure after the active workspace;
+   preserve the full browse/mobile result surface and its existing bounded
+   list scroll.
+3. Render the Desktop active workspace with a 280–320px visual-left control
+   rail and a primary chart column; keep `ChartTabs` before `LapDetailTable` in
+   the primary reading order.
+4. Close the full rider list when browse selection enters analysis while
+   retaining search, keyboard targets, and UX2-1 trigger focus behavior.
+5. Verify at `lg` boundary and 1440×900/1280×720/390×844/320×568 without
+   modifying URL keys, history semantics, chart/data transforms, or mobile
+   sheet/header behavior.
 
 ### UX2-3 — Responsive compact controls
 
-- Status: BLOCKED by UX2-1
+- Status: BLOCKED by UX2-2
 - Objective: Keep current context/metric/comparison visible on Mobile and move
   low-frequency rider/fixed-rider lists into accessible bounded sheets/dialogs.
 - Scope: `RiderSelector.tsx`, `ComparisonAdjuster.tsx`,
   `ComparisonRiderPicker.tsx`, responsive workspace styles, existing Base UI or
   native dialog primitives.
-- Dependencies: UX2-1; coordinate with UX2-2 without parallel edits to the
+- Dependencies: UX2-2; coordinate with UX2-2 without parallel edits to the
   same integration file.
 - Do not change: 44px target policy, graphable/all limit, four fixed-rider
   limit, or page-level overflow boundary.

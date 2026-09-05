@@ -312,3 +312,161 @@ the new race has completed; loading and canonicalization do not steal focus.
 The existing selected-row `scrollIntoView` behavior remains limited to revealing
 the selected row in the bounded rider list when that picker is opened. It must
 not move page-level scroll as a side effect of a URL-driven rider update.
+
+## UX2-2 desktop workspace execution contract (resolved 2026-09-06)
+
+UX2-2 implements the Desktop composition only. It does not introduce the
+Mobile sheet, Mobile compact header, lap-detail disclosure redesign, or any
+new URL/data behavior.
+
+### Responsive boundary
+
+- `lg` (`min-width: 1024px`) is the Desktop workspace boundary. At and above
+  this width, active analysis uses the workspace grid described below.
+- Below `1024px`, the existing vertical/mobile composition remains the source
+  of truth for this slice. Desktop-only CSS must not create a sidebar, results
+  disclosure, or sticky workspace toolbar below the boundary.
+- The existing mobile DOM remains usable at 390px and 320px; UX2-3 owns its
+  future chart-first mobile reordering and sheets.
+
+### Active Desktop structure
+
+When a loaded race has a selected rider, `RaceViewer` renders this single
+Desktop workspace structure without duplicating durable state:
+
+```text
+RaceHeader (existing sticky header)
+  compact active-results disclosure (closed by default)
+  #race-analysis
+    focusable h2 / skip target
+    AnalysisContextBar (race, category, rider, comparison, metric)
+    desktop grid
+      control rail (280–320px)
+        compact RiderSelector trigger/list disclosure
+        SummaryCard + LapSummaryCard
+        ComparisonAdjuster + fixed picker when selected
+      primary column
+        ChartTabs (tabs, reading hint, chart, detail panel)
+        LapDetailTable (supporting content)
+```
+
+The active results table is represented once in the Desktop tree, inside a
+native `details` disclosure with a keyboard-reachable `summary` named
+`結果表を表示`. It has no URL or history state. The disclosure is closed when
+entering analysis and may be opened explicitly; browse state and all widths
+below `1024px` keep the existing full results surface. The table remains in
+the DOM when the disclosure is open and retains its existing semantic labels.
+
+The Desktop-only visual order is applied at the workspace boundary: the
+primary `ChartTabs` surface precedes `LapDetailTable`; the pre-existing mobile
+vertical order is not changed by this slice. No chart calculation, table value,
+status meaning, or comparison eligibility changes.
+
+### Context and controls
+
+- `AnalysisContextBar` is a compact, text-readable context surface. It always
+  shows race name, category, selected rider (including position/status),
+  comparison mode/count, and the active metric. Long race/rider names wrap
+  rather than causing horizontal overflow.
+- The context bar is not a second sticky surface in UX2-2. `RaceHeader` remains
+  the only sticky page header; the context bar is placed directly before the
+  workspace grid so it remains visible in the initial chart-first viewport.
+  UX2-3 may revisit a measured mobile toolbar after this Desktop slice.
+- The selected rider control is compact in active analysis, but its existing
+  search/list path remains available on activation. A transition from browse
+  to analysis must close the full rider list after the selected URL state is
+  applied; a later rider change returns focus to the stable compact trigger.
+- Comparison controls remain in the Desktop rail with their existing ±0–±5,
+  fixed, all, disabled, and count semantics. Current values remain visible;
+  no list or search capability is removed.
+- Metric controls remain inside `ChartTabs`, immediately above the primary
+  chart. `tab` URL, history, and UX2-1 `{ scroll: false }` navigation are
+  unchanged.
+
+### Scroll, focus, and layout stability
+
+- No new scroll container, `scrollTo`, timeout, or magic pixel restoration is
+  allowed. Same-workspace rider/comparison/metric/lap transitions continue to
+  use the UX2-1 navigation contract and preserve the page position.
+- Entering analysis from a result row may use the existing explicit analysis
+  anchor behavior. Category/new-race navigation keeps its existing top/loaded
+  content behavior.
+- The workspace heading remains the stable `#race-analysis` skip/focus target;
+  its focus behavior and `preventScroll` reconciliation remain unchanged.
+- The results disclosure is an explicit user navigation surface. Opening it
+  may reveal the table below the compact context, but opening/closing it does
+  not write URL/history and must not change existing same-workspace focus
+  behavior.
+- The primary chart column reserves the existing chart plot frame; Desktop
+  chart plotting remains at least `360px`/the existing component minimum, and
+  the layout must not collapse the chart when comparison legends grow.
+
+### UX2-2 acceptance additions
+
+1. At 1440×900, a normal valid analysis state shows the context, metric tabs,
+   and a meaningful chart plot area without an additional scroll.
+2. At 1280×720, the tabs and a practical chart plot area are visible without
+   the full results table or lap detail preceding the chart.
+3. Desktop configuration is limited to the 280–320px rail; active full results
+   are closed by default and the full rider list is not left open.
+4. Race/category/rider/comparison/metric are readable in the active context;
+   no state is represented by color alone.
+5. Metric, comparison, rider, browser back/forward, deep link, and keyboard
+   behavior satisfy UX2-1 without URL/history or scroll regressions.
+6. At 390px and 320px the existing mobile composition remains usable and has
+   no Desktop-only sidebar/disclosure leak or page-level horizontal overflow.
+
+### UX2-2 audit resolutions (2026-09-06)
+
+- `1024px` is the only Desktop boundary. A resize across it changes only the
+  responsive presentation; URL state, selected rider, history, scroll, and the
+  user's Desktop results-disclosure preference are retained. The implementation
+  must not derive durable analysis state from `matchMedia`.
+- In Desktop `analyze`, the results disclosure is rendered after the active
+  workspace (after chart and lap detail). Its summary is the compact on-demand
+  results action. Opening it expands the existing results card in that place;
+  it does not push a new history entry or move focus away from the summary.
+  `browse` always renders the existing full results before analysis entry.
+  Below `1024px`, the existing full-results placement and appearance remain.
+- The Desktop workspace DOM order is `h2/context/status → ChartTabs →
+  LapDetailTable → control rail → results disclosure`. CSS grid places the
+  control rail visually to the left, but it is not placed before the primary
+  chart in the reading order. The context bar is the primary status surface;
+  SummaryCard/LapSummaryCard remain supporting detail in the rail.
+- Context text is: race name, category, selected rider name plus a readable
+  position/status string, comparison label plus displayed count, and active
+  metric. `DNF`/lapped/unavailable wording follows the existing result/status
+  meaning; pinned mode shows the fixed count rather than a long rider-name list.
+  Race and rider names may wrap to two lines in the context/trigger; the
+  selected-rider trigger keeps its action label visible and uses an accessible
+  full name if visual truncation is unavoidable.
+- The existing `max-h-[32rem] overflow-y-auto` results list is retained. It is
+  the only pre-existing bounded result-list scroll surface; UX2-2 adds no
+  workspace scroll container. The page remains the only page-level workspace
+  scroll container.
+- The measurable chart target is: at 1440×900, `ChartTabs` and at least 100px
+  of the plot frame are within the initial viewport; at 1280×720, the tab list
+  and at least 100px of plot frame are within the initial viewport. The visible
+  frame must not be hidden by the existing sticky `RaceHeader`. These are
+  browser assertions, not fixed document coordinates.
+- `analysis-unavailable` retains the existing unavailable alert and does not
+  render `ChartTabs` or `LapDetailTable`; its context still identifies the
+  selected rider and reason. Valid analysis keeps the chart and moves lap
+  detail after it. A category change continues to clear the rider and returns
+  to browse after the target race loads.
+- Keyboard result-row selection keeps the existing workspace-heading focus
+  path. Pointer selection does not steal focus beyond the existing explicit
+  navigation behavior. Disclosure open/close uses the native summary focus
+  behavior, and browser traversal continues to reconcile only current visible
+  controls under the UX2-1 contract.
+- The Desktop results disclosure is not rendered below `1024px`; Mobile uses
+  the existing full results table before the analysis workspace in DOM and
+  visual order. Desktop uses one table instance after the workspace. The local
+  Desktop open preference is updated only by the mounted Desktop disclosure,
+  so responsive resize cannot turn a forced Mobile presentation into a saved
+  open state.
+- The active analysis children use explicit structural order per breakpoint:
+  Mobile keeps the existing control rail, lap detail, then chart sequence;
+  Desktop uses chart tabs, lap detail, then control rail. Desktop grid placement
+  moves the rail visually left without relying on CSS `order` to define the
+  Mobile DOM or assistive-technology sequence.

@@ -170,3 +170,33 @@ READY
 テストで検証済みという意味ではない。実装Phaseでは、まず低リスクなprototypeまたは
 bounded sliceを作り、4 viewport・keyboard・error/data semantics・連続操作のbrowser
 verificationと、3名以上のtask testを通過させる。
+
+## UX2-2 implementation audit resolutions (2026-09-06)
+
+Two independent auditors reviewed the UX2-2 boundary against the current
+UX2-1 source and identified ambiguities in breakpoint behavior, results
+disclosure placement, reading order, context content, chart measurement,
+internal scrolling, and unavailable analysis. The Commander resolved them in
+`docs/ux-redesign-spec-v2.md`, `docs/DESIGN.md`, and
+`docs/IMPLEMENTATION_PLAN.md`:
+
+- Desktop is `>=1024px`; resize preserves URL/state/history/scroll and the
+  local disclosure preference.
+- Active Desktop results are an explicit native disclosure after the workspace;
+  browse/mobile remain full-result-first and no URL state is added.
+- The primary Desktop reading order is context/status → chart tabs/chart → lap
+  detail → controls → optional results, with the control rail visually placed
+  left by grid placement.
+- Context values and DNF/lapped/unavailable wording are text-readable; long
+  labels wrap or retain a full accessible name.
+- Existing bounded results scrolling remains; no new workspace scroll
+  container or restoration mechanism is introduced.
+- Both Desktop targets require the tab list and at least 100px of unobscured
+  plot frame in the initial viewport. Unavailable analysis keeps the existing
+  alert and omits chart/detail.
+
+The remaining implementation choices are token-level styling and the exact
+native disclosure class names; neither changes state, URL, focus, scroll,
+responsive boundary, or data semantics.
+
+VERDICT: READY FOR IMPLEMENTATION

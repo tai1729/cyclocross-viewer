@@ -227,6 +227,67 @@ below governs the lap-detail and summary implementation.
 
 STATUS: CLEAR
 
+## UX2-2 Desktop workspace audit — specification resolution (2026-09-06)
+
+The UX2-2 source documents and the current UX2-1 implementation were checked
+before implementation. The following decisions resolve the implementation
+questions for this bounded Desktop slice:
+
+1. Desktop is `min-width: 1024px` (`lg`). Below that boundary the existing
+   mobile/vertical composition remains intact; no UX2-3 sheet, compact mobile
+   header, or mobile chart reorder is introduced.
+2. `analyze` is derived only from a loaded race with a selected rider. Browse
+   remains result-first. In active Desktop analysis, the single existing
+   results-table representation is placed in a native `details` disclosure,
+   closed by default and named `結果表を表示`; it has no URL/history state.
+   Browse and sub-1024px rendering keep the existing full results surface.
+3. The active Desktop workspace consists of one compact text context bar,
+   followed by a 280–320px control rail and a flexible primary column. The
+   primary column renders `ChartTabs` before `LapDetailTable`. Existing chart,
+   table, data-quality, DNF, lapped, sparse-lap, and comparison semantics are
+   unchanged.
+4. The context bar must show race, category, selected rider with position or
+   status, comparison mode/count, and active metric as text. Long values wrap;
+   no state is color-only. `RaceViewer` owns state and `AnalysisContextBar` is
+   presentation-only.
+5. `RaceHeader` remains the only sticky surface in UX2-2. The new context bar
+   is non-sticky so a second hardcoded or unmeasured sticky offset cannot
+   overlap the existing header. UX2-3 may revisit measured mobile stickiness.
+6. Same-workspace rider/comparison/metric/lap actions continue through the
+   centralized UX2-1 URL writer with `scroll: false`; category and route
+   navigation semantics are not changed. No scroll state, query key, or
+   history rule is added.
+7. The selected rider's browse list must close when a result-row selection
+   enters analysis, while search, keyboard operation, bounded internal list
+   scrolling, and the stable trigger focus contract remain available.
+8. Validation must include existing and new behavior tests, TypeScript, lint,
+   production build, diff check, and browser smoke at 1440×900, 1280×720,
+   390×844, and 320×568. Desktop screenshots/measurements are evidence; exact
+   pixel coordinates are not fixed requirements.
+
+No implementation-blocking ambiguity remains for UX2-2. UX2-3, UX2-4, and UX2-5
+remain out of scope and blocked.
+
+## UX2-2 revision resolution — responsive results surface (2026-09-06)
+
+The Desktop results disclosure is presentation-specific. Below `1024px`, the
+Desktop `<details>` and summary are not rendered; the existing full results
+table is rendered before the analysis workspace so visual and assistive
+technology order remain results-first. At or above `1024px`, the same single
+table is rendered after the chart-first workspace in a closed-by-default native
+disclosure. Only the Desktop disclosure's native toggle updates its local open
+preference. A viewport round trip therefore preserves explicit Desktop open
+state without making a default-closed disclosure open accidentally, and does
+not add URL/history state.
+
+The active analysis children likewise use structural breakpoint branches:
+Mobile preserves the existing control rail → lap detail → chart DOM and visual
+sequence, while Desktop uses chart tabs → lap detail → control rail in reading
+order and grid-places the rail visually left. CSS order is not used as the
+Mobile reading-order mechanism.
+
+STATUS: CLEAR
+
 ## UX redesign audit v2 — specification resolution (2026-09-05)
 
 The task-based audit was performed against the public site before reading the
@@ -416,5 +477,48 @@ authoritative for this slice:
    URL round trips and category reset, while browser smoke covers same-analysis
    no-top-reset, back/forward state/focus, picker focus, direct URLs, and all four
    required viewport sizes.
+
+STATUS: CLEAR
+
+## UX2-2 Desktop workspace audit — specification resolution (2026-09-06)
+
+The UX2-2 source documents and the current UX2-1 implementation were checked
+before implementation. The following decisions resolve the implementation
+questions for this bounded Desktop slice:
+
+1. Desktop is `min-width: 1024px` (`lg`). Below that boundary the existing
+   mobile/vertical composition remains intact; no UX2-3 sheet, compact mobile
+   header, or mobile chart reorder is introduced.
+2. `analyze` is derived only from a loaded race with a selected rider. Browse
+   remains result-first. In active Desktop analysis, the single existing
+   results-table representation is placed in a native `details` disclosure,
+   closed by default and named `結果表を表示`; it has no URL/history state.
+   Browse and sub-1024px rendering keep the existing full results surface.
+3. The active Desktop workspace consists of one compact text context bar,
+   followed by a 280–320px control rail and a flexible primary column. The
+   primary column renders `ChartTabs` before `LapDetailTable`. Existing chart,
+   table, data-quality, DNF, lapped, sparse-lap, and comparison semantics are
+   unchanged.
+4. The context bar must show race, category, selected rider with position or
+   status, comparison mode/count, and active metric as text. Long values wrap;
+   no state is color-only. `RaceViewer` owns state and `AnalysisContextBar` is
+   presentation-only.
+5. `RaceHeader` remains the only sticky surface in UX2-2. The new context bar
+   is non-sticky so a second hardcoded or unmeasured sticky offset cannot
+   overlap the existing header. UX2-3 may revisit measured mobile stickiness.
+6. Same-workspace rider/comparison/metric/lap actions continue through the
+   centralized UX2-1 URL writer with `scroll: false`; category and route
+   navigation semantics are not changed. No scroll state, query key, or
+   history rule is added.
+7. The selected rider's browse list must close when a result-row selection
+   enters analysis, while search, keyboard operation, bounded internal list
+   scrolling, and the stable trigger focus contract remain available.
+8. Validation must include existing and new behavior tests, TypeScript, lint,
+   production build, diff check, and browser smoke at 1440×900, 1280×720,
+   390×844, and 320×568. Desktop screenshots/measurements are evidence; exact
+   pixel coordinates are not fixed requirements.
+
+No implementation-blocking ambiguity remains for UX2-2. UX2-3, UX2-4, and UX2-5
+remain out of scope and blocked.
 
 STATUS: CLEAR
