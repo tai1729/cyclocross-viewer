@@ -221,6 +221,20 @@ AJOCCシクロクロスの公開結果は大会・カテゴリーごとの結果
 - 順位は `stepAfter`、ギャップ/ペース/ラップは `linear`、すべて `connectNulls={false}` である。
 - 比較系列の色は最終順位順に8色を循環する。8名超の全員比較はUIで禁止する。
 
+### Phase 2 Slice 5 current behavior — accessible chart detail
+
+- 各chartの直下に、選択した周回の実測値を常設する詳細領域を表示する。
+- hoverは未固定の選択周回を更新し、chartのtap/clickまたは詳細領域の
+  周回操作は選択を固定する。解除操作で固定を外せる。
+- 詳細領域はnativeの周回選択、前後周回ボタン、選択周回ラベル、選手別の
+  値を持ち、keyboardでもhover/tapと同じ情報へ到達できる。主要操作は
+  44px相当以上でfocus-visibleを表示する。
+- 順位は有効checkpoint、ラップは有効timed lap、タイム差は既存の累積差、
+  周回差は既存の単周差を使う。欠損・重複・不正値は「未計測」とし、推定
+  やゼロ補完を行わない。
+- 既存tooltipとchartの線種、疎なデータ、比較状態、route/error動作を維持し、
+  320px/390pxでもページ水平overflowを発生させない。
+
 ### Known uncertainty
 
 以下は既存資料から確定できないため、将来taskで必要になった時点で確認する。

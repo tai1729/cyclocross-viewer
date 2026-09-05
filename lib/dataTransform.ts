@@ -178,6 +178,76 @@ export function buildLapMap(
   return new Map(laps.map((lap) => [lap.lapNumber, lap]));
 }
 
+export type ChartDetailMetricKind = "rank" | "gap" | "pace" | "lap";
+
+export interface ChartDetailResult {
+  riderId: string;
+  value: number | null;
+  rankAtLap: number | null;
+}
+
+/** Return sparse, raw detail values for one lap without changing chart data. */
+export function buildChartDetail(
+  primaryRider: Rider,
+  riders: Rider[],
+  lapNumber: number,
+  metricKind: ChartDetailMetricKind,
+): ChartDetailResult[] {
+  const isDifference = metricKind === "gap" || metricKind === "pace";
+  const displayRiders = isDifference
+    ? [
+        primaryRider,
+        ...riders.filter((rider) => rider.riderId !== primaryRider.riderId),
+      ]
+    : riders;
+  const primaryMap = isDifference
+    ? buildLapMap(primaryRider, metricKind === "pace")
+    : undefined;
+
+  return displayRiders.map((rider) => {
+    const riderMap = buildLapMap(rider, metricKind === "lap" || metricKind === "pace");
+    const riderLap = riderMap.get(lapNumber);
+
+    if (metricKind === "rank") {
+      return {
+        riderId: rider.riderId,
+        value: riderLap?.rankAtLap ?? null,
+        rankAtLap: riderLap?.rankAtLap ?? null,
+      };
+    }
+
+    if (metricKind === "lap") {
+      return {
+        riderId: rider.riderId,
+        value: riderLap?.lapTimeSec ?? null,
+        rankAtLap: riderLap?.rankAtLap ?? null,
+      };
+    }
+
+    const primaryLap = primaryMap?.get(lapNumber);
+    if (rider.riderId === primaryRider.riderId) {
+      return {
+        riderId: rider.riderId,
+        value: primaryLap ? 0 : null,
+        rankAtLap: primaryLap?.rankAtLap ?? null,
+      };
+    }
+
+    const value =
+      primaryLap && riderLap
+        ? metricKind === "gap"
+          ? riderLap.cumulativeTimeSec - primaryLap.cumulativeTimeSec
+          : riderLap.lapTimeSec - primaryLap.lapTimeSec
+        : null;
+
+    return {
+      riderId: rider.riderId,
+      value,
+      rankAtLap: value === null ? null : riderLap?.rankAtLap ?? null,
+    };
+  });
+}
+
 function getLastCheckpoint(rider: Rider): LapRecord | undefined {
   return getValidCheckpoints(rider).at(-1);
 }

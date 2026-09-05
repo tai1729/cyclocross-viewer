@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildChartDetail,
   buildLapDeltaRows,
   buildGapSeries,
   buildPaceDeltaSeries,
@@ -397,4 +398,79 @@ test("DNF and lapped riders contribute measured values only", () => {
       { lapNumber: 3 },
     ],
   );
+});
+
+test("chart detail returns ordered raw values for all metric kinds", () => {
+  const primary = rider("primary", 1, [
+    lap(1, 60.5, 60.5, 1),
+    lap(2, 62.25, 122.75, 2),
+    lap(3, 64, 186.75, 3),
+  ]);
+  const second = rider("second", 2, [
+    lap(1, 61.5, 61.5, 2),
+    lap(2, 60.25, 121.75, 1),
+    lap(3, 65, 186.75, 2),
+  ]);
+  const first = rider("first", 3, [lap(1, 63, 63, 3), lap(2, 64, 127, 3)]);
+
+  assert.deepEqual(buildChartDetail(primary, [second, first], 2, "rank"), [
+    { riderId: "second", value: 1, rankAtLap: 1 },
+    { riderId: "first", value: 3, rankAtLap: 3 },
+  ]);
+  assert.deepEqual(buildChartDetail(primary, [second, first], 2, "lap"), [
+    { riderId: "second", value: 60.25, rankAtLap: 1 },
+    { riderId: "first", value: 64, rankAtLap: 3 },
+  ]);
+  assert.deepEqual(buildChartDetail(primary, [second, first], 2, "gap"), [
+    { riderId: "primary", value: 0, rankAtLap: 2 },
+    { riderId: "second", value: -1, rankAtLap: 1 },
+    { riderId: "first", value: 4.25, rankAtLap: 3 },
+  ]);
+  assert.deepEqual(buildChartDetail(primary, [second, first], 2, "pace"), [
+    { riderId: "primary", value: 0, rankAtLap: 2 },
+    { riderId: "second", value: -2, rankAtLap: 1 },
+    { riderId: "first", value: 1.75, rankAtLap: 3 },
+  ]);
+});
+
+test("chart detail keeps missing values explicit and does not infer boundaries", () => {
+  const primary = rider("primary", 1, [
+    lap(1, 60, 60, 1),
+    lap(2, 0, 120, 1),
+    lap(3, 63, 183, 1),
+  ]);
+  const duplicate = rider("duplicate", 2, [
+    lap(1, 65, 65, 2),
+    lap(2, 66, 131, 2),
+    lap(2, 67, 132, 2),
+    lap(3, 68, 199, 2),
+  ]);
+  const dnf = rider("dnf", 4, [lap(1, 70, 70, 4)], "dnf");
+  const lapped = rider("lapped", 3, [lap(1, 72, 72, 3)]);
+  const invalid = rider("invalid", 5, [
+    { ...lap(2, 66, 126, 5), rankAtLap: Number.NaN },
+  ]);
+
+  assert.deepEqual(
+    buildChartDetail(primary, [duplicate, dnf, lapped, invalid], 2, "lap"),
+    [
+      { riderId: "duplicate", value: null, rankAtLap: null },
+      { riderId: "dnf", value: null, rankAtLap: null },
+      { riderId: "lapped", value: null, rankAtLap: null },
+      { riderId: "invalid", value: null, rankAtLap: null },
+    ],
+  );
+  assert.deepEqual(buildChartDetail(primary, [duplicate, dnf, lapped, invalid], 2, "gap"), [
+    { riderId: "primary", value: 0, rankAtLap: 1 },
+    { riderId: "duplicate", value: null, rankAtLap: null },
+    { riderId: "dnf", value: null, rankAtLap: null },
+    { riderId: "lapped", value: null, rankAtLap: null },
+    { riderId: "invalid", value: null, rankAtLap: null },
+  ]);
+
+  const noBase = rider("no-base", 1, [lap(1, 0, 60, 1)]);
+  assert.deepEqual(buildChartDetail(noBase, [dnf], 1, "pace"), [
+    { riderId: "no-base", value: null, rankAtLap: null },
+    { riderId: "dnf", value: null, rankAtLap: null },
+  ]);
 });

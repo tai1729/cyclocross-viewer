@@ -92,8 +92,6 @@ Auditors must identify any implementation-significant ambiguity about:
     Recharts pointer tooltip is not rearchitected into a keyboard chart
     navigator in this Slice.
 
-STATUS: CLEAR
-
 ## Current Slice 4 audit
 
 The preceding section records the completed Slice 3 audit. The active audit
@@ -172,5 +170,52 @@ below governs the lap-detail and summary implementation.
    comparison columns; their comparison detail remains in existing charts and
    tooltips. No URL, chart architecture, upstream contract, or dependency
    changes are part of Slice 4.
+
+STATUS: CLEAR
+
+## Current audit — Phase 2 Slice 5: accessible mobile chart detail
+
+This audit supersedes the completed Slice 4 audit while the new slice is
+active. Auditors must check the current `PRODUCT.md`, `DESIGN.md`,
+`IMPLEMENTATION_PLAN.md`, the four chart components, `ChartTabs`,
+`RoleAwareTooltip`, and the validity helpers in `lib/dataTransform.ts`.
+
+The two independent auditors identified the following implementation-significant
+questions. The Commander resolved them as follows:
+
+1. First-lap fallback: use exactly `raceLapNumbers[0]`; an empty axis has no
+   selected lap and the panel is unavailable. This applies to initialization,
+   tab changes, and clear-pin.
+2. Primary gap/pace detail: always render a display-only primary row first.
+   Its value is `±0` only when the required metric is valid; otherwise it is
+   `未計測`. It is never added to the Recharts series or tooltip payload.
+3. No comparison riders: retain the existing empty chart state and render the
+   shared panel with `比較対象なし`; keep lap navigation when an axis exists,
+   without implying a zero comparison.
+4. Sparse chart click: resolve only a valid Recharts active axis
+   index/payload. A valid axis lap pins exactly even if values are missing;
+   missing values remain `未計測`. Empty-area events do not change state.
+5. Hover/pin: while unpinned, hover updates the active lap and pointer leave
+   retains the last active lap. While pinned, hover has no state effect. Clear
+   unpins and resets to `raceLapNumbers[0]` when available.
+6. Keyboard path: the native lap selector and previous/next buttons are the
+   complete keyboard mechanism. They expose labels, edge-disabled states,
+   focus-visible styling, and a readable selected-lap/value region; SVG dots
+   are not independently focusable.
+7. Rider membership: rank/lap use the same displayed rider list as the
+   existing chart. Gap/pace use the display-only primary row followed by the
+   existing comparison series riders, in reconciled order.
+8. DNF/lapped wording: the existing summary card remains authoritative. The
+   detail panel uses `未計測` for unavailable values and does not create a
+   second status model or infer a post-boundary value.
+9. Layout stability: `ChartDetailPanel` uses `min-h-[13rem]` and a bounded
+   internally scrolling value list so its outer height is stable per tab/mode;
+   the page never gains horizontal overflow.
+10. Verification: pure-transform tests cover valid, sparse, duplicate,
+    invalid, DNF, lapped, and sign cases. Browser smoke verifies initial,
+    hover, chart click/tap, selector, previous/next, pin/clear, tab changes,
+    missing values, and 320px/390px overflow/focus behavior. No component-test
+    harness is added because this repository has no such dependency; browser
+    smoke is the interaction evidence.
 
 STATUS: CLEAR

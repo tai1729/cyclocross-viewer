@@ -1,7 +1,114 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
 Status: CLOSED
-Active Change: Phase 2 Slice 4 — lap detail and summary (complete)
+Active Change: Phase 2 Slice 5 — accessible mobile chart detail (complete)
+
+## Current active design — Phase 2 Slice 5
+
+### Goal
+
+Make the exact value at a selected lap available below the active chart so
+mobile users do not have to rely on a transient pointer tooltip. The same
+detail must be reachable by chart hover, chart tap, and keyboard controls at
+320px/390px widths.
+
+### Non-goals
+
+- No URL state synchronization, export, official-result metadata, upstream
+  contract change, chart-library replacement, or new production dependency.
+- No interpolation, gap filling, synthetic primary data, or change to the
+  existing chart formulas, line types, role styling, or error routes.
+- No change to comparison selection, pinned limits, all-mode eligibility, or
+  the existing desktop tooltip behavior.
+
+### Product behavior
+
+- `ChartTabs` owns the active lap detail state for all four tabs. The initial
+  detail lap is the first race lap; switching tabs preserves the lap number
+  when it is on the race axis and otherwise selects the first race lap.
+- Hover updates the detail lap while the selection is not pinned. Clicking or
+  tapping the chart pins that lap. Keyboard selection in the detail panel also
+  pins it. A visible clear action releases the pin and returns to the current
+  first race lap.
+- A stable detail panel is rendered immediately below the active chart. It
+  contains a native lap selector, previous/next lap controls, the selected lap
+  label, and the exact measured values for the riders represented in the chart.
+  Controls have visible focus and a minimum 44px target.
+- The panel uses the existing semantic roles: rank uses valid checkpoints,
+  lap uses valid timed laps, cumulative gap uses the existing checkpoint
+  difference, and pace uses the existing timed-lap difference. Missing values
+  are displayed as `未計測`; no value is estimated.
+- Difference panels include the primary rider as the visible `±0` reference
+  when its metric is valid and show comparison ranks only beside an emitted
+  value. Rank and lap panels show the corresponding exact primary and
+  comparison values. Role labels and text remain available even when color is
+  unavailable.
+- The existing Recharts tooltip remains for pointer inspection. The panel is
+  the persistent/readable alternative and uses `min-h-[13rem]` plus a bounded
+  internal value list so changing laps does not change its outer height for a
+  given tab/mode. Crowded/all mode scrolls only that value list vertically and
+  never introduces page-level horizontal overflow.
+
+### Architecture and data flow
+
+```text
+race + primary + displayed riders
+  -> active lap state in ChartTabs
+  -> existing valid checkpoint/timed-lap maps
+  -> pure chart-detail transform
+  -> persistent ChartDetailPanel below the active chart
+```
+
+The four chart components receive the active lap and two callbacks: chart-level
+hover/click events resolve only the Recharts active axis index/payload to a
+lap in `raceLapNumbers`; events without a valid axis lap are ignored. Hover
+updates the active lap only while unpinned, and chart click/tap pins the
+currently resolved axis lap even if all rider values are missing. A vertical
+active-lap marker is visual reinforcement only; the DOM detail panel and
+controls are the accessible source of the value. The pure transform reuses
+`getValidCheckpoints`/`getValidTimedLaps` and existing gap/pace signs.
+
+The panel always renders the primary entry first. On gap/pace its value is a
+display-only `±0` only when the primary metric is valid; otherwise it is
+`未計測` and is never synthesized into the Recharts payload. Rank/lap show the
+active chart's displayed riders in reconciled order; gap/pace show the primary
+entry followed by the existing comparison series riders. Native select and
+previous/next buttons are the complete keyboard path, with visible labels,
+disabled edge states, and focus-visible styling; SVG points do not become
+independent focus targets.
+
+### Error and edge behavior
+
+- The first race lap is exactly `raceLapNumbers[0]`. With no race lap axis,
+  there is no selected lap; the panel shows an explicit unavailable state and
+  disables lap navigation.
+- With no comparison rider, gap and pace retain the existing empty chart
+  state. The shared panel still exposes lap navigation when an axis exists,
+  but its value area says `比較対象なし` and does not imply a zero comparison.
+- DNF, lapped, duplicate, invalid, and post-end records follow the existing
+  validity rules. A missing value is rendered as `未計測`; the existing status
+  card remains authoritative for DNF/lapped interpretation and the panel does
+  not invent a second status model.
+- Long rider names and labels wrap within the panel. The panel remains
+  readable at 320px and 390px and does not depend on hover or color alone.
+
+### Affected components and acceptance criteria
+
+- `lib/dataTransform.ts` and `tests/dataTransform.test.ts`: pure detail
+  extraction with rank/metric validity and sparse semantics.
+- `components/ChartTabs.tsx` and new `components/ChartDetailPanel.tsx`:
+  shared active/pinned lap state, keyboard/touch controls, and stable panel.
+- `components/RankBumpChart.tsx`, `GapChart.tsx`, `PaceChart.tsx`, and
+  `LapTimeChart.tsx`: hover/click callbacks and active-lap marker only.
+- `docs/PRODUCT.md`, `docs/IMPLEMENTATION_PLAN.md`, and
+  `docs/SPEC_AUDIT.md`: current contract and closeout.
+
+Acceptance requires: persistent exact detail for all four tabs; hover, tap,
+and keyboard reach the same lap detail; missing values remain explicit;
+keyboard focus and 44px controls are visible; 320px/390px layouts have no
+page-level horizontal overflow; existing chart semantics and routes regress
+not; tests, typecheck, lint, build, diff hygiene, browser smoke, and
+independent review pass.
 
 ## Context and assumption
 

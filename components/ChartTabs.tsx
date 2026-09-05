@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { RaceResult, Rider } from "@/lib/types";
 import { getRaceLapNumbers } from "@/lib/dataTransform";
 import { buildRiderSeriesStyles } from "@/lib/chartSeriesStyles";
@@ -8,6 +8,7 @@ import { RankBumpChart } from "@/components/RankBumpChart";
 import { GapChart } from "@/components/GapChart";
 import { PaceChart } from "@/components/PaceChart";
 import { LapTimeChart } from "@/components/LapTimeChart";
+import { ChartDetailPanel } from "@/components/ChartDetailPanel";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -54,10 +55,53 @@ export function ChartTabs({
   isAllMode = false,
 }: ChartTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("rank");
+  const raceLapNumbers = useMemo(() => getRaceLapNumbers(race), [race]);
+  const raceLapAxisKey = raceLapNumbers.join(",");
+  const [activeLapNumber, setActiveLapNumber] = useState<number | null>(
+    () => raceLapNumbers[0] ?? null,
+  );
+  const [pinnedLapNumber, setPinnedLapNumber] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    queueMicrotask(() => {
+      if (!isCurrent) return;
+
+      const fallbackLapNumber = raceLapNumbers[0] ?? null;
+      setActiveLapNumber((currentLapNumber) =>
+        currentLapNumber !== null && raceLapNumbers.includes(currentLapNumber)
+          ? currentLapNumber
+          : fallbackLapNumber,
+      );
+      setPinnedLapNumber((currentLapNumber) =>
+        currentLapNumber !== null && raceLapNumbers.includes(currentLapNumber)
+          ? currentLapNumber
+          : null,
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [raceLapAxisKey, raceLapNumbers]);
+
+  const handleLapHover = (lapNumber: number) => {
+    if (pinnedLapNumber === null) setActiveLapNumber(lapNumber);
+  };
+  const handleLapSelect = (lapNumber: number) => {
+    setActiveLapNumber(lapNumber);
+    setPinnedLapNumber(lapNumber);
+  };
+  const handleLapChange = (lapNumber: number) => {
+    if (raceLapNumbers.includes(lapNumber)) handleLapSelect(lapNumber);
+  };
+  const handleClearPin = () => {
+    setPinnedLapNumber(null);
+    setActiveLapNumber(raceLapNumbers[0] ?? null);
+  };
   const otherRiders = comparisonRiders.filter(
     (r) => r.riderId !== selfRider.riderId,
   );
-  const raceLapNumbers = getRaceLapNumbers(race);
   const activeTabDef = TABS.find((t) => t.key === activeTab) ?? TABS[0];
   const seriesStyles = buildRiderSeriesStyles(
     comparisonRiders,
@@ -105,8 +149,22 @@ export function ChartTabs({
                 riderNames={riderNames}
                 isCrowded={isCrowded}
                 raceLapNumbers={raceLapNumbers}
+                activeLapNumber={activeLapNumber}
+                onLapHover={handleLapHover}
+                onLapSelect={handleLapSelect}
               />
             </figure>
+            <ChartDetailPanel
+              metricKind="rank"
+              primaryRider={selfRider}
+              riders={comparisonRiders}
+              seriesStyles={seriesStyles}
+              raceLapNumbers={raceLapNumbers}
+              activeLapNumber={activeLapNumber}
+              isPinned={pinnedLapNumber !== null}
+              onLapChange={handleLapChange}
+              onClearPin={handleClearPin}
+            />
           </TabsContent>
           <TabsContent value="gap">
             {otherRiders.length > 0 ? (
@@ -122,11 +180,26 @@ export function ChartTabs({
                   seriesStyles={seriesStyles}
                   riderNames={riderNames}
                   isCrowded={isCrowded}
+                  raceLapNumbers={raceLapNumbers}
+                  activeLapNumber={activeLapNumber}
+                  onLapHover={handleLapHover}
+                  onLapSelect={handleLapSelect}
                 />
               </figure>
             ) : (
               <NoComparisonRiders />
             )}
+            <ChartDetailPanel
+              metricKind="gap"
+              primaryRider={selfRider}
+              riders={otherRiders}
+              seriesStyles={seriesStyles}
+              raceLapNumbers={raceLapNumbers}
+              activeLapNumber={activeLapNumber}
+              isPinned={pinnedLapNumber !== null}
+              onLapChange={handleLapChange}
+              onClearPin={handleClearPin}
+            />
           </TabsContent>
           <TabsContent value="pace">
             {otherRiders.length > 0 ? (
@@ -142,11 +215,26 @@ export function ChartTabs({
                   seriesStyles={seriesStyles}
                   riderNames={riderNames}
                   isCrowded={isCrowded}
+                  raceLapNumbers={raceLapNumbers}
+                  activeLapNumber={activeLapNumber}
+                  onLapHover={handleLapHover}
+                  onLapSelect={handleLapSelect}
                 />
               </figure>
             ) : (
               <NoComparisonRiders />
             )}
+            <ChartDetailPanel
+              metricKind="pace"
+              primaryRider={selfRider}
+              riders={otherRiders}
+              seriesStyles={seriesStyles}
+              raceLapNumbers={raceLapNumbers}
+              activeLapNumber={activeLapNumber}
+              isPinned={pinnedLapNumber !== null}
+              onLapChange={handleLapChange}
+              onClearPin={handleClearPin}
+            />
           </TabsContent>
           <TabsContent value="lap">
             <figure>
@@ -159,8 +247,22 @@ export function ChartTabs({
                 riderNames={riderNames}
                 isCrowded={isCrowded}
                 raceLapNumbers={raceLapNumbers}
+                activeLapNumber={activeLapNumber}
+                onLapHover={handleLapHover}
+                onLapSelect={handleLapSelect}
               />
             </figure>
+            <ChartDetailPanel
+              metricKind="lap"
+              primaryRider={selfRider}
+              riders={comparisonRiders}
+              seriesStyles={seriesStyles}
+              raceLapNumbers={raceLapNumbers}
+              activeLapNumber={activeLapNumber}
+              isPinned={pinnedLapNumber !== null}
+              onLapChange={handleLapChange}
+              onClearPin={handleClearPin}
+            />
           </TabsContent>
         </CardContent>
       </Tabs>

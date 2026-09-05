@@ -1,7 +1,109 @@
 # Implementation Plan
 
 Status: COMPLETE
-Active implementation plan: Phase 2 Slice 4 — lap detail and summary (complete)
+Active implementation plan: Phase 2 Slice 5 — accessible mobile chart detail (complete)
+
+## Phase 2 Slice 5 task graph
+
+### P2S5-1 — Pure chart-detail transform and tests
+
+- Status: DONE
+- Objective: Return exact per-rider detail for one lap using the existing
+  checkpoint/timed-lap validity rules and gap/pace signs.
+- Scope: `lib/dataTransform.ts`, `tests/dataTransform.test.ts`.
+- Dependencies: specification audit clear.
+- Do-not-change: upstream types, route/error behavior, comparison selection,
+  existing series builders, and unrelated worktree files.
+- Acceptance: rank/checkpoint, lap/timed-lap, cumulative-gap, and pace values
+  are sparse; missing/duplicate/invalid values are null; primary difference
+  baseline is only emitted when its metric is valid; ranks are same-lap.
+- Verification: focused tests and full validation.
+
+### P2S5-2 — Shared detail panel and lap navigation
+
+- Status: DONE
+- Objective: Add a stable below-chart panel with native selector,
+  previous/next controls, clear pin action, readable values, role labels, and
+  mobile-safe wrapping.
+- Scope: new `components/ChartDetailPanel.tsx`.
+- Dependencies: P2S5-1.
+- Do-not-change: chart data builders, route states, or upstream contracts.
+- Acceptance: the same panel supports keyboard selection and displays explicit
+  `未計測` without relying on color; controls are focus-visible and 44px.
+- Verification: typecheck, lint, browser smoke at 320px/390px.
+
+### P2S5-3 — Chart interaction integration
+
+- Status: DONE
+- Objective: Connect shared active/pinned lap state to all four charts. Hover
+  updates, click/tap pins, and an active-lap marker reinforces the selected
+  point while existing tooltips remain intact.
+- Scope: `components/ChartTabs.tsx`, `components/RankBumpChart.tsx`,
+  `components/GapChart.tsx`, `components/PaceChart.tsx`,
+  `components/LapTimeChart.tsx`.
+- Dependencies: P2S5-1 and P2S5-2.
+- Do-not-change: line types, sparse data, role styles, comparison modes, or
+  chart formulas.
+- Acceptance: switching tabs preserves valid lap selection, chart hover/tap
+  reaches the same panel detail, and no chart interaction removes the
+  keyboard path.
+- Verification: full validation and browser smoke.
+
+### P2S5-4 — Product documentation and closeout
+
+- Status: DONE
+- Objective: Record the persistent chart-detail contract and close the slice.
+- Scope: `docs/PRODUCT.md`, `docs/DESIGN.md`,
+  `docs/IMPLEMENTATION_PLAN.md`, `docs/SPEC_AUDIT.md`.
+- Dependencies: P2S5-1 through P2S5-3 and reviewer PASS.
+- Do-not-change: historical docs, deployment settings, or unrelated changes.
+- Acceptance: canonical docs describe shipped behavior and
+  `docs/SPEC_AUDIT.md` ends exactly with `STATUS: CLEAR`.
+- Verification: documentation review and `git diff --check`.
+
+### P2S5-5 — Verification, browser smoke, and independent review
+
+- Status: DONE
+- Objective: Run required checks, verify responsive interaction, obtain
+  independent PASS, then commit and push only intended changes.
+- Scope: tests, typecheck, lint, build, diff hygiene, browser smoke, review,
+  bounded revisions, Git handoff.
+- Dependencies: P2S5-1 through P2S5-4.
+- Do-not-change: credentials, deployment configuration, historical assets, or
+  unrelated user changes.
+- Acceptance: every required check passes and reviewer returns `PASS`.
+
+Execution order:
+
+```text
+two spec auditors -> specification resolution -> P2S5-1
+  -> P2S5-2 -> P2S5-3 -> P2S5-4 -> P2S5-5
+```
+
+### Resolved design decisions
+
+- The panel is shared by all chart tabs and is always placed immediately
+  below the active chart; it is not a second chart or a mobile-only duplicate.
+- Hover changes the unpinned active lap. Chart click/tap and panel keyboard
+  actions pin the lap. The clear action unpins without changing the data
+  semantics.
+- Native select plus previous/next buttons is the keyboard/touch mechanism;
+  raw SVG dots are not made independently focusable.
+- The panel renders comparison riders in the same reconciled order and uses
+  the current role labels. All mode may use a vertically scrollable value list.
+- `raceLapNumbers[0]` is the only first-lap fallback. An empty axis has no
+  selected lap. Chart-level events use only the Recharts active axis
+  index/payload; empty-area events are ignored, but a valid axis lap may be
+  pinned even when every rider value is missing.
+- Gap/pace always render a display-only primary row first. It is `±0` only
+  when the primary metric is valid; otherwise it is `未計測` and is never
+  added to the chart payload. With no comparison riders the value area says
+  `比較対象なし` while the lap controls remain available.
+- `ChartDetailPanel` uses `min-h-[13rem]` and a fixed bounded value-list area
+  so its outer height remains stable for the same tab/mode. Existing status
+  cards remain authoritative for DNF/lapped wording; the panel uses
+  `未計測` for unavailable values.
+- No URL synchronization is included in this slice.
 
 ## Baseline
 

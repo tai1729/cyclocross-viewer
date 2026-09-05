@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { MouseHandlerDataParam } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
 import {
   buildLapMap,
@@ -22,6 +23,7 @@ import {
   formatLapTooltipLabel,
   RoleAwareTooltip,
 } from "@/components/RoleAwareTooltip";
+import { resolveChartLapNumber } from "@/components/chartInteraction";
 
 interface PaceChartProps {
   race: RaceResult;
@@ -30,6 +32,10 @@ interface PaceChartProps {
   seriesStyles: Record<string, RiderSeriesStyle>;
   riderNames: Record<string, string>;
   isCrowded: boolean;
+  raceLapNumbers: readonly number[];
+  activeLapNumber?: number | null;
+  onLapHover?: (lapNumber: number) => void;
+  onLapSelect?: (lapNumber: number) => void;
 }
 
 export function PaceChart({
@@ -39,6 +45,10 @@ export function PaceChart({
   seriesStyles,
   riderNames,
   isCrowded,
+  raceLapNumbers,
+  activeLapNumber = null,
+  onLapHover,
+  onLapSelect,
 }: PaceChartProps) {
   const data = buildPaceDeltaSeries(
     race,
@@ -49,6 +59,18 @@ export function PaceChart({
     otherRiders.map((rider) => [rider.riderId, buildLapMap(rider, true)]),
   );
   const primaryStyle = seriesStyles[baseRider.riderId];
+  const activeRaceLapNumber =
+    activeLapNumber !== null && raceLapNumbers.includes(activeLapNumber)
+      ? activeLapNumber
+      : null;
+  const handleMouseMove = (event: MouseHandlerDataParam) => {
+    const lapNumber = resolveChartLapNumber(event, raceLapNumbers);
+    if (lapNumber !== null) onLapHover?.(lapNumber);
+  };
+  const handleClick = (event: MouseHandlerDataParam) => {
+    const lapNumber = resolveChartLapNumber(event, raceLapNumbers);
+    if (lapNumber !== null) onLapSelect?.(lapNumber);
+  };
 
   return (
     <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
@@ -56,6 +78,8 @@ export function PaceChart({
         <LineChart
           data={data}
           margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+          onMouseMove={handleMouseMove}
+          onClick={handleClick}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
           <XAxis
@@ -85,6 +109,14 @@ export function PaceChart({
               fill: primaryStyle.color,
             }}
           />
+          {activeRaceLapNumber !== null && (
+            <ReferenceLine
+              x={activeRaceLapNumber}
+              stroke="#71717a"
+              strokeDasharray="4 4"
+              strokeOpacity={0.75}
+            />
+          )}
           <Tooltip
             content={(props) => (
               <RoleAwareTooltip

@@ -5,11 +5,13 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { MouseHandlerDataParam } from "recharts";
 import type { Rider } from "@/lib/types";
 import { buildLapMap, formatSecToClock } from "@/lib/dataTransform";
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
@@ -17,6 +19,7 @@ import {
   formatLapTooltipLabel,
   RoleAwareTooltip,
 } from "@/components/RoleAwareTooltip";
+import { resolveChartLapNumber } from "@/components/chartInteraction";
 
 interface LapTimeChartProps {
   riders: Rider[];
@@ -24,7 +27,10 @@ interface LapTimeChartProps {
   riderNames: Record<string, string>;
   isCrowded: boolean;
   /** レース全体の有効チェックポイントにある周回番号の和集合。 */
-  raceLapNumbers: number[];
+  raceLapNumbers: readonly number[];
+  activeLapNumber?: number | null;
+  onLapHover?: (lapNumber: number) => void;
+  onLapSelect?: (lapNumber: number) => void;
 }
 
 export function LapTimeChart({
@@ -33,6 +39,9 @@ export function LapTimeChart({
   riderNames,
   isCrowded,
   raceLapNumbers,
+  activeLapNumber = null,
+  onLapHover,
+  onLapSelect,
 }: LapTimeChartProps) {
   const riderLapMaps = new Map(
     riders.map((rider) => [rider.riderId, buildLapMap(rider, true)]),
@@ -47,6 +56,18 @@ export function LapTimeChart({
     }
     data.push(point);
   }
+  const activeRaceLapNumber =
+    activeLapNumber !== null && raceLapNumbers.includes(activeLapNumber)
+      ? activeLapNumber
+      : null;
+  const handleMouseMove = (event: MouseHandlerDataParam) => {
+    const lapNumber = resolveChartLapNumber(event, raceLapNumbers);
+    if (lapNumber !== null) onLapHover?.(lapNumber);
+  };
+  const handleClick = (event: MouseHandlerDataParam) => {
+    const lapNumber = resolveChartLapNumber(event, raceLapNumbers);
+    if (lapNumber !== null) onLapSelect?.(lapNumber);
+  };
 
   return (
     <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
@@ -54,6 +75,8 @@ export function LapTimeChart({
         <LineChart
           data={data}
           margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+          onMouseMove={handleMouseMove}
+          onClick={handleClick}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
           <XAxis
@@ -87,6 +110,14 @@ export function LapTimeChart({
             )}
             labelFormatter={(l) => `${l}周目`}
           />
+          {activeRaceLapNumber !== null && (
+            <ReferenceLine
+              x={activeRaceLapNumber}
+              stroke="#71717a"
+              strokeDasharray="4 4"
+              strokeOpacity={0.75}
+            />
+          )}
           {!isCrowded && <Legend wrapperStyle={{ fontSize: 11 }} />}
           {riders.map((rider) => {
             const style = seriesStyles[rider.riderId];
