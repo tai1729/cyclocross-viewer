@@ -794,3 +794,81 @@ released on remote `main` before this change.
    conveyed by color alone.
 8. Tests, typecheck, lint, production build, diff hygiene, browser smoke, and
    independent review pass.
+
+## UX redesign audit v2 — preparatory design (2026-09-05)
+
+This section records the design decision from the task-based UX audit. It is
+documentation-only and does not authorize product-code changes in this
+session. Detailed evidence, alternatives, implementation behavior, and the
+specification audit are in:
+
+- `docs/ux-task-test-v2.md`
+- `docs/ux-redesign-options-v2.md`
+- `docs/ux-redesign-spec-v2.md`
+- `docs/ux-spec-audit-v2.md`
+
+### Goal
+
+Re-evaluate the information architecture from the perspective of a first-time
+analysis user. After a rider is selected, the race/category/rider/comparison
+context must become compact, the chart must become the primary analysis
+surface, and repeated rider/comparison/metric changes must not move the user
+to the page top.
+
+### Non-goals
+
+- No product-code, dependency, upstream JSON, route, data-transform, chart
+  formula, or deployment change is part of this audit.
+- No new analytics, user tracking, export, search, save, authentication, or
+  official-result inference is proposed.
+- Existing loading, error, not-found, DNF, lapped, sparse-data, and
+  unavailable-analysis semantics remain authoritative.
+
+### Resolved design
+
+The recommended direction is an analysis workspace with two derived states:
+
+- `browse`: category and full results are primary; no rider is selected.
+- `analyze`: the existing `rider` URL state is present; a compact context bar,
+  chart-first main area, and on-demand results/detail surfaces are primary.
+
+The workspace has one page-level scroll container. On desktop (`>=1024px`), a
+280–320px control rail sits beside the main area. On mobile, the current rider,
+comparison mode, and metric remain in a sticky compact toolbar; rider and fixed
+comparison lists open in bounded, focus-managed sheets/dialogs. The DOM order is
+`context/status -> ChartTabs -> LapDetailTable -> optional full results` inside
+the active workspace. The default chart remains the existing rank view.
+
+Same-race rider, comparison, metric/tab, and lap actions preserve the workspace
+anchor and the activating control focus. Category changes and new-route
+navigation clear dependent state and may start at the page top. The existing
+URL keys remain unchanged; the user-facing word “metric” maps to the existing
+`tab` key.
+
+### Architecture and data flow
+
+```text
+existing URL + race data
+  -> derived browse/analyze workspace mode
+  -> compact context + control surface
+  -> existing comparison/dataTransform contracts
+  -> ChartTabs (primary) -> LapDetailTable (supporting)
+```
+
+`RaceViewer` remains the owner of URL state, route intent, and loading
+boundaries. `RiderSelector`, comparison controls, and `ChartTabs` remain
+focused component boundaries. A future implementation must distinguish
+same-analysis scroll-preserving navigation from category/new-route navigation;
+CSS-only changes are insufficient to address the observed `router.push()` page
+reset.
+
+### Acceptance and validation boundary
+
+The future implementation must satisfy the UX acceptance criteria in
+`docs/ux-redesign-spec-v2.md`: no forced page-top reset for same-analysis
+changes, chart/tab visibility in the target desktop viewport, compact active
+configuration, repeated-analysis stability, visible context, 320px/390px
+accessibility, and preservation of all existing data/error semantics. Required
+validation remains tests, typecheck, lint, build, diff hygiene, browser smoke
+at all four viewports, and independent review. At least three first-time users
+should then repeat Tasks 1–5 before a broader rewrite is considered.

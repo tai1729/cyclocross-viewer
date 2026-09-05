@@ -549,3 +549,86 @@ two spec auditors -> specification resolution -> P2S4-1
 - The table uses one `role="table"` DOM representation that switches to a
   labeled grid layout on narrow screens. The summary is placed after
   `SummaryCard` on the left; the table is above charts on the right.
+
+## UX redesign audit v2 — future implementation plan (not started)
+
+This plan is the bounded follow-up to the documentation-only audit in
+`docs/ux-redesign-spec-v2.md`. No task below was implemented in the current
+session; product code remains unchanged.
+
+### UX2-1 — Workspace state and scroll intent
+
+- Status: READY (future phase)
+- Objective: Derive `browse`/`analyze` from the existing rider URL state and
+  separate same-analysis scroll-preserving actions from category/new-route
+  navigation.
+- Scope: `components/RaceViewer.tsx`, workspace wrapper, focus/scroll intent;
+  preserve `lib/urlState.ts` contract.
+- Dependencies: UX redesign spec v2; no new dependency.
+- Do not change: upstream types, data semantics, chart formulas, error/not-found
+  boundaries, or public routes.
+- Acceptance: rider/comparison/tab/lap actions do not force page top; category
+  change clears dependents and may start at top; direct/deep-link and
+  back/forward behavior follows the state table.
+- Verification: focused tests, typecheck, browser scroll/focus smoke.
+
+### UX2-2 — Chart-first workspace composition
+
+- Status: BLOCKED by UX2-1
+- Objective: Make the active workspace render context/status, `ChartTabs`, then
+  `LapDetailTable`, with full results collapsed to an explicit on-demand surface.
+- Scope: `RaceViewer.tsx`, `ChartTabs.tsx`, `LapDetailTable.tsx`, result summary
+  disclosure, stable chart panel sizing.
+- Dependencies: UX2-1.
+- Do not change: chart data, chart tabs, sparse values, DNF/lapped meaning, or
+  detail-table value contracts.
+- Acceptance: valid active rider shows chart tab and plot frame in the target
+  viewport; results and detail remain keyboard-reachable and readable.
+- Verification: existing tests, build, browser smoke at 1440×900/1280×720.
+
+### UX2-3 — Responsive compact controls
+
+- Status: BLOCKED by UX2-1
+- Objective: Keep current context/metric/comparison visible on Mobile and move
+  low-frequency rider/fixed-rider lists into accessible bounded sheets/dialogs.
+- Scope: `RiderSelector.tsx`, `ComparisonAdjuster.tsx`,
+  `ComparisonRiderPicker.tsx`, responsive workspace styles, existing Base UI or
+  native dialog primitives.
+- Dependencies: UX2-1; coordinate with UX2-2 without parallel edits to the
+  same integration file.
+- Do not change: 44px target policy, graphable/all limit, four fixed-rider
+  limit, or page-level overflow boundary.
+- Acceptance: 390px/320px primary controls and chart are reachable without
+  large vertical roundtrips; sheet focus return and long-name wrapping pass.
+- Verification: keyboard smoke, overflow assertions, screenshots at both
+  mobile sizes.
+
+### UX2-4 — State/error/accessibility regression coverage
+
+- Status: BLOCKED by UX2-2 and UX2-3
+- Objective: Cover loading, error, empty, unavailable, DNF, lapped, missing,
+  duplicate, pinned, all-limit, direct URL, and browser navigation states.
+- Scope: behavior-focused tests and browser matrix; no data-model change.
+- Dependencies: UX2-2, UX2-3.
+- Do not change: existing error kinds or collector boundary.
+- Acceptance: no stale race/chart flash, no hidden essential content, visible
+  focus, screen-reader labels, and stable same-analysis scroll.
+- Verification: `npm test`, `npx tsc --noEmit`, `npm run lint`, browser matrix.
+
+### UX2-5 — Full verification, user test, review, and closeout
+
+- Status: BLOCKED by UX2-4
+- Objective: Run required checks, independent review, and a three-person
+  first-use comparison against the baseline audit.
+- Scope: tests/typecheck/lint/build, `git diff --check`, browser smoke, task
+  metrics, reviewer, documentation closeout.
+- Dependencies: UX2-4.
+- Acceptance: all required checks pass, reviewer returns PASS, and Task 1–5
+  show improved Time to Insight without regression of existing semantics.
+- Verification: project required commands plus the v2 user-test protocol.
+
+### Future execution order
+
+```text
+UX2-1 -> (UX2-2 || UX2-3) -> UX2-4 -> UX2-5
+```

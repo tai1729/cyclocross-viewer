@@ -227,6 +227,42 @@ below governs the lap-detail and summary implementation.
 
 STATUS: CLEAR
 
+## UX redesign audit v2 — specification resolution (2026-09-05)
+
+The task-based audit was performed against the public site before reading the
+repository. Two independent specification auditors then inspected the
+canonical documents and the relevant implementation. They identified
+implementation-significant ambiguity around chart-first order, control
+collapse, per-action scroll/focus, deep links, back/forward, DNF/lapped and
+empty states, and 320px/390px accessibility.
+
+The authoritative detailed resolution is
+`docs/ux-redesign-spec-v2.md`. Its key decisions are:
+
+- `browse` and `analyze` are derived from the existing rider URL state; no new
+  URL key is added.
+- Chart-first means context/status and actionable controls remain available,
+  but `ChartTabs` precedes `LapDetailTable` and active full results collapse.
+- The page remains the only page-level scroll container. Same-race rider,
+  comparison, metric/tab, and lap changes preserve the workspace anchor; a
+  category/new-route change may go to the top.
+- `#race-analysis` targets a focusable workspace heading with a measured sticky
+  header offset. Dialog/sheet actions return focus to their opener.
+- Desktop uses a 280–320px control rail beside the main chart. Mobile keeps
+  context, rider, comparison, and metric in a compact sticky toolbar and moves
+  low-frequency lists into bounded accessible sheets.
+- Existing URL, data, sparse-lap, DNF, lapped, unavailable, all-mode, pinned,
+  loading, error, and not-found contracts remain unchanged.
+- Current production coordinates are baseline evidence, not pixel requirements.
+
+No implementation-blocking ambiguity remains for the documented direction.
+The remaining choices (existing Base UI vs native dialog primitive and exact
+visual tokens) cannot change the resolved state, focus, scroll, content order,
+URL, or responsive behavior. This is a preparatory design audit; it does not
+claim that the redesign has been validated by real users.
+
+STATUS: CLEAR
+
 ## Current audit — Phase 2 Slice 5: accessible mobile chart detail
 
 This audit supersedes the completed Slice 4 audit while the new slice is
