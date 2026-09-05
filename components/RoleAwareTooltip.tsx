@@ -6,16 +6,35 @@ import type {
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
 
 type NameType = string | number;
+type TooltipLabel = string | number | null | undefined;
+export type TooltipLapMap = ReadonlyMap<number, { rankAtLap: number }>;
 
 export type RoleAwareTooltipProps = TooltipContentProps<ValueType, NameType> & {
   seriesStyles: Record<string, RiderSeriesStyle>;
   riderNames: Record<string, string>;
   formatValue: (value: number) => React.ReactNode;
   formatLabel?: (label: string | number) => React.ReactNode;
+  riderLapMaps?: ReadonlyMap<string, TooltipLapMap>;
 };
 
 export function formatLapTooltipLabel(label: string | number): string {
   return `${label}周目`;
+}
+
+export function getTooltipRankAtLap(
+  label: TooltipLabel,
+  riderLapMap?: TooltipLapMap,
+): number | null {
+  const lapNumber =
+    typeof label === "number" || typeof label === "string" ? Number(label) : NaN;
+  if (!Number.isInteger(lapNumber) || lapNumber <= 0) {
+    return null;
+  }
+
+  const rankAtLap = riderLapMap?.get(lapNumber)?.rankAtLap;
+  return typeof rankAtLap === "number" && Number.isFinite(rankAtLap)
+    ? rankAtLap
+    : null;
 }
 
 type NormalizedTooltipEntry = {
@@ -37,6 +56,7 @@ export function RoleAwareTooltip({
   riderNames,
   formatValue,
   formatLabel,
+  riderLapMaps,
 }: RoleAwareTooltipProps): React.ReactNode {
   if (!active || !payload?.length) {
     return null;
@@ -103,20 +123,30 @@ export function RoleAwareTooltip({
     >
       {hasLabel && <p className="mb-1 font-medium">{displayLabel}</p>}
       <ul className="m-0 list-none space-y-1 p-0">
-        {visibleEntries.map(({ id, name, style, value }) => (
-          <li key={id} className="flex min-w-0 items-start gap-2">
-            <span
-              aria-hidden="true"
-              className="mt-1.5 size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: style.color }}
-            />
-            <span className="min-w-0 break-words">
-              <span className="font-medium">{style.roleLabel}</span>
-              <span className="text-muted-foreground">・{name}: </span>
-              <span>{formatValue(value)}</span>
-            </span>
-          </li>
-        ))}
+        {visibleEntries.map(({ id, name, style, value }) => {
+          const rankAtLap =
+            style.role === "fixed"
+              ? getTooltipRankAtLap(label, riderLapMaps?.get(id))
+              : null;
+
+          return (
+            <li key={id} className="flex min-w-0 items-start gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-1.5 size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: style.color }}
+              />
+              <span className="min-w-0 break-words">
+                <span className="font-medium">{style.roleLabel}</span>
+                <span className="text-muted-foreground">・{name}: </span>
+                <span>{formatValue(value)}</span>
+                {rankAtLap !== null && (
+                  <span className="text-muted-foreground">（{rankAtLap}位）</span>
+                )}
+              </span>
+            </li>
+          );
+        })}
         {contextMinimum !== null && contextMaximum !== null && contextStyle && (
           <li className="flex min-w-0 items-start gap-2">
             <span

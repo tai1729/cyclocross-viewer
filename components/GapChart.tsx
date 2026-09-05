@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
-import { buildGapSeries, formatGapSec } from "@/lib/dataTransform";
+import { buildGapSeries, buildLapMap, formatGapSec } from "@/lib/dataTransform";
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
 import {
   formatLapTooltipLabel,
@@ -40,6 +40,9 @@ export function GapChart({
     race,
     baseRider.riderId,
     otherRiders.map((r) => r.riderId),
+  );
+  const riderLapMaps = new Map(
+    otherRiders.map((rider) => [rider.riderId, buildLapMap(rider)]),
   );
   const primaryStyle = seriesStyles[baseRider.riderId];
 
@@ -72,7 +75,7 @@ export function GapChart({
             strokeOpacity={primaryStyle.opacity}
             strokeWidth={primaryStyle.strokeWidth}
             label={{
-              value: `${primaryStyle.roleLabel}・${baseRider.name}`,
+              value: `${primaryStyle.roleLabel}・${baseRider.name}（±0基準）`,
               position: "insideBottomLeft",
               fontSize: 11,
               fill: primaryStyle.color,
@@ -84,6 +87,7 @@ export function GapChart({
                 {...props}
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
+                riderLapMaps={riderLapMaps}
                 formatLabel={formatLapTooltipLabel}
                 formatValue={formatGapSec}
               />

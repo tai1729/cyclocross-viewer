@@ -34,6 +34,31 @@
   they are not inferred, interpolated, or aggregated across missing data.
 - Slice 2 adds no new data contracts and no new production dependencies.
 
+## Phase 2 Slice 3 current behavior
+
+- The user-facing `タイム差` chart is the cumulative difference at the same
+  lap: `target cumulative time - selected rider cumulative time`. The
+  user-facing `周回差` chart is the per-lap difference at the same lap:
+  `target lap time - selected rider lap time`.
+- For both charts, a positive value means the target/comparison rider is
+  behind or slower than the selected rider; a negative value means ahead or
+  faster. The selected rider remains the `±0` baseline and is not added as a
+  synthetic comparison series.
+- Both charts retain the union of measured lap numbers. Missing or invalid
+  values are omitted for the affected rider, and no value is inferred across
+  missing laps. A missing selected-rider record prevents a difference from
+  being emitted at that lap.
+- For fixed riders, the tooltip shows the same-lap rank only when the
+  corresponding finite metric is emitted: a valid checkpoint for `タイム差`
+  or a valid timed lap for `周回差`. Context riders remain represented by the
+  existing current-point aggregated metric summary; their individual ranks are
+  not inferred or listed.
+- Existing DNF and lapped-rider semantics remain unchanged. Slice 3 adds no
+  new status interpretation or chart status label.
+- Lap tables and fastest/average/max-loss statistics remain deferred to Phase
+  2 Slice 4; this slice only clarifies the existing difference charts and
+  tooltip detail.
+
 この文書は、製品全体の長期的なSource of Truthである。現在の実装、テスト、既存設計、2026-09-02〜03のレビューから確認できる事実を整理する。将来の変更仕様は `docs/DESIGN.md` に記載する。
 
 ## Problem

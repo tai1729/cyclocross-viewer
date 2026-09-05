@@ -1,56 +1,92 @@
 # Specification Audit
 
-Status: CLEAR
-Current Change: Phase 2 Slice 2 — role-based chart styling
+Current Change: Phase 2 Slice 3 — time-difference analysis
+
+## Sources inspected
+
+- `AGENTS.md`
+- `docs/PRODUCT.md`
+- `docs/DESIGN.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/2026-09-03-integrated-product-improvement-roadmap.md`
+- `lib/dataTransform.ts`
+- `lib/types.ts`
+- `components/ChartTabs.tsx`
+- `components/GapChart.tsx`
+- `components/PaceChart.tsx`
+- `components/RoleAwareTooltip.tsx`
+- `tests/dataTransform.test.ts`
 
 ## Audit scope
 
-Two independent `spec_auditor` agents will inspect `docs/PRODUCT.md`,
-`docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`, the roadmap, current chart
-components, style helpers, tests, and the Phase 2 Slice 1 baseline. They must
-report only implementation-significant ambiguities or regressions. They are
-read-only and must not edit product files.
+Auditors must identify any implementation-significant ambiguity about:
 
-## Auditor reports
+1. cumulative versus per-lap formula and sign wording;
+2. whether `gap`/`pace` internal paths or public contracts may be renamed;
+3. same-lap rank availability and tooltip behavior for missing values;
+4. DNF, lapped, first-lap, and missing-primary behavior;
+5. context summaries, all/numeric/pinned modes, and mobile wrapping;
+6. boundaries with the deferred lap table and URL synchronization work.
+
+## Commander assumptions pending audit
+
+- The previous user instruction to proceed is treated as approval of the
+  proposed Slice 3 boundary: time-difference clarification now, lap table in
+  Slice 4.
+- Existing transforms already join by `lapNumber` and use the established
+  valid-checkpoint/valid-timed-lap rules; Slice 3 must preserve those rules.
+- The existing chart paths remain internal implementation details, so
+  user-facing labels may change without changing the upstream contract.
+
+## Auditor findings
 
 ### Auditor A
 
-Questions covered: primary treatment in gap/pace, per-chart tooltip fields,
-all-mode legend behavior, fixed color ordering, inactive stored IDs, shared
-context style values, and missing-data semantics.
+- Asked whether the lap axis should be an intersection or the existing union
+  and whether missing values should remove a whole point.
+- Asked whether primary should be synthesized as `±0`, which rank source is
+  valid for per-lap difference, and whether rank may appear without a metric.
+- Asked whether rank validity should become stricter than the existing finite
+  checkpoint rule, how duplicates affect other riders, whether exports may be
+  renamed, how lapped status should appear, and how much tooltip work belongs
+  to Slice 4.
 
 ### Auditor B
 
-Questions covered: primary-only pinned behavior, typed tooltip boundaries,
-context summary definition, crowd predicates, non-color accessibility cues,
-mobile tooltip sizing, and four-chart compatibility.
+- Independently raised the same union/intersection and primary-tooltip
+  questions, plus the need for exact positive/negative copy.
+- Asked whether pace rank should use checkpoints or timed laps, how sparse
+  DNF/lapped values should be presented, whether numeric context ranks should
+  be listed, and whether Slice 4 owns statistics transforms or only table UI.
 
-## Resolution log
+## Resolutions
 
-All legitimate questions were resolved in `docs/DESIGN.md` and
-`docs/IMPLEMENTATION_PLAN.md` before implementation:
-
-1. Gap/pace retain the existing zero `ReferenceLine` for the primary. It is
-   labeled as the primary and is not synthesized into the tooltip payload.
-2. Rank/lap tooltips show present primary/fixed values with role labels. Gap,
-   pace, and rank/lap context values are summarized at the hovered point as
-   count plus min–max in chart units; missing/null values are omitted.
-3. All mode always suppresses legends. Other modes suppress legends when
-   displayed rider count exceeds eight; pinned mode with five or fewer may show
-   its role-labeled legend.
-4. Fixed colors use filtered `pinnedRiderIds` insertion order. IDs remain
-   stored outside pinned mode, are context while inactive, and are recolored by
-   current filtered order when pinned resumes.
-5. Shared role values are primary `#292722`, width 3.5, opacity 1; fixed width
-   2.5, opacity 0.95 using the existing accessible palette; context `#77736b`,
-   width 1.5, opacity 0.5, dash `5 4`. Context dots are hidden under the
-   shared crowd predicate; primary/fixed dots remain where supported.
-6. Tooltips use only sparse finite values at the hovered lap. No interpolation,
-   placeholder numeric value, or cross-gap summary is added. Tooltip cards wrap
-   long names within a viewport-safe width.
-7. Pinned primary-only mode keeps rank/lap primary charts and the existing
-   gap/pace comparison-empty state; the picker remains available.
-8. The shared tooltip accepts a normalized payload plus a chart-owned unit
-   formatter and role map; inactive/empty/unknown entries render nothing.
+1. Retain the existing union lap axis from `getRaceLapNumbers`; omit only the
+   affected rider value. A missing primary suppresses all comparison values at
+   that lap because a difference cannot be calculated.
+2. Preserve the Slice 2 decision that the primary is a zero `ReferenceLine`,
+   not a synthesized difference payload or Tooltip row. Comparison rows show
+   their metric and same-lap rank when a metric value exists; the rank chart
+   remains the source for the primary's rank.
+3. Use `getValidCheckpoints` for cumulative-gap rank maps and
+   `getValidTimedLaps` for per-lap-difference rank maps. Never render rank-only
+   rows. Preserve the existing finite `rankAtLap` validation rule.
+4. Duplicate lap numbers invalidate only that rider's record at that lap;
+   other riders and the union axis remain available.
+5. Preserve `buildGapSeries`, `buildPaceDeltaSeries`, and `GapSeriesPoint`
+   signatures/shapes because they are repository-consumed interfaces even
+   though they are not upstream contracts.
+6. Lapped/DNF chart behavior remains sparse measured data with existing
+   result-card status; no new chart status label is added in Slice 3.
+7. Slice 4 owns the lap table, fastest/average/max-loss statistics, and their
+   transforms. Slice 3's tooltip rank API may be reused but is not expanded
+   with lap statistics.
+8. Visible copy distinguishes cumulative `タイム差` from per-lap `周回差` and
+   explains that positive is behind/slower relative to the selected rider.
+9. Numeric/all context riders keep the existing finite current-point metric
+   count/min/max summary; their individual ranks are not listed.
+10. Keyboard focus remains required for surrounding controls; the existing
+    Recharts pointer tooltip is not rearchitected into a keyboard chart
+    navigator in this Slice.
 
 STATUS: CLEAR

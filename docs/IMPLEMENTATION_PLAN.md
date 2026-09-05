@@ -1,102 +1,115 @@
 # Implementation Plan
 
-Status: READY_FOR_IMPLEMENTATION
-Active implementation plan: Phase 2 Slice 2 — role-based chart styling
-Phase 2 Slice 1 baseline: released on remote `main` at
-`22c38212a4ad49729abdf67bc106ecabb4fec25c`
+Status: READY_FOR_VERIFICATION
+Active implementation plan: Phase 2 Slice 3 — time-difference analysis
+
+## Baseline
+
+Phase 2 Slice 1 fixed comparison and Slice 2 role-based chart styling are
+complete on remote `main`. Slice 3 is deliberately limited to clarifying the
+existing difference charts; lap tables and lap summaries are Slice 4.
 
 ## Task graph
 
-### P2S2-1 — Role model and style helper
+### P2S3-1 — Difference semantics and regression tests
 
 - Status: DONE
-- Objective: Add deterministic pure role classification and style derivation.
-- Scope: focused chart-style helper and `tests/chartSeriesStyles.test.ts`.
+- Objective: Give cumulative and per-lap difference builders explicit,
+  tested semantics and same-lap sparse behavior.
+- Scope: `lib/dataTransform.ts`, `tests/dataTransform.test.ts`.
 - Dependencies: specification audit clear.
-- Do-not-change: chart components, data transforms, comparison selection,
-  external contracts, and unrelated dirty-worktree files.
-- Acceptance: primary/fixed/context roles, four fixed colors, context fallback,
-  invalid/duplicate filtering, and stable output are covered by tests.
+- Do-not-change: upstream types/contracts, comparison selection, route/error
+  behavior, and unrelated dirty-worktree files.
+- Acceptance: sign meaning, same-lap joins over the retained union lap axis,
+  valid-timed-lap gate, missing primary/target values, DNF/lapped edges, and
+  compatibility are covered.
 - Verification: focused tests and full validation.
 
-### P2S2-2 — Shared role-aware tooltip
+### P2S3-2 — Same-lap rank detail in shared tooltip
 
 - Status: DONE
-- Objective: Provide one typed tooltip/role-summary renderer for all charts.
-- Scope: new `components/RoleAwareTooltip.tsx`.
-- Dependencies: style helper contract.
-- Do-not-change: chart line semantics or data transforms.
-- Acceptance: primary/fixed values remain readable; crowded/all context is
-  summarized rather than listed unconditionally; empty/inactive states are
-  safe and accessible.
-- Verification: typecheck, lint, and build.
+- Objective: Extend the existing role-aware tooltip with measured rank detail
+  for primary/fixed riders at the hovered lap.
+- Scope: `components/RoleAwareTooltip.tsx`, `components/GapChart.tsx`,
+  `components/PaceChart.tsx`.
+- Dependencies: valid lap-map contract from P2S3-1.
+- Do-not-change: context aggregation rules, sparse payload filtering, line
+  interpolation, or chart selection state.
+- Acceptance: checkpoint ranks are used for cumulative gap, timed-lap ranks
+  for per-lap difference, ranks appear only with emitted metric values,
+  context remains a current-point metric summary, and the tooltip wraps safely
+  on mobile.
+- Verification: typecheck, lint, focused tests, and browser smoke.
 
-### P2S2-3 — Chart styling integration
-
-- Status: DONE
-- Objective: Apply the shared role map and tooltip to every chart.
-- Scope: `ChartTabs.tsx`, `RankBumpChart.tsx`, `GapChart.tsx`,
-  `PaceChart.tsx`, `LapTimeChart.tsx`.
-- Dependencies: helper and tooltip APIs.
-- Do-not-change: `stepAfter`/`linear`, missing-data semantics, chart tabs, or
-  route/error states.
-- Acceptance: all four charts have consistent primary/fixed/context treatment,
-  crowded legend behavior, textual role cues, and no page overflow.
-- Verification: full validation and browser smoke.
-
-### P2S2-4 — RaceViewer and documentation integration
+### P2S3-3 — Difference chart vocabulary and visible sign guidance
 
 - Status: DONE
-- Objective: Pass active pinned IDs only for pinned mode and update canonical
-  product documentation.
-- Scope: `components/RaceViewer.tsx`, `docs/PRODUCT.md`.
-- Dependencies: chart API complete.
-- Do-not-change: comparison selection semantics, category reset, data fetching,
-  and existing Phase 1 behavior.
-- Acceptance: numeric/all modes classify non-primary riders as context; pinned
-  mode highlights only active fixed IDs; docs match implementation.
-- Verification: full validation and browser smoke.
+- Objective: Make the existing difference tabs and supporting copy explain
+  cumulative versus per-lap meaning and positive/negative direction.
+- Scope: `components/ChartTabs.tsx`, `components/GapChart.tsx`,
+  `components/PaceChart.tsx`.
+- Dependencies: tooltip API complete.
+- Do-not-change: rank/lap chart meaning, role styles, `linear` lines,
+  `connectNulls={false}`, or comparison behavior.
+- Acceptance: user-facing labels are distinct, selected rider is explicitly
+  the zero reference, and sign explanations are visible without relying on
+  color.
+- Verification: full validation and browser smoke at desktop/mobile widths.
 
-### P2S2-5 — Verification and independent review
+### P2S3-4 — Product documentation and closeout
+
+- Status: DONE
+- Objective: Record the implemented difference semantics and Slice 4 boundary
+  in canonical product documentation.
+- Scope: `docs/PRODUCT.md` and this plan.
+- Dependencies: implementation behavior verified.
+- Do-not-change: historical docs, release history, deployment settings, or
+  unrelated Autobuild files.
+- Acceptance: docs describe formulas, signs, sparse behavior, and deferred
+  lap-table scope accurately.
+- Verification: documentation review and `git diff --check`.
+
+### P2S3-5 — Verification and independent review
 
 - Status: READY
-- Objective: Run required checks, inspect scope, obtain reviewer PASS, and
-  commit/push the approved implementation.
+- Objective: Run required checks, browser smoke, independent review, and
+  commit/push only the approved Slice 3 files.
 - Scope: tests, typecheck, lint, build, diff hygiene, browser smoke, reviewer,
   bounded revisions, and Git handoff.
 - Dependencies: all implementation tasks complete.
-- Do-not-change: unrelated user changes, Phase 1 history, credentials, and
-  deployment configuration.
+- Do-not-change: unrelated worktree changes, credentials, deployment
+  configuration, and historical documents.
 - Acceptance: every required check passes and reviewer returns `PASS`.
 
 ## Execution order
 
 ```text
-two spec auditors -> specification resolution -> P2S2-1
-  -> P2S2-2 -> P2S2-3 -> P2S2-4 -> P2S2-5
+two spec auditors -> specification resolution -> P2S3-1
+  -> P2S3-2 -> P2S3-3 -> P2S3-4 -> P2S3-5
 ```
 
 No parallel worker may edit the same source file as another worker.
 
 ## Resolved design decisions
 
-- `primary` is always the selected rider; `fixed` is active only in pinned
-  mode; all other displayed riders are `context`.
-- In gap/pace the primary remains the existing zero `ReferenceLine`; it is
-  labeled as primary but is not synthesized into the data or tooltip payload.
-- Fixed colors are assigned by the filtered state-array insertion order, not by
-  final rank. Stored IDs are inactive outside pinned mode and are recolored by
-  that order when pinned mode resumes.
-- Context uses neutral gray, lower opacity, thin width, and a dash pattern so
-  role is not communicated by color alone.
-- Shared style values are primary `#292722` / 3.5 / 1, fixed 2.5 / 0.95, and
-  context `#77736b` / 1.5 / 0.5 / dash `5 4`.
-- All mode always hides its legend; numeric modes use `displayedCount > 8` as
-  the crowd predicate; pinned mode with five or fewer can show its legend.
-- Tooltips show present primary/fixed values and summarize present context as
-  count plus min–max for the chart's units. Missing values are omitted and no
-  cross-lap aggregation is performed.
-- Pinned primary-only state renders rank/lap primary charts and retains the
-  existing gap/pace comparison-empty state.
-- Existing line interpolation, graphable gate, numeric/all limits, and route
-  contracts remain unchanged.
+- Slice 3 uses the existing `gap` and `pace` chart paths; it does not add a
+  new chart or a lap table.
+- User-facing `gap` becomes `タイム差` for cumulative difference, and
+  user-facing `pace` becomes `周回差` for per-lap difference.
+- Positive cumulative difference means the comparison rider is behind at that
+  lap; positive per-lap difference means the comparison rider was slower on
+  that lap. The selected rider is always the zero reference.
+- The union lap axis is retained, but missing values are omitted per rider.
+  Same-lap `rankAtLap` is shown only when the corresponding finite metric
+  record exists: checkpoint records for cumulative gap and timed-lap records
+  for per-lap difference. Context ranks are not aggregated or inferred.
+- Existing `buildGapSeries`, `buildPaceDeltaSeries`, and `GapSeriesPoint`
+  exports retain their signatures and sparse shape; semantic clarification
+  does not change an external contract.
+- DNF/lapped status remains represented by existing result/summary behavior;
+  Slice 3 adds no chart status label. Slice 4 owns lap-table/statistics UI and
+  reusable lap-statistics transforms, but may consume this tooltip contract.
+- Existing role styling, context summaries, sparse values, line types, and
+  comparison modes remain unchanged.
+- Slice 4 will separately address lap tables and fastest/average/max-loss
+  summaries after this semantic layer is stable.

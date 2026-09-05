@@ -160,3 +160,128 @@ test("有効チェックポイントがない選手は分析対象にできな�
     reason: "no-checkpoints",
   });
 });
+
+test("difference series preserve sign direction and the union lap axis", () => {
+  const base = rider("base", 1, [
+    lap(1, 60, 60),
+    lap(2, 70, 130),
+    lap(3, 60, 190),
+    lap(4, 60, 250),
+  ]);
+  const target = rider("target", 2, [
+    lap(1, 55, 55),
+    lap(3, 65, 120),
+    lap(4, 65, 185),
+  ]);
+
+  assert.deepEqual(buildGapSeries(race([base, target]), "base", ["target"]), [
+    { lapNumber: 1, target: -5 },
+    { lapNumber: 2 },
+    { lapNumber: 3, target: -70 },
+    { lapNumber: 4, target: -65 },
+  ]);
+  assert.deepEqual(
+    buildPaceDeltaSeries(race([base, target]), "base", ["target"]),
+    [
+      { lapNumber: 1, target: -5 },
+      { lapNumber: 2 },
+      { lapNumber: 3 },
+      { lapNumber: 4, target: 5 },
+    ],
+  );
+});
+
+test("a missing primary checkpoint suppresses all difference values at that lap", () => {
+  const base = rider("base", 1, [
+    lap(1, 60, 60),
+    lap(3, 60, 120),
+    lap(4, 60, 180),
+  ]);
+  const target = rider("target", 2, [
+    lap(1, 65, 65),
+    lap(2, 65, 130),
+    lap(3, 65, 195),
+    lap(4, 65, 260),
+  ]);
+
+  assert.deepEqual(buildGapSeries(race([base, target]), "base", ["target"]), [
+    { lapNumber: 1, target: 5 },
+    { lapNumber: 2 },
+    { lapNumber: 3, target: 75 },
+    { lapNumber: 4, target: 80 },
+  ]);
+  assert.deepEqual(
+    buildPaceDeltaSeries(race([base, target]), "base", ["target"]),
+    [
+      { lapNumber: 1, target: 5 },
+      { lapNumber: 2 },
+      { lapNumber: 3 },
+      { lapNumber: 4, target: 5 },
+    ],
+  );
+});
+
+test("duplicate checkpoints invalidate only that rider and lap", () => {
+  const base = rider("base", 1, [
+    lap(1, 60, 60),
+    lap(2, 60, 120),
+    lap(3, 60, 180),
+  ]);
+  const duplicate = rider("duplicate", 2, [
+    lap(1, 65, 65),
+    lap(2, 65, 130),
+    lap(2, 66, 131),
+    lap(3, 65, 196),
+  ]);
+  const peer = rider("peer", 3, [lap(2, 62, 122)]);
+
+  assert.deepEqual(
+    buildGapSeries(race([base, duplicate, peer]), "base", ["duplicate", "peer"]),
+    [
+      { lapNumber: 1, duplicate: 5 },
+      { lapNumber: 2, peer: 2 },
+      { lapNumber: 3, duplicate: 16 },
+    ],
+  );
+  assert.deepEqual(
+    buildPaceDeltaSeries(race([base, duplicate, peer]), "base", [
+      "duplicate",
+      "peer",
+    ]),
+    [
+      { lapNumber: 1, duplicate: 5 },
+      { lapNumber: 2 },
+      { lapNumber: 3 },
+    ],
+  );
+});
+
+test("DNF and lapped riders contribute measured values only", () => {
+  const base = rider("base", 1, [
+    lap(1, 60, 60),
+    lap(2, 60, 120),
+    lap(3, 60, 180),
+  ]);
+  const dnf = rider("dnf", 4, [lap(1, 65, 65)], "dnf");
+  const lapped = rider("lapped", 3, [
+    lap(1, 70, 70),
+    lap(2, 70, 140),
+  ]);
+
+  assert.deepEqual(
+    buildGapSeries(race([base, dnf, lapped]), "base", ["dnf", "lapped"]),
+    [
+      { lapNumber: 1, dnf: 5, lapped: 10 },
+      { lapNumber: 2, lapped: 20 },
+      { lapNumber: 3 },
+    ],
+  );
+  assert.deepEqual(
+    buildPaceDeltaSeries(race([base, dnf, lapped]), "base", ["dnf", "lapped"]),
+    [
+      { lapNumber: 1, dnf: 5, lapped: 10 },
+      { lapNumber: 2, lapped: 10 },
+      { lapNumber: 3 },
+    ],
+  );
+});

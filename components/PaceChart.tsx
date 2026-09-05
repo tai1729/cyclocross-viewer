@@ -12,7 +12,11 @@ import {
   YAxis,
 } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
-import { buildPaceDeltaSeries, formatGapSec } from "@/lib/dataTransform";
+import {
+  buildLapMap,
+  buildPaceDeltaSeries,
+  formatGapSec,
+} from "@/lib/dataTransform";
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
 import {
   formatLapTooltipLabel,
@@ -40,6 +44,9 @@ export function PaceChart({
     race,
     baseRider.riderId,
     otherRiders.map((r) => r.riderId),
+  );
+  const riderLapMaps = new Map(
+    otherRiders.map((rider) => [rider.riderId, buildLapMap(rider, true)]),
   );
   const primaryStyle = seriesStyles[baseRider.riderId];
 
@@ -72,7 +79,7 @@ export function PaceChart({
             strokeOpacity={primaryStyle.opacity}
             strokeWidth={primaryStyle.strokeWidth}
             label={{
-              value: `${primaryStyle.roleLabel}・${baseRider.name}`,
+              value: `${primaryStyle.roleLabel}・${baseRider.name}（±0基準）`,
               position: "insideBottomLeft",
               fontSize: 11,
               fill: primaryStyle.color,
@@ -84,6 +91,7 @@ export function PaceChart({
                 {...props}
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
+                riderLapMaps={riderLapMaps}
                 formatLabel={formatLapTooltipLabel}
                 formatValue={formatGapSec}
               />
