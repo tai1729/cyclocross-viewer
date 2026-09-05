@@ -1,20 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import type { MeetEntry } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  normalizeHomeUrlState,
+  parseHomeUrlState,
+  serializeHomeUrlState,
+  updateHomeUrlQuery,
+} from "@/lib/urlState";
 
 interface MeetSelectorProps {
   meets: MeetEntry[];
 }
 
 export function MeetSelector({ meets }: MeetSelectorProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const seasons = useMemo(() => [...new Set(meets.map((meet) => meet.season))].sort().reverse(), [meets]);
-  const [season, setSeason] = useState("");
-  const [series, setSeries] = useState("");
+  const urlState = useMemo(() => parseHomeUrlState(searchParams), [searchParams]);
+  const normalizedUrlState = useMemo(() => normalizeHomeUrlState(urlState, meets), [meets, urlState]);
+  const season = normalizedUrlState.season;
+  const series = normalizedUrlState.series;
+  const canonicalQuery = useMemo(() => serializeHomeUrlState(normalizedUrlState), [normalizedUrlState]);
+  const contextQuery = useMemo(
+    () => serializeHomeUrlState({ season, series, unknownParams: [] }),
+    [season, series],
+  );
+
+  useEffect(() => {
+    const currentQuery = searchParams.toString();
+    if (currentQuery !== canonicalQuery) {
+      void router.replace(canonicalQuery ? `/?${canonicalQuery}` : "/");
+    }
+  }, [canonicalQuery, router, searchParams]);
 
   const filteredBySeason = season ? meets.filter((meet) => meet.season === season) : meets;
   const seriesOptions = useMemo(
@@ -33,9 +56,18 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
     ...seriesOptions.map((value) => ({ label: value, value })),
   ];
 
+  function pushUrl(patch: { season?: string; series?: string }) {
+    const currentQuery = searchParams.toString();
+    const nextQuery = updateHomeUrlQuery(searchParams, {
+      season: patch.season ?? season,
+      series: patch.series ?? series,
+    });
+    if (nextQuery === currentQuery) return;
+    void router.push(nextQuery ? `/?${nextQuery}` : "/");
+  }
+
   function changeSeason(value: string) {
-    setSeason(value);
-    setSeries("");
+    pushUrl({ season: value, series: "" });
   }
 
   return (
@@ -59,7 +91,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
             </Field>
             <Field>
               <FieldLabel htmlFor="series-filter">シリーズ</FieldLabel>
-              <Select items={seriesItems} value={series || null} onValueChange={(value) => setSeries(value ?? "")}>
+              <Select items={seriesItems} value={series || null} onValueChange={(value) => pushUrl({ series: value ?? "" })}>
                 <SelectTrigger id="series-filter" aria-describedby="series-filter-description" className="min-h-11 w-full sm:min-h-8"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectGroup><SelectItem value={null}>すべてのシリーズ</SelectItem>{seriesOptions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectGroup></SelectContent>
               </Select>
@@ -74,7 +106,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
         {filtered.length > 0 ? (
           <div className="divide-y divide-paper-line">
               {filtered.map((meet) => (
-                <Link key={meet.meetId} href={`/race/${encodeURIComponent(meet.meetId)}`} className="flex min-w-0 flex-col gap-1 px-3 py-3 text-sm transition-colors hover:bg-flag-soft focus-visible:bg-flag-soft focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring sm:grid sm:grid-cols-[8rem_7rem_minmax(0,1fr)] sm:gap-2">
+                <Link key={meet.meetId} href={`/race/${encodeURIComponent(meet.meetId)}${contextQuery ? `?${contextQuery}` : ""}`} className="flex min-w-0 flex-col gap-1 px-3 py-3 text-sm transition-colors hover:bg-flag-soft focus-visible:bg-flag-soft focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring sm:grid sm:grid-cols-[8rem_7rem_minmax(0,1fr)] sm:gap-2">
                   <span className="flex min-w-0 items-center gap-3 sm:contents">
                     <time dateTime={meet.meetDate} className="font-mono text-muted-foreground">{meet.meetDate}</time>
                     <span className="text-flag">{meet.series || "—"}</span>

@@ -1,7 +1,128 @@
 # Implementation Plan
 
 Status: COMPLETE
-Active implementation plan: Phase 2 Slice 5 — accessible mobile chart detail (complete)
+Active implementation plan: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+
+## Phase 2 Slice 7 task graph
+
+### P2S7-1 - Pure URL contract and tests
+
+- Status: DONE
+- Objective: Add total parsing, normalization, serialization, and query-update
+  helpers for Home filters and race analysis state.
+- Scope: new `lib/urlState.ts`, new `tests/urlState.test.ts`.
+- Dependencies: specification audit clear.
+- Do-not-change: React components, upstream types, route structure, data
+  fetching, and comparison semantics.
+- Acceptance: defaults, allowlists, repeated fixed IDs, dedupe/caps,
+  positive-integer laps, invalid fallback, context parameters, and unknown
+  query preservation are behavior-tested.
+- Verification: focused tests and full validation.
+
+### P2S7-2 - Home URL synchronization
+
+- Status: DONE
+- Objective: Restore and write season/series filters from the URL and carry
+  valid list context into meet links.
+- Scope: `components/MeetSelector.tsx`, `app/page.tsx` only if required by
+  the client search-param boundary.
+- Dependencies: P2S7-1.
+- Do-not-change: meet data fetching, filtering semantics, list ordering, or
+  loading/error UI.
+- Acceptance: filter changes push canonical URLs, season changes clear series,
+  reload/revisit/back-forward restore state, and invalid values are safe.
+- Verification: typecheck, lint, build, and browser smoke.
+
+### P2S7-3 - Race URL synchronization and controlled chart state
+
+- Status: DONE
+- Objective: Restore and write category, rider, comparison, fixed IDs, active
+  tab, and deliberate pinned lap state while preserving existing UI behavior.
+- Scope: `components/RaceViewer.tsx`, `components/ChartTabs.tsx`.
+- Dependencies: P2S7-1; P2S7-2 is independent and may be complete first.
+- Do-not-change: chart formulas, data transforms, route/error behavior,
+  comparison hook contracts, or upstream JSON contracts.
+- Acceptance: state is shareable and reloadable, category changes clear the
+  specified state, back/forward restores meaningful states, hover is not
+  serialized, and all existing limits/reconciliation remain authoritative.
+- Verification: typecheck, lint, build, and browser smoke.
+
+### P2S7-4 - Canonical documentation and closeout
+
+- Status: DONE
+- Objective: Record the shipped URL contract, compatibility behavior, and
+  verification evidence in canonical docs and a dated history document.
+- Scope: `docs/PRODUCT.md`, `docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`,
+  `docs/SPEC_AUDIT.md`, and one new dated history document.
+- Dependencies: P2S7-1 through P2S7-3 and verification.
+- Do-not-change: historical documents, deployment settings, or unrelated
+  worktree files.
+- Acceptance: canonical docs match the implementation and
+  `docs/SPEC_AUDIT.md` ends with exactly `STATUS: CLEAR`.
+- Verification: documentation review and `git diff --check`.
+
+### P2S7-5 - Full verification and independent review
+
+- Status: DONE
+- Objective: Run all required checks, browser smoke, bounded revisions, and
+  independent review, then commit and push the completed slice.
+- Scope: tests, typecheck, lint, build, diff hygiene, browser smoke, reviewer,
+  commit, and push.
+- Dependencies: P2S7-4.
+- Do-not-change: credentials, deployment configuration, historical docs, and
+  unrelated user changes.
+- Acceptance: all required checks pass, reviewer returns `PASS`, and the
+  completed Slice 7 commit is pushed to the configured upstream.
+
+## Phase 2 Slice 7 verification evidence
+
+- Automated checks passed on 2026-09-05: `npm.cmd test` (48/48),
+  `npx.cmd tsc --noEmit`, `npm.cmd run lint`, `npm.cmd run build`, and
+  `git diff --check`.
+- Local browser smoke passed for Home filter URL restoration and context links,
+  shareable rider/tab/lap state, category reset, invalid/stale values with
+  repeated unknown parameters, normal race data, a 6-rider DNF category, a
+  68-rider category, a DNF rider, a lapped finished rider, and not-found.
+- Narrow-screen behavior remains covered by the existing Slice 4 responsive
+  smoke and unchanged layout boundaries; this slice adds only URL state and
+  controlled chart wiring.
+
+## Slice 7 execution order
+
+```text
+two spec auditors -> specification resolution -> P2S7-1 and P2S7-2
+  -> P2S7-3 -> P2S7-4 -> P2S7-5
+```
+
+## Slice 7 resolved design decisions
+
+- Use readable `URLSearchParams` state. Home uses `season` and `series`; race
+  uses `category`, `rider`, `compare`, repeated `fixed`, `tab`, and `lap`.
+  Race links may carry matching Home season/series as return context.
+- Parse synchronously with `useSearchParams`. Resolve category against the
+  server-loaded meet before the first race fetch. Do not rewrite Home or
+  race-dependent values while their data is loading or in error; normalize
+  them after successful data is available.
+- Use a two-phase pure helper API: raw parsing is total and data-independent;
+  normalization validates against the available meet/race snapshot and
+  produces the canonical state. No fetch or React state belongs in the helper.
+- Default values are omitted. Known query keys serialize as season, series,
+  category, rider, compare, fixed (repeated), tab, lap; unknown repeated pairs
+  are preserved in relative order after known keys.
+- Every deliberate filter, selection, mode, fixed, tab, and lap action uses
+  one `push`; canonical cleanup uses `replace`. Hover never writes the URL.
+- Category changes clear rider/fixed/tab/lap and restore comparison `2`.
+  Primary changes remove the selected ID from fixed IDs in that same entry.
+  Tab changes preserve a valid pinned lap. Pinned mode with no fixed IDs stays
+  pinned and keeps the existing no-comparison state.
+- Primary IDs may refer to any existing rider, preserving unavailable states;
+  fixed IDs must be graphable, non-primary, unique, and capped at four. `all`
+  over the existing graphable limit falls back to omitted default `2`.
+- A valid lap is normalized against the race axis even without a valid primary.
+  An invalid lap is removed and falls back to an unpinned first lap; an empty
+  axis removes it and leaves active/pinned state null. Back links carry only
+  the first present season/series context values matching the current meet;
+  a global series context may omit season, while stale context links to `/`.
 
 ## Phase 2 Slice 5 task graph
 

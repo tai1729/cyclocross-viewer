@@ -1,7 +1,275 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
 Status: CLOSED
-Active Change: Phase 2 Slice 5 — accessible mobile chart detail (complete)
+Active Change: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+
+## Current design - Phase 2 Slice 7: URL-synchronized filters and analysis state
+
+### Goal
+
+Make the list filters and race analysis state addressable by URL so browser
+back/forward, reload, revisit, and sharing restore the same observable view.
+The feature preserves the existing routes, data contracts, comparison limits,
+sparse chart semantics, and error/not-found behavior.
+
+### Non-goals
+
+- No path or route migration, upstream collector contract change, export,
+  persistence service, authentication, or new production dependency.
+- No URL synchronization for transient hover state, rider-picker search text,
+  focus, scroll position, or tooltip visibility.
+- No change to ranking, lap validity, comparison reconciliation, chart
+  formulas, data-fetch endpoints, or loading/error/not-found surfaces.
+
+### URL contract
+
+The URL uses readable query parameters and `URLSearchParams` encoding. Values
+are omitted when they represent the default state.
+
+Home (`/`):
+
+- `season=<season>` selects a known season; omission means all seasons.
+- `series=<series>` selects a known series within the selected season;
+  omission means all series. A series without a matching selected season is
+  invalid and falls back to all series.
+
+Race (`/race/<meetId>`):
+
+- `category=<raceId>` selects a category; omission means the first category in
+  upstream `order` order.
+- `rider=<riderId>` selects an existing rider in the loaded race; omission
+  means no primary rider. A real rider with data-quality or no-checkpoint
+  problems is retained so the existing unavailable analysis state remains
+  visible.
+- `compare=0|1|2|3|4|5|pinned|all` selects the existing comparison mode;
+  omission means `2` (`+-2`). `all` is accepted only when the existing
+  graphable-rider limit allows it; otherwise it falls back to `2`.
+- `fixed=<riderId>` may occur repeatedly for pinned mode. IDs are deduplicated
+  in first-seen order, limited to the existing four fixed-rider maximum, and
+  filtered to graphable riders other than the primary. Fixed IDs are omitted
+  from the canonical URL when the mode is not `pinned`.
+- `tab=rank|gap|pace|lap` selects the chart tab; omission means `rank`.
+- `lap=<positive integer>` pins a lap detail selection only when that number is
+  present on the current race lap axis. Omission means the unpinned first-lap
+  fallback. A lap is never inferred from a hover event.
+
+Race links retain the current Home `season` and `series` values as optional
+return-context query parameters with the same names. `RaceViewer` ignores
+them for race state and uses them only for its back-to-list links. Direct race
+visits without that context return to `/`. Home validates the context after
+navigation.
+
+Unknown query parameters are preserved when a known parameter is changed, so
+future links are not destroyed. Known invalid or redundant values are removed
+by canonicalization after the relevant data is available.
+
+### State ownership and data flow
+
+`lib/urlState.ts` is the pure parser, normalizer, serializer, and query-update
+boundary. It owns allowlists, defaults, fixed-ID limits, positive-integer lap
+parsing, and deterministic omission of default values. It does not fetch data
+or render UI.
+
+```text
+URL query
+  -> parse raw state
+  -> normalize against meets/categories/riders/lap axis
+  -> local UI state in MeetSelector/RaceViewer
+  -> explicit interaction pushes a canonical query
+  -> browser navigation reparses the query and restores the same state
+```
+
+`MeetSelector` initializes and reconciles season/series from the URL and
+updates the URL for filter changes. Changing season clears series in both the
+UI and query. Meet links carry the current list context.
+
+`RaceViewer` owns durable race state and passes controlled tab/lap state and
+callbacks into `ChartTabs`. Category selection is applied before the race
+fetch; a category change clears rider, fixed IDs, tab, and lap and restores
+comparison mode `2`, matching existing behavior. Rider/mode/fixed changes are
+validated against the loaded race and existing comparison-hook rules before
+being rendered or serialized. `ChartTabs` renders charts and forwards
+hover/select/detail controls; it never writes the URL directly.
+
+The URL is the external source of truth. An explicit user action uses
+`router.push`, including deliberate lap selection/navigation, so back/forward
+can restore meaningful states. Initial state and invalid-value canonicalization
+use `router.replace`. Hover changes the visible detail lap only while
+unpinned and never creates history entries or query churn.
+
+### Normalization and compatibility behavior
+
+- Parsing is total: malformed, unknown, duplicate, over-limit, or stale values
+  never throw and always resolve to safe existing defaults.
+- Category, rider, fixed ID, and lap validation happens after their respective
+  data is loaded. Until then, the existing loading state remains authoritative.
+- An invalid category uses the first ordered category and removes the invalid
+  category value. An invalid rider is cleared. Invalid comparison modes, fixed
+  IDs, tab values, and lap values are canonicalized using the defaults above.
+- A category change resets analysis selection exactly as the current UI does.
+  A primary rider change removes that rider from fixed IDs. Removing the last
+  fixed rider keeps `compare=pinned` but renders the existing no-comparison
+  state.
+- Existing `useComparisonRiders` remains the final reconciliation boundary;
+  URL normalization does not weaken graphability, all-mode, or fixed-rider
+  limits.
+- Existing data-load errors, invalid race data, empty categories, and
+  not-found routes remain unchanged. URL state never masks an error or creates
+  a second fetch contract.
+
+### Responsive and accessibility behavior
+
+The query controls use the existing Base UI controls and focus styles. No
+URL-only state is required to understand the current view: season, series,
+category, rider, comparison mode, active tab, and pinned lap remain visible in
+their existing controls/panels. Existing 44px mobile targets, wrapping, and
+320px/390px no-horizontal-overflow requirements remain acceptance criteria.
+
+### Affected components and files
+
+- New pure URL contract and tests: `lib/urlState.ts`,
+  `tests/urlState.test.ts`.
+- Home state and contextual links: `app/page.tsx`,
+  `components/MeetSelector.tsx`.
+- Race state and back links: `components/RaceViewer.tsx`.
+- Controlled durable chart state: `components/ChartTabs.tsx`.
+- Canonical product documents and closeout history: `docs/PRODUCT.md`,
+  `docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/SPEC_AUDIT.md`, and a
+  new dated history document.
+
+### Acceptance criteria
+
+1. Home season/series changes update the URL, clear series when season
+   changes, and survive reload, revisit, and browser back/forward.
+2. Meet links retain list context and the race list link restores that context
+   without changing direct-visit behavior.
+3. Race category, primary rider, comparison mode, repeated pinned IDs, active
+   chart tab, and deliberate pinned lap are shareable and restored on reload.
+4. Invalid, stale, duplicated, or over-limit query values fall back safely and
+   are canonicalized without throwing or bypassing existing limits.
+5. Browser back/forward restores meaningful in-page URL states, while hover
+   does not create URL churn.
+6. Existing normal, DNF, lapped, small, large, not-found, loading, error,
+   sparse-data, keyboard-focus, and 320px/390px responsive behavior remains
+   intact.
+7. Pure URL parser/normalizer/serializer tests and the full required test,
+   typecheck, lint, build, diff, browser smoke, and independent review checks
+   pass.
+
+### Validation commands
+
+- `npm.cmd test`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `git diff --check`
+- Browser smoke for URL changes, reload/share, back/forward, invalid values,
+  normal/DNF/lapped/small/large/not-found routes, and 320px/390px widths.
+
+### Slice 7 specification audit resolutions
+
+The two independent auditors reviewed the canonical documents and current
+source. The following decisions close the implementation-significant
+questions they raised.
+
+#### Hydration and validation timing
+
+- Both client components read the current query synchronously with Next's
+  `useSearchParams`; server pages keep their existing route/data boundaries.
+  This avoids a hard-coded first render for a shared URL.
+- Because `useSearchParams` can trigger a static-route client-render bailout,
+  `app/page.tsx` and `app/race/[meetId]/page.tsx` wrap the query-reading client
+  subtree in an explicit `Suspense` boundary with the existing loading-style
+  fallback. The race page remains a server component and keeps its existing
+  `notFound()` check.
+- The meet server payload is sufficient to resolve the category before the
+  first race fetch. An unknown category therefore selects the first ordered
+  category and only that endpoint is fetched. The invalid category is removed
+  with a `replace` after mount.
+- Home applies raw season/series only after `meets.json` succeeds. It never
+  rewrites the URL during loading or a meet-data error. Race-dependent fields
+  are never canonicalized while the selected race is loading or in error.
+- After a successful race response, rider/fixed/mode/tab/lap are normalized
+  against that response and the current lap axis, then invalid known values
+  are removed with one `replace` operation.
+- During a category transition, old race-dependent analysis is hidden by the
+  existing loading branch. The new URL is the target state: category resolves
+  first, dependent state is reset while loading, and the loaded target race
+  then hydrates only the target URL's valid dependent values. This applies to
+  both browser navigation and direct URL changes; it prevents stale data flash
+  without defeating back/forward restoration.
+
+#### Exact transition table
+
+Every explicit transition creates one `push` entry and preserves unrelated
+known state, unknown query parameters, and valid return context unless the
+table says otherwise:
+
+| Action | Writes | Clears/resets |
+| --- | --- | --- |
+| Home season | `season` | `series` |
+| Home series | `series` | nothing else |
+| Race category | `category` | `rider`, `fixed`, `tab`, `lap`; `compare` becomes default `2` |
+| Race primary rider | `rider` | the selected rider is removed from `fixed` in the same entry |
+| Comparison mode | `compare` | `fixed` is removed when mode is not `pinned` |
+| Fixed add/remove | repeated `fixed` | only the changed fixed ID |
+| Chart tab | `tab` | nothing; a valid pinned `lap` is preserved |
+| Deliberate lap select/previous/next | `lap` | nothing; clear removes `lap` |
+
+The `pinned` mode with zero valid fixed IDs remains `compare=pinned` and keeps
+the existing no-comparison UI. Automatic fixed-ID removal caused by primary
+selection is part of that one primary-rider `push`, not a second entry. The UI
+cannot push an invalid `all` transition; a stale URL `all` normalizes to the
+omitted default comparison `2` when the graphable count exceeds the existing
+limit. Duplicate fixed values are redundant rather than fatal: the first-seen
+valid occurrence is retained, and only one canonical occurrence is emitted.
+
+Known query keys are emitted in this order: `season`, `series`, `category`,
+`rider`, `compare`, repeated `fixed`, `tab`, `lap`. Unknown key/value pairs are
+copied in their original relative order after the known keys for every push or
+replace. The pure serializer preserves repeated unknown pairs as well.
+
+#### Rider, fixed, and lap eligibility
+
+- `rider` is valid when its ID exists in the loaded race, regardless of
+  `dataQuality` or checkpoint availability. This preserves the existing
+  unavailable analysis surface. Fixed IDs are a separate allowlist: they must
+  be graphable, non-primary, unique, and within the four fixed-rider maximum.
+- `lap` is normalized solely against the loaded race's `getRaceLapNumbers`
+  axis, even when no primary is selected or the selected rider is unavailable.
+  A valid value is both the active and pinned lap. An invalid value is removed
+  and becomes an unpinned first-axis lap; an empty axis removes `lap` and makes
+  both active and pinned state `null`. No lap is restored from hover.
+- A valid pinned lap can remain in the URL when analysis is unavailable; the
+  existing unavailable state is rendered and no chart hydration is attempted.
+
+#### Return context and malformed values
+
+The back-to-list link uses only the first `season` and `series` values when
+each present value matches the current meet (`season` may be absent, allowing
+a global series filter). If either present value is stale or mismatched, it
+links to `/`. It never carries race analysis keys or unknown keys. Home
+performs its normal successful-data canonicalization after navigation.
+`URLSearchParams` parsing is wrapped by total helpers: malformed/undecodable
+query values are treated as absent and removed; malformed or nonexistent path
+IDs continue to use the existing server not-found behavior.
+
+#### Controlled chart boundary
+
+`RaceViewer` owns `activeTab`, `activeLapNumber`, and `pinnedLapNumber` for the
+URL-controlled view. `ChartTabs` receives them as controlled props plus
+callbacks, while retaining its current chart hover/select/detail semantics.
+Tab changes preserve a valid pinned lap. Hover updates an unpinned active lap
+locally but does not invoke the URL writer. All controlled-state callbacks
+accept only values on the current race axis, and race replacement resets the
+state before the new race hydrates.
+
+The pure URL API has separate raw parsing and data-aware normalization inputs:
+raw parsing never requires loaded data and never throws; normalization accepts
+immutable meet/category/rider/lap snapshots and returns a fully canonical
+state only when the required snapshot is available. This keeps fetch/UI state
+out of `lib/urlState.ts` and makes defaults, malformed values, and stale-data
+behavior directly testable.
 
 ## Current active design — Phase 2 Slice 5
 

@@ -1,6 +1,35 @@
 # Specification Audit
 
-Current Change: Phase 2 Slice 4 — lap detail and summary
+Current Change: Phase 2 Slice 7 — URL-synchronized filters and analysis state
+
+## Current audit - Phase 2 Slice 7
+
+This audit governs the URL synchronization slice. Auditors must inspect the
+current `PRODUCT.md`, `DESIGN.md`, `IMPLEMENTATION_PLAN.md`,
+`components/MeetSelector.tsx`, `components/RaceViewer.tsx`,
+`components/ChartTabs.tsx`, `hooks/useComparisonRiders.ts`, the race page, and
+the relevant tests.
+
+The two independent auditors must identify any implementation-significant
+ambiguity about:
+
+1. exact query keys, defaults, encoding, repeated fixed IDs, and return
+   context;
+2. validation timing and safe fallback for stale category/rider/fixed/lap
+   values, including data-quality and no-checkpoint riders;
+3. which interactions create browser history entries versus transient state;
+4. how external URL navigation reconciles local React state without loops or
+   an incorrect race-data fetch;
+5. how ChartTabs exposes controlled durable tab/lap state while preserving
+   hover, pin, clear, keyboard, sparse-data, and mobile behavior;
+6. category/season reset semantics, existing comparison limits, and unknown
+   query parameter compatibility;
+7. test and browser acceptance coverage for normal, DNF, lapped, invalid,
+   loading/error, not-found, and narrow responsive routes.
+
+## Audit status
+
+AUDIT COMPLETE
 
 ## Sources inspected
 
@@ -217,5 +246,53 @@ questions. The Commander resolved them as follows:
     missing values, and 320px/390px overflow/focus behavior. No component-test
     harness is added because this repository has no such dependency; browser
     smoke is the interaction evidence.
+
+STATUS: CLEAR
+
+## Phase 2 Slice 7 audit findings and resolutions
+
+The two independent auditors found no product contradiction, but identified
+implementation-significant details that needed explicit resolution in
+`docs/DESIGN.md` before coding:
+
+- They requested a per-action retention/reset table. The resolved table now
+  defines Home season/series, race category/rider/mode/fixed, chart tab, and
+  deliberate lap transitions. Category clears rider/fixed/tab/lap and resets
+  comparison `2`; primary selection removes itself from fixed IDs in the same
+  history entry; tab preserves a valid pinned lap.
+- They requested hydration and fetch timing. The resolved design uses
+  synchronous client `useSearchParams`, resolves category against the server
+  meet before the first race fetch, and canonicalizes only after mount. Home
+  and race-dependent values are not rewritten while their data is loading or
+  in error; dependent values hydrate only after the target race succeeds.
+- They requested an atomic external-navigation rule. The resolved design
+  hides the old race analysis through the existing loading branch, resets
+  dependent state during category replacement, and applies only the new URL's
+  valid values after the new race response arrives.
+- They requested separate rider and fixed eligibility. Existing riders remain
+  valid primary selections even with data-quality/no-checkpoint problems;
+  fixed IDs must be graphable, non-primary, unique, and within the existing
+  four-ID limit. A valid race-axis lap remains canonical even when analysis is
+  unavailable; an invalid lap is removed and falls back to an unpinned first
+  axis lap, while an empty axis yields null active/pinned state.
+- They requested deterministic fixed/query serialization. Duplicate fixed
+  values retain the first valid occurrence; the normalized list is capped at
+  four. Known keys use the documented order, and unknown repeated pairs remain
+  in relative order after them on every URL rewrite.
+- They requested explicit mode fallback and return-link behavior. Stale
+  `all` becomes omitted default comparison `2` when over the graphable limit;
+  `pinned` with no fixed IDs remains pinned and shows the existing empty state.
+  The back link carries only first context values present and matching the
+  current meet (including a global series without season), otherwise `/`;
+  race analysis and unknown keys are not carried to Home.
+- They requested malformed-input behavior and a pure API boundary. Query
+  helpers are total and treat malformed values as absent; path parsing keeps
+  existing not-found semantics. Raw parsing is separate from data-aware
+  normalization so helpers do not fetch or own UI state.
+
+The resolved design also makes explicit that every deliberate durable action
+uses one `push`, canonical cleanup uses `replace`, and hover never writes the
+URL. No new dependency, route, upstream contract, or chart formula is
+introduced.
 
 STATUS: CLEAR

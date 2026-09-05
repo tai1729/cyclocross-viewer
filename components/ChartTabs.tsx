@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { RaceResult, Rider } from "@/lib/types";
 import { getRaceLapNumbers } from "@/lib/dataTransform";
 import { buildRiderSeriesStyles } from "@/lib/chartSeriesStyles";
+import type { ChartTab } from "@/lib/urlState";
 import { RankBumpChart } from "@/components/RankBumpChart";
 import { GapChart } from "@/components/GapChart";
 import { PaceChart } from "@/components/PaceChart";
@@ -12,7 +13,7 @@ import { ChartDetailPanel } from "@/components/ChartDetailPanel";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type TabKey = "rank" | "gap" | "pace" | "lap";
+type TabKey = ChartTab;
 
 const TABS: { key: TabKey; label: string; howToRead: string }[] = [
   {
@@ -45,6 +46,14 @@ interface ChartTabsProps {
   comparisonRiders: Rider[];
   fixedRiderIds?: readonly string[];
   isAllMode?: boolean;
+  activeTab: TabKey;
+  activeLapNumber: number | null;
+  pinnedLapNumber: number | null;
+  onTabChange: (tab: TabKey) => void;
+  onLapHover: (lapNumber: number) => void;
+  onLapSelect: (lapNumber: number) => void;
+  onLapChange: (lapNumber: number) => void;
+  onClearPin: () => void;
 }
 
 export function ChartTabs({
@@ -53,51 +62,27 @@ export function ChartTabs({
   comparisonRiders,
   fixedRiderIds = [],
   isAllMode = false,
+  activeTab,
+  activeLapNumber,
+  pinnedLapNumber,
+  onTabChange,
+  onLapHover,
+  onLapSelect,
+  onLapChange,
+  onClearPin,
 }: ChartTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>("rank");
   const raceLapNumbers = useMemo(() => getRaceLapNumbers(race), [race]);
-  const raceLapAxisKey = raceLapNumbers.join(",");
-  const [activeLapNumber, setActiveLapNumber] = useState<number | null>(
-    () => raceLapNumbers[0] ?? null,
-  );
-  const [pinnedLapNumber, setPinnedLapNumber] = useState<number | null>(null);
-
-  useEffect(() => {
-    let isCurrent = true;
-    queueMicrotask(() => {
-      if (!isCurrent) return;
-
-      const fallbackLapNumber = raceLapNumbers[0] ?? null;
-      setActiveLapNumber((currentLapNumber) =>
-        currentLapNumber !== null && raceLapNumbers.includes(currentLapNumber)
-          ? currentLapNumber
-          : fallbackLapNumber,
-      );
-      setPinnedLapNumber((currentLapNumber) =>
-        currentLapNumber !== null && raceLapNumbers.includes(currentLapNumber)
-          ? currentLapNumber
-          : null,
-      );
-    });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [raceLapAxisKey, raceLapNumbers]);
 
   const handleLapHover = (lapNumber: number) => {
-    if (pinnedLapNumber === null) setActiveLapNumber(lapNumber);
+    if (pinnedLapNumber === null && raceLapNumbers.includes(lapNumber)) {
+      onLapHover(lapNumber);
+    }
   };
   const handleLapSelect = (lapNumber: number) => {
-    setActiveLapNumber(lapNumber);
-    setPinnedLapNumber(lapNumber);
+    if (raceLapNumbers.includes(lapNumber)) onLapSelect(lapNumber);
   };
   const handleLapChange = (lapNumber: number) => {
-    if (raceLapNumbers.includes(lapNumber)) handleLapSelect(lapNumber);
-  };
-  const handleClearPin = () => {
-    setPinnedLapNumber(null);
-    setActiveLapNumber(raceLapNumbers[0] ?? null);
+    if (raceLapNumbers.includes(lapNumber)) onLapChange(lapNumber);
   };
   const otherRiders = comparisonRiders.filter(
     (r) => r.riderId !== selfRider.riderId,
@@ -117,7 +102,9 @@ export function ChartTabs({
     <Card>
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as TabKey)}
+        onValueChange={(value) => {
+          if (TABS.some((tab) => tab.key === value)) onTabChange(value as TabKey);
+        }}
         className="contents"
       >
         <CardHeader>
@@ -163,7 +150,7 @@ export function ChartTabs({
               activeLapNumber={activeLapNumber}
               isPinned={pinnedLapNumber !== null}
               onLapChange={handleLapChange}
-              onClearPin={handleClearPin}
+              onClearPin={onClearPin}
             />
           </TabsContent>
           <TabsContent value="gap">
@@ -198,7 +185,7 @@ export function ChartTabs({
               activeLapNumber={activeLapNumber}
               isPinned={pinnedLapNumber !== null}
               onLapChange={handleLapChange}
-              onClearPin={handleClearPin}
+              onClearPin={onClearPin}
             />
           </TabsContent>
           <TabsContent value="pace">
@@ -233,7 +220,7 @@ export function ChartTabs({
               activeLapNumber={activeLapNumber}
               isPinned={pinnedLapNumber !== null}
               onLapChange={handleLapChange}
-              onClearPin={handleClearPin}
+              onClearPin={onClearPin}
             />
           </TabsContent>
           <TabsContent value="lap">
@@ -261,7 +248,7 @@ export function ChartTabs({
               activeLapNumber={activeLapNumber}
               isPinned={pinnedLapNumber !== null}
               onLapChange={handleLapChange}
-              onClearPin={handleClearPin}
+              onClearPin={onClearPin}
             />
           </TabsContent>
         </CardContent>

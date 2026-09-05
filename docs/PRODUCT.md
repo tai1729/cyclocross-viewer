@@ -6,8 +6,31 @@
 - The production URL is `https://ajocc-laptime-viewer.vercel.app/`.
 - The verified release is `bab760bea87c2dfc126b70559e375a721b68dd5a`; its Vercel production deployment is READY and reports the same `githubCommitSha`.
 - Phase 1 blockers are zero. Phase 2 Slice 4 lap detail and summary is
-  complete in the current working tree; the next Phase 2 slice requires its
-  own design and audit.
+  complete, and Phase 2 Slice 7 URL synchronization is complete and released
+  from the reviewed working tree.
+
+## Phase 2 Slice 7 current behavior - URL-synchronized state
+
+The Home list filters and race analysis selections are represented by readable
+query parameters so reload, revisit, sharing, and browser back/forward restore
+the same view. Home uses optional `season` and `series` parameters. Race uses
+optional `category`, `rider`, `compare`, repeated `fixed`, `tab`, and `lap`
+parameters. Race links may also carry `season` and `series` as return context
+for the list link; those two values do not affect race data or analysis.
+
+Default values are omitted: all seasons/series, the first ordered category, no
+primary rider, comparison `2`, the `rank` tab, and no pinned lap. Fixed IDs
+are deduplicated, limited to the existing four fixed-rider maximum, and only
+retained for pinned mode. `all` remains subject to the existing graphable
+rider limit. A lap is shareable only after it is deliberately selected or
+navigated to; hover is transient and never changes the URL.
+
+Invalid, stale, duplicate, and over-limit values are parsed without throwing,
+fall back to the existing safe defaults, and are removed from the canonical
+URL after the relevant data is loaded. A season change clears series. A race
+category change clears rider, fixed IDs, tab, and lap and restores comparison
+`2`. Existing data validity, error, loading, not-found, DNF, lapped, and
+responsive behavior remains authoritative.
 
 ## Phase 2 Slice 1 current behavior
 
