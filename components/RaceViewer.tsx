@@ -18,7 +18,6 @@ import {
   getRiderSummary,
   getValidCheckpoints,
 } from "@/lib/dataTransform";
-import { buildRiderColorMap } from "@/lib/chartColors";
 import type { MeetEntry } from "@/lib/types";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
@@ -66,7 +65,6 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     comparisonMode,
     pinnedRiderIds,
   );
-  const colors = useMemo(() => (race ? buildRiderColorMap(race) : {}), [race]);
 
   function selectPrimaryRider(riderId: string) {
     setSelfRiderId(riderId);
@@ -234,7 +232,13 @@ export function RaceViewer({ meet }: RaceViewerProps) {
         ) : selfRider && !hasLapData ? (
           <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
         ) : summary && selfRider ? (
-          <ChartTabs race={race} selfRider={selfRider} comparisonRiders={comparisonRiders} colors={colors} />
+          <ChartTabs
+            race={race}
+            selfRider={selfRider}
+            comparisonRiders={comparisonRiders}
+            fixedRiderIds={comparisonMode === "pinned" ? pinnedRiderIds : []}
+            isAllMode={comparisonMode === "all"}
+          />
         ) : (
           <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
         )}

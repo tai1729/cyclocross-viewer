@@ -1,143 +1,156 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
 Status: ACTIVE
-Active Change: Phase 2 Slice 1 — arbitrary comparison riders
+Active Change: Phase 2 Slice 2 — role-based chart styling
 
 ## Goal
 
-Allow a rider to compare against individually selected graphable riders in
-addition to the existing rank-neighbor presets. Preserve the Phase 1 result
-table, chart semantics, category behavior, loading/error states, and mobile
-accessibility guarantees.
+Make the role of each plotted rider immediately legible when comparing a
+primary rider, fixed comparison riders, and a larger context set. Preserve the
+existing four chart meanings, data semantics, comparison state model, and
+mobile/keyboard behavior.
 
 ## Scope
 
-- Add a `pinned` comparison mode containing the primary rider and up to four
-  fixed comparison riders, for a maximum of five chart series.
-- Let users search, add, and remove fixed comparison riders within the active
-  category.
-- Keep numeric rank-neighbor modes (`±0` through `±5`) and the guarded `all`
-  mode unchanged.
-- Keep fixed selections in local category state while switching comparison
-  modes; clear them when the category changes.
+- Classify displayed riders as `primary`, `fixed`, or `context`.
+- Give the primary a strong dark solid line, fixed riders up to four distinct
+  accessible colors, and context riders a neutral low-emphasis treatment.
+- Apply the role styles consistently to rank, gap, pace, and lap charts.
+- Keep legends quiet for crowded context sets and provide role-aware tooltip
+  content that prioritizes primary/fixed values instead of listing every
+  context rider unconditionally.
+- Add pure style/classification tests and preserve existing chart line-type
+  semantics (`stepAfter` for rank, `linear` for time series).
 
 ## Non-goals
 
-- No URL synchronization or persistence across page reloads.
-- No role-based chart styling, lap table, time-difference redesign, summary
-  expansion, or mobile chart-detail redesign; those remain later Phase 2
-  slices.
-- No collector contract, route, data-source, dependency, or deployment
-  configuration changes.
+- No new chart type, lap table, time-difference calculation, URL state sync,
+  summary redesign, or data contract change.
+- No change to the graphable-rider gate, pinned selection cap, `all` eligibility
+  guard, missing-lap behavior, or route/error states.
+- No new dependency. Existing Recharts and Tailwind primitives remain the
+  implementation boundary.
 
 ## Product behavior
 
-### Comparison modes
+### Role classification
 
-- Numeric modes `0`–`5` select graphable riders near the primary rider's final
-  position, using the existing rank-based semantics.
-- `pinned` selects the primary rider plus the fixed rider IDs, sorted by final
-  position. The primary rider is always first. Invalid, non-graphable,
-  duplicate, or primary IDs are ignored. At most four fixed riders are used.
-  The five-series limit applies to `pinned` only; numeric presets retain their
-  existing possible range of up to eleven riders.
-- `all` selects every graphable rider only when the existing graphable count is
-  at most eight. The UI remains disabled for larger fields.
-- If there is no primary rider, the existing selector behavior remains and
-  chart comparison remains empty. With a graphable primary and zero fixed
-  riders, pinned mode displays the primary series and an add-comparison prompt.
-  A non-graphable primary cannot produce pinned chart data, matching the
-  existing analysis-unavailable state.
+- The selected primary rider is always `primary`.
+- A rider is `fixed` only when the active comparison mode is `pinned` and its
+  ID is in the active fixed ID list. Fixed IDs that are not displayed are
+  ignored.
+- Every other displayed rider is `context`, including riders shown by numeric
+  rank presets and riders shown by `all`.
+- The role model is derived from current display inputs; it does not persist or
+  alter comparison state.
 
-### Fixed comparison picker
+### Visual treatment
 
-- The comparison controls list `固定` after `±5` and before `全員`; selecting
-  it activates pinned mode and shows the inline picker. The picker is not
-  opened as a modal.
-- Search uses the existing normalized text matching behavior and searches
-  graphable riders only. The primary rider and already fixed riders are not
-  addable candidates.
-- Each fixed rider has a visible remove control. The add control is unavailable
-  at the four-rider fixed limit and communicates the limit without relying on
-  color alone. If no candidates match the query, the picker says there are no
-  matches; if the query is empty and every graphable rider is excluded, it says
-  there are no addable riders; at the cap it states that the four-rider limit
-  has been reached.
-- Controls remain keyboard reachable, have visible focus, and provide a
-  roughly 44px touch target at narrow widths. The picker may use an inline
-  list; no new dialog or dependency is introduced.
-- Fixed selections persist while changing between numeric, pinned, and all
-  modes in the same category. They are not applied by numeric or all modes.
-- RaceViewer owns primary/fixed reconciliation. Selecting a new primary removes
-  that new primary ID from the fixed set to avoid duplicate series; other fixed
-  IDs remain. Clearing the primary leaves the fixed IDs in local state, but
-  pinned derivation is empty until a graphable primary is selected again.
-  Changing category clears the fixed set, clears the primary rider, and
-  restores numeric `±2`, matching existing category reset behavior.
+- `primary`: dark ink color, solid stroke, highest width/opacity, visible dots
+  when the chart is not crowded, and an accessible label identifying it as the
+  primary rider.
+- `fixed`: four-role palette colors, solid medium-width strokes, visible dots
+  when practical, and labels using the rider name.
+- `context`: neutral gray, lower opacity, thin stroke, and a short dash pattern
+  so it is not distinguished by color alone. Context remains visible as race
+  shape, but never competes with the primary/fixed series.
+- Shared style values are primary `#292722` / width `3.5` / opacity `1`, fixed
+  palette / width `2.5` / opacity `0.95`, and context `#77736b` / width `1.5`
+  / opacity `0.5` / dash `5 4`. Context dots and legends are hidden when the
+  shared crowded predicate is true; primary and fixed dots remain visible when
+  their chart supports dots. The role treatment must not make the chart
+  unreadable at 320px/390px.
+
+### Tooltip and legend
+
+- Rank and lap tooltips show present primary/fixed values with role labels.
+  Gap and pace retain the existing zero `ReferenceLine` as the primary
+  baseline; the baseline is labeled as the primary but is not synthesized as a
+  tooltip payload entry. In every chart, context is summarized at the hovered
+  point rather than listed rider-by-rider: rank reports count plus min–max
+  rank, while gap, pace, and lap report count plus min–max formatted value.
+- The all-mode legend is always suppressed, even for 2–8 riders. Numeric
+  presets use the shared crowded predicate `displayed rider count > 8`; pinned
+  mode with five or fewer series may show its role-labeled legend.
+- Tooltip entries with missing/null values are omitted. Context summaries use
+  only finite values present at the current hovered point; they never infer,
+  interpolate, or aggregate across missing laps. Tooltip cards wrap long names
+  within a viewport-safe maximum width.
+- The chart keeps its visible context lines and an adjacent text note explains
+  that context is intentionally de-emphasized when the legend is suppressed.
+- No information is conveyed by color alone: line weight, dash pattern,
+  textual labels, and the existing chart description carry the distinction.
 
 ## Architecture and data flow
 
-`RaceViewer` owns `pinnedRiderIds` alongside the existing primary rider and
-comparison mode state. `useComparisonRiders` exposes a pure
-`getComparisonRiders` helper and applies the mode-specific selection. The new
-picker receives graphable candidates and controlled fixed IDs, while
-`ComparisonAdjuster` remains the mode control.
+`RaceViewer` passes the active fixed IDs to `ChartTabs` only when pinned mode
+is active, plus an explicit all-mode flag. `ChartTabs` derives a pure
+`RiderSeriesStyle` map for the displayed riders and passes it to each chart. A
+shared role-aware tooltip renderer keeps the four chart implementations
+consistent. Stored fixed IDs remain unchanged outside pinned mode and receive
+fresh palette slots from filtered insertion order when pinned mode resumes.
 
 ```text
-race.riders
-  -> RaceViewer graphableRiders (dataQuality ok + valid checkpoints)
-  -> primary rider + pinned IDs + comparison mode
-  -> getComparisonRiders / useComparisonRiders
-  -> ChartTabs and existing chart transforms
+comparisonRiders + primaryRiderId + active pinned IDs
+  -> classifyRiderSeries / buildRiderSeriesStyles
+  -> ChartTabs + isAllMode
+  -> RankBumpChart / GapChart / PaceChart / LapTimeChart
+  -> role-aware lines, legends, tooltips, and text notes
 ```
 
-The upstream `Rider` and `RaceResult` contracts remain unchanged. DNF riders
-with valid checkpoints remain graphable and selectable; DNF riders without
-valid checkpoints are excluded. The picker does not fetch data and does not
-bypass `dataSource.ts` or `dataTransform.ts`. Riders with equal final
-positions are ordered by `finalPosition` then `riderId` for deterministic
-selection.
+The helper is deterministic: fixed colors are assigned in fixed-ID order, and
+unlisted riders receive the context style. The existing `colors` map may be
+removed from the chart path if the new style map fully replaces it; no other
+consumer contract changes.
 
 ## Error and edge behavior
 
-- Invalid external rider values are filtered by the existing graphable gate;
-  the picker never offers them.
-- An empty search result is rendered as an explicit empty state.
-- The picker interface is controlled: `RaceViewer` owns the fixed ID list and
-  exposes graphable candidates, while the picker emits only add/remove and
-  activate callbacks.
-- Removing the primary rider from the result selector clears it as before; any
-  stale ID in the fixed set is ignored by the pure selection helper.
-- A fixed set containing fewer than four valid IDs remains valid; no automatic
-  filling or inferred riders occur.
-- Existing network, HTTP, invalid-data, not-found, loading, and analysis-
-  unavailable states are unchanged.
+- Empty comparison data retains the existing `NoComparisonRiders` display.
+- A pinned mode with only the primary keeps the existing behavior: rank/lap
+  render the primary series, while gap/pace retain the existing
+  `NoComparisonRiders` state because they require a comparison series. The
+  picker remains available for adding a comparison rider.
+- Missing or invalid rider IDs are ignored by style derivation and cannot
+  produce a line or tooltip entry.
+- In gap/pace the primary remains a zero reference line; it is not duplicated
+  as a synthetic data series.
+- An all-mode set remains bounded by the existing eight-rider UI guard, while
+  numeric presets keep their current rider count behavior.
+- Existing network, HTTP, invalid-data, not-found, loading, DNF, and
+  analysis-unavailable states remain unchanged.
 
 ## Affected files
 
-- `hooks/useComparisonRiders.ts`
-- `components/ComparisonAdjuster.tsx`
-- `components/ComparisonRiderPicker.tsx` (new)
 - `components/RaceViewer.tsx`
-- `tests/useComparisonRiders.test.ts` (new)
+- `components/ChartTabs.tsx`
+- `components/RankBumpChart.tsx`
+- `components/GapChart.tsx`
+- `components/PaceChart.tsx`
+- `components/LapTimeChart.tsx`
+- `components/RoleAwareTooltip.tsx` (new)
+- `lib/chartColors.ts` or a focused chart-style helper module
+- `tests/chartSeriesStyles.test.ts` (new)
 - `docs/PRODUCT.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/SPEC_AUDIT.md`
 
 ## Acceptance criteria
 
-1. Numeric modes preserve the current rank-neighbor behavior.
-2. `pinned` mode renders the primary plus at most four selected graphable
-   riders, in stable final-position order, with no duplicate series.
-3. Users can search, add, and remove fixed riders; the cap and empty states
-   are explicit and usable at 320px/390px widths.
-4. Fixed selections persist across comparison-mode changes and reset on
-   category changes; changing the primary removes that ID from fixed state.
-   Clearing and reselecting a primary preserves the local fixed IDs but keeps
-   derivation empty while no graphable primary is selected.
-5. Existing `all` eligibility and all Phase 1 error/loading/not-found behavior
-   remain intact.
-6. Tests, typecheck, lint, production build, and diff hygiene pass.
-7. An independent reviewer returns `PASS` against this design and the project
-   acceptance rules.
+1. Pure role/style derivation returns primary, fixed, and context roles with
+   deterministic colors and no duplicate IDs.
+2. All four charts use the same role map: primary is strongest, fixed riders
+   are distinguishable, and context is visibly de-emphasized without color-
+   only meaning. Gap/pace retain the primary zero reference line.
+3. Rank remains `stepAfter`; gap, pace, and lap remain `linear`; missing data
+   is not connected or inferred.
+4. All mode always suppresses its legend; other charts suppress it only when
+   displayed rider count exceeds eight. Tooltips show present primary/fixed
+   values and the exact per-chart context count/range summary, without listing
+   missing or inferred values.
+5. Numeric, pinned, and all comparison modes retain their existing selection
+   behavior and error/loading/not-found behavior.
+6. The role treatment remains usable at 320px/390px with visible focus and no
+   page-level horizontal overflow.
+7. Tests, typecheck, lint, production build, diff hygiene, browser smoke, and
+   independent review pass.
 
 ## Validation commands
 
@@ -146,10 +159,10 @@ selection.
 - `npm.cmd run lint`
 - `npm.cmd run build`
 - `git diff --check`
+- local browser smoke for normal, pinned, all, and narrow layouts
 
 ## Baseline
 
-Phase 1 production acceptance remains recorded in
-`docs/2026-09-05-phase-1-production-acceptance.md`. The remote release SHA is
-`bab760bea87c2dfc126b70559e375a721b68dd5a`; this Slice 1 design does not alter
-that baseline evidence.
+Phase 1 production acceptance is recorded in
+`docs/2026-09-05-phase-1-production-acceptance.md`. Phase 2 Slice 1 fixed
+comparison is released on remote `main` at `22c38212a4ad49729abdf67bc106ecabb4fec25c`.

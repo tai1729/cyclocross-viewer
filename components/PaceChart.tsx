@@ -13,26 +13,35 @@ import {
 } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
 import { buildPaceDeltaSeries, formatGapSec } from "@/lib/dataTransform";
+import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
+import {
+  formatLapTooltipLabel,
+  RoleAwareTooltip,
+} from "@/components/RoleAwareTooltip";
 
 interface PaceChartProps {
   race: RaceResult;
   baseRider: Rider;
   otherRiders: Rider[];
-  colors: Record<string, string>;
+  seriesStyles: Record<string, RiderSeriesStyle>;
+  riderNames: Record<string, string>;
+  isCrowded: boolean;
 }
 
 export function PaceChart({
   race,
   baseRider,
   otherRiders,
-  colors,
+  seriesStyles,
+  riderNames,
+  isCrowded,
 }: PaceChartProps) {
   const data = buildPaceDeltaSeries(
     race,
     baseRider.riderId,
     otherRiders.map((r) => r.riderId),
   );
-  const isCrowded = otherRiders.length > 8;
+  const primaryStyle = seriesStyles[baseRider.riderId];
 
   return (
     <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
@@ -59,33 +68,53 @@ export function PaceChart({
           />
           <ReferenceLine
             y={0}
-            stroke="#6b685d"
-            strokeWidth={2}
+            stroke={primaryStyle.color}
+            strokeOpacity={primaryStyle.opacity}
+            strokeWidth={primaryStyle.strokeWidth}
             label={{
-              value: `${baseRider.name}（注目選手）`,
+              value: `${primaryStyle.roleLabel}・${baseRider.name}`,
               position: "insideBottomLeft",
               fontSize: 11,
-              fill: "#71717a",
+              fill: primaryStyle.color,
             }}
           />
           <Tooltip
-            formatter={(value) => formatGapSec(Number(value))}
+            content={(props) => (
+              <RoleAwareTooltip
+                {...props}
+                seriesStyles={seriesStyles}
+                riderNames={riderNames}
+                formatLabel={formatLapTooltipLabel}
+                formatValue={formatGapSec}
+              />
+            )}
             labelFormatter={(l) => `${l}周目`}
           />
           {!isCrowded && <Legend wrapperStyle={{ fontSize: 11 }} />}
-          {otherRiders.map((rider) => (
-            <Line
-              key={rider.riderId}
-              type="linear"
-              dataKey={rider.riderId}
-              name={rider.name}
-              stroke={colors[rider.riderId] ?? "#71717a"}
-              strokeWidth={2}
-              dot={isCrowded ? false : { r: 2.5 }}
-              activeDot={{ r: 4 }}
-              connectNulls={false}
-            />
-          ))}
+          {otherRiders.map((rider) => {
+            const style = seriesStyles[rider.riderId];
+            return (
+              <Line
+                key={rider.riderId}
+                type="linear"
+                dataKey={rider.riderId}
+                name={`${style.roleLabel}・${rider.name}`}
+                stroke={style.color}
+                strokeOpacity={style.opacity}
+                strokeWidth={style.strokeWidth}
+                strokeDasharray={style.strokeDasharray}
+                dot={
+                  style.role === "context" && isCrowded
+                    ? false
+                    : { r: style.role === "fixed" ? 3 : 2.5 }
+                }
+                activeDot={
+                  style.role === "context" && isCrowded ? false : { r: 4 }
+                }
+                connectNulls={false}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
       {isCrowded && (

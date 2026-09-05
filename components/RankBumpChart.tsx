@@ -12,19 +12,26 @@ import {
 } from "recharts";
 import type { Rider } from "@/lib/types";
 import { buildLapMap } from "@/lib/dataTransform";
+import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
+import {
+  formatLapTooltipLabel,
+  RoleAwareTooltip,
+} from "@/components/RoleAwareTooltip";
 
 interface RankBumpChartProps {
   riders: Rider[];
-  selfRiderId: string;
-  colors: Record<string, string>;
+  seriesStyles: Record<string, RiderSeriesStyle>;
+  riderNames: Record<string, string>;
+  isCrowded: boolean;
   /** レース全体の有効チェックポイントにある周回番号の和集合。 */
   raceLapNumbers: number[];
 }
 
 export function RankBumpChart({
   riders,
-  selfRiderId,
-  colors,
+  seriesStyles,
+  riderNames,
+  isCrowded,
   raceLapNumbers,
 }: RankBumpChartProps) {
   const riderLapMaps = new Map(
@@ -47,8 +54,6 @@ export function RankBumpChart({
   const minRank = ranks.length > 0 ? Math.min(...ranks) : 1;
   const maxRank = ranks.length > 0 ? Math.max(...ranks) : 1;
   const rankPadding = minRank === maxRank ? 1 : 0;
-  const isCrowded = riders.length > 8;
-
   return (
     <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
       <ResponsiveContainer width="100%" height="100%">
@@ -76,22 +81,47 @@ export function RankBumpChart({
             tickFormatter={(v) => `${v}位`}
           />
           <Tooltip
-            formatter={(value) => `${value}位`}
+            content={(props) => (
+              <RoleAwareTooltip
+                {...props}
+                seriesStyles={seriesStyles}
+                riderNames={riderNames}
+                formatLabel={formatLapTooltipLabel}
+                formatValue={(value) => `${value}位`}
+              />
+            )}
             labelFormatter={(l) => `${l}周目`}
           />
           {!isCrowded && <Legend wrapperStyle={{ fontSize: 11 }} />}
           {riders.map((rider) => {
-            const isSelf = rider.riderId === selfRiderId;
+            const style = seriesStyles[rider.riderId];
             return (
               <Line
                 key={rider.riderId}
                 type="stepAfter"
                 dataKey={rider.riderId}
-                name={isSelf ? `${rider.name}（注目選手）` : rider.name}
-                stroke={colors[rider.riderId] ?? "#71717a"}
-                strokeWidth={isSelf ? 3.5 : 1.75}
-                dot={isSelf ? { r: 4 } : isCrowded ? false : { r: 2.5 }}
-                activeDot={{ r: isSelf ? 6 : 4 }}
+                name={`${style.roleLabel}・${rider.name}`}
+                stroke={style.color}
+                strokeOpacity={style.opacity}
+                strokeWidth={style.strokeWidth}
+                strokeDasharray={style.strokeDasharray}
+                dot={
+                  style.role === "context" && isCrowded
+                    ? false
+                    : {
+                        r:
+                          style.role === "primary"
+                            ? 4
+                            : style.role === "fixed"
+                              ? 3
+                              : 2.5,
+                      }
+                }
+                activeDot={
+                  style.role === "context" && isCrowded
+                    ? false
+                    : { r: style.role === "primary" ? 6 : 4 }
+                }
                 connectNulls={false}
               />
             );

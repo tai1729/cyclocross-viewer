@@ -12,19 +12,26 @@ import {
 } from "recharts";
 import type { Rider } from "@/lib/types";
 import { buildLapMap, formatSecToClock } from "@/lib/dataTransform";
+import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
+import {
+  formatLapTooltipLabel,
+  RoleAwareTooltip,
+} from "@/components/RoleAwareTooltip";
 
 interface LapTimeChartProps {
   riders: Rider[];
-  selfRiderId: string;
-  colors: Record<string, string>;
+  seriesStyles: Record<string, RiderSeriesStyle>;
+  riderNames: Record<string, string>;
+  isCrowded: boolean;
   /** レース全体の有効チェックポイントにある周回番号の和集合。 */
   raceLapNumbers: number[];
 }
 
 export function LapTimeChart({
   riders,
-  selfRiderId,
-  colors,
+  seriesStyles,
+  riderNames,
+  isCrowded,
   raceLapNumbers,
 }: LapTimeChartProps) {
   const riderLapMaps = new Map(
@@ -69,29 +76,54 @@ export function LapTimeChart({
             tickFormatter={(v) => formatSecToClock(v)}
           />
           <Tooltip
-            formatter={(value) => formatSecToClock(Number(value))}
+            content={(props) => (
+              <RoleAwareTooltip
+                {...props}
+                seriesStyles={seriesStyles}
+                riderNames={riderNames}
+                formatLabel={formatLapTooltipLabel}
+                formatValue={formatSecToClock}
+              />
+            )}
             labelFormatter={(l) => `${l}周目`}
           />
-          {riders.length <= 8 && <Legend wrapperStyle={{ fontSize: 11 }} />}
+          {!isCrowded && <Legend wrapperStyle={{ fontSize: 11 }} />}
           {riders.map((rider) => {
-            const isSelf = rider.riderId === selfRiderId;
+            const style = seriesStyles[rider.riderId];
             return (
               <Line
                 key={rider.riderId}
                 type="linear"
                 dataKey={rider.riderId}
-                name={isSelf ? `${rider.name}（注目選手）` : rider.name}
-                stroke={colors[rider.riderId] ?? "#71717a"}
-                strokeWidth={isSelf ? 3.5 : 1.5}
-                dot={isSelf ? { r: 3.5 } : riders.length > 8 ? false : { r: 2 }}
-                activeDot={{ r: isSelf ? 5.5 : 4 }}
+                name={`${style.roleLabel}・${rider.name}`}
+                stroke={style.color}
+                strokeOpacity={style.opacity}
+                strokeWidth={style.strokeWidth}
+                strokeDasharray={style.strokeDasharray}
+                dot={
+                  style.role === "context" && isCrowded
+                    ? false
+                    : {
+                        r:
+                          style.role === "primary"
+                            ? 3.5
+                            : style.role === "fixed"
+                              ? 3
+                              : 2,
+                      }
+                }
+                activeDot={
+                  style.role === "context" && isCrowded
+                    ? false
+                    : { r: style.role === "primary" ? 5.5 : 4 }
+                }
                 connectNulls={false}
               />
             );
           })}
         </LineChart>
       </ResponsiveContainer>
-      {riders.length > 8 && (
+      {isCrowded && (
         <p className="mt-1 text-center text-xs text-muted-foreground">
           全{riders.length}名を表示中（注目選手の線のみ強調表示）
         </p>

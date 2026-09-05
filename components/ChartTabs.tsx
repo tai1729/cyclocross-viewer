@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { RaceResult, Rider } from "@/lib/types";
 import { getRaceLapNumbers } from "@/lib/dataTransform";
+import { buildRiderSeriesStyles } from "@/lib/chartSeriesStyles";
 import { RankBumpChart } from "@/components/RankBumpChart";
 import { GapChart } from "@/components/GapChart";
 import { PaceChart } from "@/components/PaceChart";
@@ -41,14 +42,16 @@ interface ChartTabsProps {
   race: RaceResult;
   selfRider: Rider;
   comparisonRiders: Rider[];
-  colors: Record<string, string>;
+  fixedRiderIds?: readonly string[];
+  isAllMode?: boolean;
 }
 
 export function ChartTabs({
   race,
   selfRider,
   comparisonRiders,
-  colors,
+  fixedRiderIds = [],
+  isAllMode = false,
 }: ChartTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("rank");
   const otherRiders = comparisonRiders.filter(
@@ -56,6 +59,15 @@ export function ChartTabs({
   );
   const raceLapNumbers = getRaceLapNumbers(race);
   const activeTabDef = TABS.find((t) => t.key === activeTab) ?? TABS[0];
+  const seriesStyles = buildRiderSeriesStyles(
+    comparisonRiders,
+    selfRider.riderId,
+    fixedRiderIds,
+  );
+  const riderNames = Object.fromEntries(
+    comparisonRiders.map((rider) => [rider.riderId, rider.name]),
+  );
+  const isCrowded = isAllMode || comparisonRiders.length > 8;
 
   return (
     <Card>
@@ -89,8 +101,9 @@ export function ChartTabs({
               </figcaption>
               <RankBumpChart
                 riders={comparisonRiders}
-                selfRiderId={selfRider.riderId}
-                colors={colors}
+                seriesStyles={seriesStyles}
+                riderNames={riderNames}
+                isCrowded={isCrowded}
                 raceLapNumbers={raceLapNumbers}
               />
             </figure>
@@ -106,7 +119,9 @@ export function ChartTabs({
                   race={race}
                   baseRider={selfRider}
                   otherRiders={otherRiders}
-                  colors={colors}
+                  seriesStyles={seriesStyles}
+                  riderNames={riderNames}
+                  isCrowded={isCrowded}
                 />
               </figure>
             ) : (
@@ -124,7 +139,9 @@ export function ChartTabs({
                   race={race}
                   baseRider={selfRider}
                   otherRiders={otherRiders}
-                  colors={colors}
+                  seriesStyles={seriesStyles}
+                  riderNames={riderNames}
+                  isCrowded={isCrowded}
                 />
               </figure>
             ) : (
@@ -138,8 +155,9 @@ export function ChartTabs({
               </figcaption>
               <LapTimeChart
                 riders={comparisonRiders}
-                selfRiderId={selfRider.riderId}
-                colors={colors}
+                seriesStyles={seriesStyles}
+                riderNames={riderNames}
+                isCrowded={isCrowded}
                 raceLapNumbers={raceLapNumbers}
               />
             </figure>

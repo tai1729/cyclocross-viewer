@@ -1,62 +1,56 @@
 # Specification Audit
 
 Status: CLEAR
-Current Change: Phase 2 Slice 1 — arbitrary comparison riders
+Current Change: Phase 2 Slice 2 — role-based chart styling
 
 ## Audit scope
 
 Two independent `spec_auditor` agents will inspect `docs/PRODUCT.md`,
-`docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`, the Phase 2 roadmap, relevant
-source and tests, and the Phase 1 production baseline. They must report only
-implementation-significant ambiguities, contradictions, or missing edge
-decisions. They are read-only and must not edit product files.
+`docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`, the roadmap, current chart
+components, style helpers, tests, and the Phase 2 Slice 1 baseline. They must
+report only implementation-significant ambiguities or regressions. They are
+read-only and must not edit product files.
 
 ## Auditor reports
 
 ### Auditor A
 
-Questions covered: pinned mode with zero fixed riders, primary/fixed
-reconciliation, scope of the five-rider cap, activation control, graphable
-primary behavior, clearing/reselecting a primary, deterministic ties, and
-observable persistence/reset tests.
-
-Evidence: the prior hook supported only numeric and `all` modes; the existing
-graphable gate is separate from the result selector; and existing sorting used
-only `finalPosition`.
+Questions covered: primary treatment in gap/pace, per-chart tooltip fields,
+all-mode legend behavior, fixed color ordering, inactive stored IDs, shared
+context style values, and missing-data semantics.
 
 ### Auditor B
 
-Questions covered: controlled state ownership, picker empty states, DNF riders
-with valid checkpoints, all-mode compatibility, keyboard/mobile controls, and
-the picker/integration interface boundary.
-
-Evidence: `RaceViewer` currently passes the primary setter directly to two
-selection surfaces, while graphable candidates are derived separately; the
-existing comparison control has no pinned option; and DNF status is not itself
-excluded by the current graphable gate.
+Questions covered: primary-only pinned behavior, typed tooltip boundaries,
+context summary definition, crowd predicates, non-color accessibility cues,
+mobile tooltip sizing, and four-chart compatibility.
 
 ## Resolution log
 
 All legitimate questions were resolved in `docs/DESIGN.md` and
 `docs/IMPLEMENTATION_PLAN.md` before implementation:
 
-1. Zero fixed riders: pinned mode displays the graphable primary alone and an
-   add prompt. No graphable primary yields no comparison.
-2. The five-series cap is pinned-only: one primary plus at most four fixed
-   riders. Numeric modes retain current semantics; `all` retains its existing
-   eight-rider guard.
-3. The visible mode label is `固定`, between `±5` and `全員`, and opens the
-   controlled inline picker.
-4. DNF riders with valid checkpoints are graphable candidates; DNF riders
-   without valid checkpoints are excluded.
-5. RaceViewer owns fixed IDs and removes a newly selected primary from them.
-   Other IDs survive primary clearing/reselection locally and are ignored until
-   a graphable primary exists. Category changes clear them.
-6. The picker distinguishes no matches, no addable riders, and the four-rider
-   cap. It exposes add/remove/activate callbacks and does not own state.
-7. Equal final positions are ordered by `riderId` after `finalPosition`.
-8. Acceptance covers mode persistence, primary reconciliation, category reset,
-   invalid/duplicate filtering, cap enforcement, empty states, and narrow
-   keyboard/touch use.
+1. Gap/pace retain the existing zero `ReferenceLine` for the primary. It is
+   labeled as the primary and is not synthesized into the tooltip payload.
+2. Rank/lap tooltips show present primary/fixed values with role labels. Gap,
+   pace, and rank/lap context values are summarized at the hovered point as
+   count plus min–max in chart units; missing/null values are omitted.
+3. All mode always suppresses legends. Other modes suppress legends when
+   displayed rider count exceeds eight; pinned mode with five or fewer may show
+   its role-labeled legend.
+4. Fixed colors use filtered `pinnedRiderIds` insertion order. IDs remain
+   stored outside pinned mode, are context while inactive, and are recolored by
+   current filtered order when pinned resumes.
+5. Shared role values are primary `#292722`, width 3.5, opacity 1; fixed width
+   2.5, opacity 0.95 using the existing accessible palette; context `#77736b`,
+   width 1.5, opacity 0.5, dash `5 4`. Context dots are hidden under the
+   shared crowd predicate; primary/fixed dots remain where supported.
+6. Tooltips use only sparse finite values at the hovered lap. No interpolation,
+   placeholder numeric value, or cross-gap summary is added. Tooltip cards wrap
+   long names within a viewport-safe width.
+7. Pinned primary-only mode keeps rank/lap primary charts and the existing
+   gap/pace comparison-empty state; the picker remains available.
+8. The shared tooltip accepts a normalized payload plus a chart-owned unit
+   formatter and role map; inactive/empty/unknown entries render nothing.
 
 STATUS: CLEAR

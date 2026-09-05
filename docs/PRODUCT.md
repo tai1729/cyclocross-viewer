@@ -18,8 +18,21 @@
 - Fixed IDs persist while switching comparison modes, are reconciled when the
   primary changes, and are cleared when the category changes. Numeric rank
   presets and the existing eight-rider `全員` guard remain unchanged.
-- URL synchronization, time-difference presentation, lap tables, role-based
-  chart styling, and other Phase 2 slices remain out of scope.
+- URL synchronization, time-difference presentation, lap tables, and other
+  Phase 2 slices remain out of scope.
+
+## Phase 2 Slice 2 current behavior
+
+- Charts distinguish the selected primary rider, active fixed riders in pinned
+  mode, and all other displayed riders as context. The primary has the strongest
+  treatment, fixed riders have distinct role colors, and context remains visible
+  with a neutral low-emphasis treatment.
+- Gap and pace retain the primary rider's zero baseline. In all mode the legend
+  is suppressed and context riders are summarized at the hovered point instead
+  of being listed individually.
+- Charts use only sparse measured values. Missing values and laps are omitted;
+  they are not inferred, interpolated, or aggregated across missing data.
+- Slice 2 adds no new data contracts and no new production dependencies.
 
 この文書は、製品全体の長期的なSource of Truthである。現在の実装、テスト、既存設計、2026-09-02〜03のレビューから確認できる事実を整理する。将来の変更仕様は `docs/DESIGN.md` に記載する。
 
