@@ -50,6 +50,126 @@ export function getValidTimedLaps(rider: Rider): LapRecord[] {
   );
 }
 
+export interface MeasuredLapRow {
+  lapNumber: number;
+  lapTimeSec: number;
+  cumulativeTimeSec: number;
+  rankAtLap: number;
+}
+
+export interface LapStatistics {
+  fastestLap: MeasuredLapRow | null;
+  averageLapTimeSec: number | null;
+}
+
+export function getMeasuredLapRows(rider: Rider): MeasuredLapRow[] {
+  return getValidTimedLaps(rider).map(
+    ({ lapNumber, lapTimeSec, cumulativeTimeSec, rankAtLap }) => ({
+      lapNumber,
+      lapTimeSec,
+      cumulativeTimeSec,
+      rankAtLap,
+    }),
+  );
+}
+
+export function getLapStatistics(rider: Rider): LapStatistics {
+  const laps = getMeasuredLapRows(rider);
+  if (laps.length === 0) {
+    return { fastestLap: null, averageLapTimeSec: null };
+  }
+
+  const fastestLap = laps.reduce((fastest, current) => {
+    if (
+      current.lapTimeSec < fastest.lapTimeSec ||
+      (current.lapTimeSec === fastest.lapTimeSec &&
+        current.lapNumber < fastest.lapNumber)
+    ) {
+      return current;
+    }
+    return fastest;
+  });
+  const averageLapTimeSec =
+    laps.reduce((total, current) => total + current.lapTimeSec, 0) / laps.length;
+
+  return { fastestLap, averageLapTimeSec };
+}
+
+export interface LapDeltaRow {
+  lapNumber: number;
+  deltas: Record<string, number | undefined>;
+}
+
+export function buildLapDeltaRows(
+  primaryRider: Rider,
+  fixedRiders: Rider[],
+): LapDeltaRow[] {
+  const primaryLaps = getValidTimedLaps(primaryRider);
+  const fixedLapMaps = fixedRiders.map(
+    (rider) => [rider.riderId, buildLapMap(rider, true)] as const,
+  );
+
+  return primaryLaps.map((primaryLap) => {
+    const deltas: Record<string, number | undefined> = {};
+    for (const [riderId, fixedLapMap] of fixedLapMaps) {
+      const fixedLap = fixedLapMap.get(primaryLap.lapNumber);
+      if (fixedLap) {
+        deltas[riderId] = fixedLap.lapTimeSec - primaryLap.lapTimeSec;
+      }
+    }
+    return { lapNumber: primaryLap.lapNumber, deltas };
+  });
+}
+
+export interface MaximumLapLoss {
+  fixedRiderId: string;
+  lapNumber: number;
+  lossSec: number;
+}
+
+export function getMaximumLapLoss(
+  primaryRider: Rider,
+  fixedRiders: Rider[],
+): MaximumLapLoss | null {
+  const primaryLaps = getValidTimedLaps(primaryRider);
+  let maximumLoss: (MaximumLapLoss & { fixedRiderOrder: number }) | null = null;
+
+  for (let fixedRiderOrder = 0; fixedRiderOrder < fixedRiders.length; fixedRiderOrder++) {
+    const fixedRider = fixedRiders[fixedRiderOrder];
+    const fixedLapMap = buildLapMap(fixedRider, true);
+    for (const primaryLap of primaryLaps) {
+      const fixedLap = fixedLapMap.get(primaryLap.lapNumber);
+      if (!fixedLap) continue;
+
+      const lossSec = primaryLap.lapTimeSec - fixedLap.lapTimeSec;
+      if (lossSec <= 0) continue;
+
+      if (
+        maximumLoss === null ||
+        lossSec > maximumLoss.lossSec ||
+        (lossSec === maximumLoss.lossSec &&
+          (primaryLap.lapNumber < maximumLoss.lapNumber ||
+            (primaryLap.lapNumber === maximumLoss.lapNumber &&
+              fixedRiderOrder < maximumLoss.fixedRiderOrder)))
+      ) {
+        maximumLoss = {
+          fixedRiderId: fixedRider.riderId,
+          lapNumber: primaryLap.lapNumber,
+          lossSec,
+          fixedRiderOrder,
+        };
+      }
+    }
+  }
+
+  if (!maximumLoss) return null;
+  return {
+    fixedRiderId: maximumLoss.fixedRiderId,
+    lapNumber: maximumLoss.lapNumber,
+    lossSec: maximumLoss.lossSec,
+  };
+}
+
 export function buildLapMap(
   rider: Rider,
   timedOnly = false,

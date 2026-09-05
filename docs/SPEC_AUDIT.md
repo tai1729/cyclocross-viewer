@@ -1,6 +1,6 @@
 # Specification Audit
 
-Current Change: Phase 2 Slice 3 — time-difference analysis
+Current Change: Phase 2 Slice 4 — lap detail and summary
 
 ## Sources inspected
 
@@ -15,6 +15,9 @@ Current Change: Phase 2 Slice 3 — time-difference analysis
 - `components/GapChart.tsx`
 - `components/PaceChart.tsx`
 - `components/RoleAwareTooltip.tsx`
+- `components/RaceViewer.tsx`
+- `components/SummaryCard.tsx`
+- `lib/dataTransform.ts` (lap semantics and reusable transforms)
 - `tests/dataTransform.test.ts`
 
 ## Audit scope
@@ -88,5 +91,86 @@ Auditors must identify any implementation-significant ambiguity about:
 10. Keyboard focus remains required for surrounding controls; the existing
     Recharts pointer tooltip is not rearchitected into a keyboard chart
     navigator in this Slice.
+
+STATUS: CLEAR
+
+## Current Slice 4 audit
+
+The preceding section records the completed Slice 3 audit. The active audit
+below governs the lap-detail and summary implementation.
+
+### Audit questions for spec auditors
+
+1. Does the selected-rider row definition exactly match the existing
+   `getValidTimedLaps` and duplicate/invalid-data semantics?
+2. Are fastest, average, tie-breaking, display rounding, and DNF/lapped
+   boundaries explicit enough to implement without guessing?
+3. Is the maximum-loss formula and fixed-rider scope consistent with the
+   Slice 3 sign convention and comparison modes?
+4. Are sparse missing comparison values, no-loss cases, and unavailable/empty
+   states specified without inventing zeroes or inferred laps?
+5. Can the proposed desktop/mobile table expose the same information at
+   320px/390px without conflicting with existing table and focus rules?
+6. Are the component boundaries and documentation scope sufficiently bounded
+   so URL sync, chart rearchitecture, and upstream contract changes stay out?
+
+### Commander assumptions pending audit
+
+- The user instruction to proceed approves the Slice 4 scope; the detailed
+  formulas and responsive presentation are recorded in `docs/DESIGN.md`.
+- Lap rows use the selected rider's valid timed laps only. The summary may be
+  shown for DNF/lapped riders when measured rows exist, while existing status
+  classification remains authoritative.
+- Only fixed pinned riders receive table comparison columns. Numeric/all
+  comparison detail remains in the existing charts and tooltip.
+- Positive displayed lap delta means the fixed rider is slower; positive
+  maximum-loss means the selected rider lost time to that fixed rider.
+
+### Auditor findings
+
+- Both auditors identified the same missing definition for a DNF tail. The
+  current `Rider` contract has no separate DNF-event lap, so “post-DNF” must
+  be grounded in the existing valid checkpoint set.
+- Both auditors requested deterministic display precision and a distinction
+  between raw-second calculations and rounded UI text.
+- Both auditors identified the zero-valid-timed-laps state as distinct from
+  zero checkpoints/data-quality failure and requested an explicit UI outcome.
+- The UI audit requested one semantic representation across desktop/mobile,
+  explicit placement in the existing two-column analysis region, and a rule
+  for fully sparse fixed-rider columns.
+- The data audit requested rider-local duplicate invalidation, fixed-rider
+  tie order, use of the same valid-timed-lap gate for loss calculations, and
+  reconciliation of stale pinned IDs.
+
+### Resolutions
+
+1. A DNF lap-detail boundary is the greatest `lapNumber` in
+   `getValidCheckpoints(rider)`. `getValidTimedLaps` already derives from that
+   set, so malformed records outside the valid checkpoint set are excluded;
+   no new status field or collector contract is introduced.
+2. All calculations and tie-breaking use original finite seconds. Lap time,
+   cumulative time, and average are displayed with `formatSecToClock`; signed
+   deltas and maximum loss use `formatGapSec`. Both existing formatters round
+   only for display, so raw values decide fastest/loss candidates.
+3. When valid checkpoints exist but valid timed laps do not, keep the existing
+   status summary and chart analysis. The new summary omits fastest/average,
+   and the new table renders a clear “no valid measured laps” empty state.
+4. The selected primary row remains whenever its own timed lap is valid. A
+   duplicate or invalid fixed-rider lap invalidates only that rider's cell;
+   the primary row and other fixed columns remain. Both riders must pass
+   `getValidTimedLaps` for a delta or maximum-loss candidate.
+5. Fixed columns are rendered for every currently reconciled fixed rider in
+   the order supplied to the table, even when all cells are blank. Maximum
+   loss ties prefer the earliest `lapNumber`; if tied on the same lap, they
+   prefer the fixed-rider order supplied to the table. Stale pinned IDs are
+   excluded by existing comparison reconciliation.
+6. The table uses one accessible `role="table"` representation and CSS
+   responsive grid rows, not duplicated desktop/mobile content. The summary
+   follows `SummaryCard` in the left analysis column; the table precedes
+   `ChartTabs` in the right column and becomes the corresponding mobile order.
+7. Numeric and all modes retain selected-rider fastest/average values but no
+   comparison columns; their comparison detail remains in existing charts and
+   tooltips. No URL, chart architecture, upstream contract, or dependency
+   changes are part of Slice 4.
 
 STATUS: CLEAR

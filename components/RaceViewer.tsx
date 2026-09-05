@@ -23,6 +23,8 @@ import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
+import { LapSummaryCard } from "@/components/LapSummaryCard";
+import { LapDetailTable } from "@/components/LapDetailTable";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { ChartTabs } from "@/components/ChartTabs";
@@ -147,6 +149,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const summary = selfRiderId && hasValidData && hasLapData
     ? getRiderSummary(race, selfRiderId)
     : null;
+  const fixedRiders = comparisonMode === "pinned"
+    ? comparisonRiders.filter((rider) => rider.riderId !== selfRider?.riderId)
+    : [];
 
   return (
     <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8 2xl:px-12">
@@ -201,6 +206,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           {summary && (
             <>
               <SummaryCard summary={summary} />
+              {selfRider && (
+                <LapSummaryCard
+                  primaryRider={selfRider}
+                  fixedRiders={fixedRiders}
+                />
+              )}
               <ComparisonAdjuster
                 mode={comparisonMode}
                 displayedCount={comparisonRiders.length}
@@ -232,13 +243,19 @@ export function RaceViewer({ meet }: RaceViewerProps) {
         ) : selfRider && !hasLapData ? (
           <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
         ) : summary && selfRider ? (
-          <ChartTabs
-            race={race}
-            selfRider={selfRider}
-            comparisonRiders={comparisonRiders}
-            fixedRiderIds={comparisonMode === "pinned" ? pinnedRiderIds : []}
-            isAllMode={comparisonMode === "all"}
-          />
+          <div className="flex min-w-0 flex-col gap-4">
+            <LapDetailTable
+              primaryRider={selfRider}
+              fixedRiders={fixedRiders}
+            />
+            <ChartTabs
+              race={race}
+              selfRider={selfRider}
+              comparisonRiders={comparisonRiders}
+              fixedRiderIds={comparisonMode === "pinned" ? pinnedRiderIds : []}
+              isAllMode={comparisonMode === "all"}
+            />
+          </div>
         ) : (
           <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
         )}

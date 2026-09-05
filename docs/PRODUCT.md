@@ -5,7 +5,9 @@
 - Phase 1 production completion is closed as of 2026-09-05.
 - The production URL is `https://ajocc-laptime-viewer.vercel.app/`.
 - The verified release is `bab760bea87c2dfc126b70559e375a721b68dd5a`; its Vercel production deployment is READY and reports the same `githubCommitSha`.
-- Phase 1 blockers are zero and Phase 2 is READY for a separately designed and audited task.
+- Phase 1 blockers are zero. Phase 2 Slice 4 lap detail and summary is
+  complete in the current working tree; the next Phase 2 slice requires its
+  own design and audit.
 
 ## Phase 2 Slice 1 current behavior
 
@@ -55,9 +57,33 @@
   not inferred or listed.
 - Existing DNF and lapped-rider semantics remain unchanged. Slice 3 adds no
   new status interpretation or chart status label.
-- Lap tables and fastest/average/max-loss statistics remain deferred to Phase
-  2 Slice 4; this slice only clarifies the existing difference charts and
-  tooltip detail.
+- Slice 4 adds the selected rider's measured lap table and compact statistics
+  described below; the Slice 3 chart semantics remain unchanged.
+
+## Phase 2 Slice 4 current behavior
+
+- The selected rider's lap detail is built only from valid timed laps. Each
+  measured row shows lap number, lap time, cumulative time, and same-lap rank.
+  Missing, duplicated, invalid, non-positive, and post-DNF records are not
+  reconstructed or displayed as inferred values.
+- The compact summary shows the fastest measured lap (earliest lap wins a
+  tie) and the arithmetic mean of all valid timed laps. Display rounding does
+  not affect the selected fastest lap.
+- In pinned comparison mode, each fixed rider gets a sparse same-lap lap-time
+  difference using `fixed lap - selected lap`: positive means the fixed rider
+  was slower and negative means faster. The maximum-loss item uses
+  `selected lap - fixed lap`, and identifies the fixed rider and lap only for
+  a positive matching loss. Equal maximum losses prefer the earliest lap; if
+  the lap is also equal, the rendered fixed-rider order wins.
+- Numeric presets and all mode keep the selected rider's statistics but do not
+  add wide comparison columns. Existing charts and tooltips remain the source
+  for those modes' comparison detail.
+- DNF and lapped riders retain their existing status summary while showing
+  any valid measured rows recorded before the boundary. No new upstream
+  fields, ranking rules, or dependencies are introduced.
+- Desktop uses a table and narrow screens use labeled stacked rows, so the
+  numeric content remains available at 320px/390px without page-level
+  horizontal overflow. Signs and status are not communicated by color alone.
 
 この文書は、製品全体の長期的なSource of Truthである。現在の実装、テスト、既存設計、2026-09-02〜03のレビューから確認できる事実を整理する。将来の変更仕様は `docs/DESIGN.md` に記載する。
 

@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildLapDeltaRows,
   buildGapSeries,
   buildPaceDeltaSeries,
+  getLapStatistics,
+  getMaximumLapLoss,
   getRaceLapNumbers,
   getRiderResult,
+  getMeasuredLapRows,
   getValidCheckpoints,
   getValidTimedLaps,
 } from "../lib/dataTransform";
@@ -38,6 +42,115 @@ function race(riders: Rider[]): RaceResult {
     riders,
   };
 }
+
+test("measured rows and lap statistics use raw timed values and earliest ties", () => {
+  const selected = rider("selected", 1, [
+    lap(1, 61.4, 61.4, 4),
+    lap(2, 60.2, 121.6, 3),
+    lap(3, 60.2, 181.8, 2),
+    lap(4, 62.8, 244.6, 1),
+  ]);
+
+  assert.deepEqual(getMeasuredLapRows(selected), [
+    { lapNumber: 1, lapTimeSec: 61.4, cumulativeTimeSec: 61.4, rankAtLap: 4 },
+    { lapNumber: 2, lapTimeSec: 60.2, cumulativeTimeSec: 121.6, rankAtLap: 3 },
+    { lapNumber: 3, lapTimeSec: 60.2, cumulativeTimeSec: 181.8, rankAtLap: 2 },
+    { lapNumber: 4, lapTimeSec: 62.8, cumulativeTimeSec: 244.6, rankAtLap: 1 },
+  ]);
+  assert.deepEqual(getLapStatistics(selected), {
+    fastestLap: {
+      lapNumber: 2,
+      lapTimeSec: 60.2,
+      cumulativeTimeSec: 121.6,
+      rankAtLap: 3,
+    },
+    averageLapTimeSec: (61.4 + 60.2 + 60.2 + 62.8) / 4,
+  });
+});
+
+test("lap statistics explicitly report no valid timed laps", () => {
+  const noTimedLaps = rider("no-timed-laps", 1, [lap(1, 0, 60), lap(2, 0, 120)]);
+
+  assert.deepEqual(getMeasuredLapRows(noTimedLaps), []);
+  assert.deepEqual(getLapStatistics(noTimedLaps), {
+    fastestLap: null,
+    averageLapTimeSec: null,
+  });
+});
+
+test("lap deltas are sparse and preserve primary rows around missing fixed data", () => {
+  const primary = rider("primary", 1, [
+    lap(1, 60, 60),
+    lap(2, 61, 121),
+    lap(3, 62, 183),
+  ]);
+  const fixed = rider("fixed", 2, [lap(1, 63, 63)]);
+
+  assert.deepEqual(buildLapDeltaRows(primary, [fixed]), [
+    { lapNumber: 1, deltas: { fixed: 3 } },
+    { lapNumber: 2, deltas: {} },
+    { lapNumber: 3, deltas: {} },
+  ]);
+});
+
+test("duplicate fixed laps invalidate only that rider's delta and loss candidates", () => {
+  const primary = rider("primary", 1, [lap(1, 70, 70), lap(2, 70, 140)]);
+  const duplicate = rider("duplicate", 2, [
+    lap(1, 75, 75),
+    lap(2, 60, 120),
+    lap(2, 61, 121),
+  ]);
+  const valid = rider("valid", 3, [lap(1, 65, 65), lap(2, 65, 130)]);
+
+  assert.deepEqual(buildLapDeltaRows(primary, [duplicate, valid]), [
+    { lapNumber: 1, deltas: { duplicate: 5, valid: -5 } },
+    { lapNumber: 2, deltas: { valid: -5 } },
+  ]);
+  assert.deepEqual(getMaximumLapLoss(primary, [duplicate, valid]), {
+    fixedRiderId: "valid",
+    lapNumber: 1,
+    lossSec: 5,
+  });
+});
+
+test("maximum loss uses positive raw values, earliest lap, then fixed-rider order", () => {
+  const primary = rider("primary", 1, [
+    lap(1, 70.4, 70.4),
+    lap(2, 80.4, 150.8),
+  ]);
+  const firstFixed = rider("first", 2, [lap(1, 70.4, 70.4), lap(2, 75.4, 145.8)]);
+  const secondFixed = rider("second", 3, [lap(1, 65.4, 65.4), lap(2, 80.4, 145.8)]);
+  const thirdFixed = rider("third", 4, [lap(1, 65.4, 65.4)]);
+
+  assert.deepEqual(getMaximumLapLoss(primary, [thirdFixed, secondFixed, firstFixed]), {
+    fixedRiderId: "third",
+    lapNumber: 1,
+    lossSec: 5,
+  });
+  assert.equal(
+    getMaximumLapLoss(
+      rider("primary", 1, [lap(1, 60, 60)]),
+      [rider("faster", 2, [lap(1, 61, 61)])],
+    ),
+    null,
+  );
+});
+
+test("measured transforms retain valid DNF and lapped rows but omit invalid tails", () => {
+  const dnf = rider(
+    "dnf",
+    4,
+    [lap(1, 65, 65), lap(2, 0, 65), { ...lap(3, 64, 129), rankAtLap: Number.NaN }],
+    "dnf",
+  );
+  const lapped = rider("lapped", 3, [lap(1, 70, 70), lap(2, 71, 141)]);
+
+  assert.deepEqual(getMeasuredLapRows(dnf), [
+    { lapNumber: 1, lapTimeSec: 65, cumulativeTimeSec: 65, rankAtLap: 1 },
+  ]);
+  assert.deepEqual(getMeasuredLapRows(lapped).map((row) => row.lapNumber), [1, 2]);
+  assert.equal(getMaximumLapLoss(dnf, [lapped]), null);
+});
 
 test("gapとpaceは配列位置ではなく同じlapNumberだけを比較する", () => {
   const base = rider("base", 1, [
