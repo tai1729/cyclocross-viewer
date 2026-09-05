@@ -53,6 +53,31 @@ The local comparison demonstrates that `タイム差` is valuable for a specific
 analysis question, but it does not establish that it is the best first view
 for the broader audience.
 
+## Task comparison
+
+Two task paths were compared with the same selected winner and `±2` context:
+
+1. For “who was ahead on each lap?”, the default `順位` view is immediately
+   available. Its explanation says that higher is better, and the detail
+   panel exposes the selected lap's rank for the primary and context riders.
+   A `タイム差`-first design would add one tab transition before this answer.
+2. For “on which lap did the gap open?”, the `タイム差` view gives the direct
+   answer after one tab transition from the current default. Its explanation
+   names the cumulative same-lap difference, states the sign meaning, and the
+   detail panel shows values such as `-22秒` for the first lap. A
+   `タイム差`-first design would save that one transition.
+
+The no-comparison path was also opened with the same primary and `compare=0`.
+The existing `タイム差` surface explicitly says `比較できる周回データを持つ
+選手がほかにいません。`, while the rank view still has a meaningful single
+rider chart. This makes rank the more resilient entry state even though the
+tab-switch cost is symmetric for a fully configured comparison.
+
+The DNF path preserved the explicit DNF summary (`到達周回`, `最終通過`, and
+`離脱時点の差`) and exposed only common measured checkpoints in the time-gap
+view. The sparse result is correct, but it is a poor default explanation until
+the viewer has understood the rider's status.
+
 ## Recommendation
 
 Keep `順位` as the initial chart. Do not change product code in this spike.
