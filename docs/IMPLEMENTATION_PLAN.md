@@ -644,21 +644,43 @@ dependencies.
 5. Verify the 1024px boundary, 390px/320px overflow and keyboard states,
    repeated analysis, UX2-1, and UX2-2 Desktop regressions.
 
-### UX2-4 — State/error/accessibility regression coverage
+### UX2-4 — Results / Lap Detail / supporting information hierarchy
 
-- Status: READY NEXT (after UX2-3; implementation intentionally not started)
-- Objective: Cover loading, error, empty, unavailable, DNF, lapped, missing,
-  duplicate, pinned, all-limit, direct URL, and browser navigation states.
-- Scope: behavior-focused tests and browser matrix; no data-model change.
+- Status: DONE (2026-09-06; independent reviewer PASS)
+- Objective: Apply progressive disclosure to supporting Results and Lap Detail
+  while keeping chart/context primary and preserving all existing information.
+- Scope: `components/RaceViewer.tsx`, new presentation-only Lap Detail
+  disclosure, pure supporting-label helper/tests, UX2-4 report, and browser
+  verification. No data-transform or URL-writer changes.
 - Dependencies: UX2-2, UX2-3.
-- Do not change: existing error kinds or collector boundary.
-- Acceptance: no stale race/chart flash, no hidden essential content, visible
-  focus, screen-reader labels, and stable same-analysis scroll.
-- Verification: `npm test`, `npx tsc --noEmit`, `npm run lint`, browser matrix.
+- Do not change: chart calculations, `LapDetailTable` values/semantics,
+  `RaceResultsTable` data/status semantics, URL keys/history, existing error
+  kinds, upstream/collector contract, mobile rider/comparison architecture,
+  or production dependencies.
+- Acceptance: active Results and Lap Detail are discoverable closed disclosures;
+  existing tables remain fully usable when open; no chart competition, page-top
+  reset, table/status/accessibility regression, or page horizontal overflow.
+- Verification: full tests plus focused UX2-4 tests, typecheck, lint, build,
+  diff check, CUA browser smoke at Desktop/Mobile targets, and independent
+  reviewer PASS.
+
+#### UX2-4 implementation task graph
+
+1. **UX2-4-A — Presentation primitive and labels** — DONE. Own
+   `components/LapDetailDisclosure.tsx`, `lib/supportingPresentation.ts`, and
+   focused tests. Depend on the resolved disclosure contract. Do not edit
+   `RaceViewer.tsx` or data transforms.
+2. **UX2-4-B — RaceViewer integration** — DONE. Own only
+   `components/RaceViewer.tsx`; wire controlled local disclosure state,
+   count-bearing Results summaries, and explicit Results rider return behavior.
+   Do not change URL helpers or chart/table internals.
+3. **UX2-4-C — Documentation and verification** — DONE. Own
+   `docs/ux2-4-information-hierarchy-report.md` and verification evidence;
+   run required checks and browser matrix. Do not change product code.
 
 ### UX2-5 — Full verification, user test, review, and closeout
 
-- Status: BLOCKED by UX2-4
+- Status: READY NEXT (after UX2-4; implementation intentionally not started)
 - Objective: Run required checks, independent review, and a three-person
   first-use comparison against the baseline audit.
 - Scope: tests/typecheck/lint/build, `git diff --check`, browser smoke, task

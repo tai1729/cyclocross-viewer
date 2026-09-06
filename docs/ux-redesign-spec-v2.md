@@ -535,3 +535,107 @@ boundary below `1024px` while leaving the UX2-2 Desktop branch unchanged.
 - No extra Mobile sticky layer is introduced. `RaceHeader` remains the only
   sticky surface; resize/hydration changes presentation only and do not write
   URL state or Desktop disclosure preference.
+
+## UX2-4 supporting information resolution (2026-09-06)
+
+UX2-4 is limited to Results, Lap Detail, and supporting-information hierarchy
+after the completed UX2-1/2/3 slices. It does not change URL keys, history
+semantics, chart/data calculations, or upstream status meaning.
+
+### Hierarchy and placement
+
+- Primary remains context, active metric/chart, and the existing chart detail
+  panel.
+- Secondary is selected-rider summary, Lap Detail, and full Results when
+  needed for inspection or rider discovery.
+- Tertiary is existing explanatory/metadata copy inside those surfaces.
+- Browse continues to render the full Results table before analysis.
+- Active Desktop keeps `context/status → ChartTabs/chart → Lap Detail → rail →
+  Results disclosure` and active Mobile keeps `context → compact controls →
+  ChartTabs/chart → summary cards → Lap Detail disclosure → Results disclosure`.
+
+### Results contract
+
+Active Results is a native `details` disclosure, closed by default, with the
+visible summary `結果表を表示・N名` where N is `race.riders.length`. It has no
+URL/history state. Opening preserves the existing one-table representation,
+semantic caption, sticky table header, and `max-h-[32rem] overflow-y-auto`
+bounded list. The selected row remains identified by the existing visual
+highlight, `aria-pressed` state, and `分析中` text. Selecting a different rider
+from an open active Results surface is explicit navigation to the analysis
+workspace: close the disclosure, use the existing in-analysis rider `push`
+with `scroll: false`, reveal the existing analysis region, and focus a visible
+analysis control. Browse row selection keeps its existing analysis-entry
+behavior.
+
+### Lap Detail contract
+
+Active Lap Detail is a native `details` disclosure, closed by default on entry
+to analysis, placed after the chart (and after existing summary cards in the
+Mobile branch). Its summary is `ラップ詳細を表示・N周・選手名` for the number
+of existing measured rows, or `ラップ詳細を表示・有効な実測ラップなし` when
+the table has no measured rows. The existing `LapDetailTable` is the only
+renderer inside; no row, delta, status, missing value, DNF, or lapped meaning
+changes. The chart detail panel remains the quick per-lap evidence surface.
+
+### Disclosure state, focus, and scroll
+
+Results keeps its completed Desktop/Mobile local preferences. Lap Detail has a
+single local preference shared across responsive presentations. Both are
+local-only and initialized closed. They persist through rider, comparison,
+metric, and lap changes and responsive resize; leaving analysis resets them to
+closed. Native `summary` supplies disclosure semantics, keyboard open/close,
+and focus retention. Closing cannot leave focus in hidden content because
+normal interaction closes through the focused summary; URL-driven unmounts
+continue to use the UX2-1 visible-control focus reconciliation.
+
+Opening/closing supporting disclosures performs no URL write and no custom
+scroll. Since both surfaces are below the chart, their height changes cannot
+move the primary chart. Active Results row selection is the only new explicit
+navigation exception: after the existing `scroll: false` URL push, the current
+analysis region is revealed with its semantic anchor and a visible analysis
+control receives focus. No page-top scroll, timeout, magic number, new scroll
+container, dependency, or data-model change is allowed.
+
+### Responsive and state coverage
+
+The existing Results bounded scroll region and Lap Detail responsive labeled
+rows are retained at 390px/320px; no page-level horizontal overflow is added.
+Long names wrap. Loading, error, empty, unavailable, DNF, lapped, missing and
+duplicate lap, large dataset, category reset, deep link, Back/Forward, and all
+comparison limits remain governed by the completed contracts and existing data
+components. UX2-4 tests must cover disclosure labels/defaults/open-close,
+active Results rider selection, static accessibility attributes, and the
+required regression command/browser matrix.
+
+### UX2-4 audit resolutions (2026-09-06)
+
+1. Results summary count is `race.riders.length`, including every rider
+   rendered by the existing table, including unavailable results. It is not
+   filtered by graphability.
+2. Lap Detail is still openable with zero valid measured rows. The summary is
+   `ラップ詳細を表示・有効な実測ラップなし`; opening exposes the existing
+   empty-state row. With rows, `N周` is exactly
+   `getMeasuredLapRows(primaryRider).length`.
+3. DNF/lapped/missing/duplicate meaning remains in the existing context,
+   `SummaryCard`, and table cells. UX2-4 adds no status text or inferred
+   boundary; malformed/duplicate records remain excluded by existing helpers.
+4. Disclosure state is local-only. Reload starts closed. Same-mount rider,
+   comparison, metric, lap, and resize preserve the preference. Browse or
+   category transitions close it synchronously and do not retain stale content.
+5. Open/close keeps native summary focus; no ordinary disclosure toggle moves
+   focus to a table heading. URL-driven unmounts use the UX2-1 visible-control
+   reconciliation.
+6. `RaceViewer` owns active Results row selection, closes the disclosure, and
+   uses the existing in-analysis rider `push` with `scroll: false`. It reveals
+   `#race-analysis` only if that region has no viewport intersection, using
+   `scrollIntoView`; if already visible, it does not move the page. It then
+   focuses the visible workspace control. `RaceResultsTable` only calls its
+   callback.
+7. Results keeps native table semantics and Lap Detail keeps its existing ARIA
+   table role and responsive rows. The existing single Results table remains
+   the only renderer.
+8. Implementation and verification ownership is bounded: the disclosure
+   component/helper/tests are separate from the sole `RaceViewer` integrator,
+   and docs/browser/reviewer work follows integration. No chart/data/URL or
+   UX2-5 scope is opened.

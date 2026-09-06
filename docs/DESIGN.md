@@ -1072,3 +1072,100 @@ dialog has a labeled title, native modal semantics, visible close control,
 Escape and backdrop handling, internal list scroll, and focus return. The
 implementation must verify 390px/320px, long names, large lists, virtual
 keyboard visibility, safe area, and no page-level overflow.
+
+## UX2-4 implementation design — Results / Lap Detail / supporting information (resolved 2026-09-06)
+
+UX2-4 is a bounded information-hierarchy slice after the UX2-1 state contract,
+UX2-2 Desktop workspace, and UX2-3 Mobile workspace. It changes only the
+presentation and disclosure state of supporting information. Results, lap
+rows, chart calculations, URL keys, comparison eligibility, and AJOCC status
+semantics remain unchanged.
+
+### Information hierarchy
+
+The active workspace classifies information as follows:
+
+- **Primary**: race/category/rider/comparison/metric context, the active chart,
+  and the existing chart detail panel.
+- **Secondary**: selected-rider summary cards, Lap Detail, and the full Results
+  table when a user is checking the field or choosing another rider.
+- **Tertiary**: explanatory copy and secondary metadata already contained in the
+  existing cards/tables. No tertiary data is removed; it remains inside the
+  same supporting surfaces when opened.
+
+Results serves both browse and analysis. Browse keeps the existing full table.
+In active analysis, Results is an explicit, closed-by-default native `details`
+surface with a visible count (`結果表を表示・N名`). The one existing table
+remains bounded by its existing `max-h-[32rem] overflow-y-auto` region. The
+selected rider remains findable through the existing row highlight,
+`aria-pressed` action state, and `分析中` text. Selecting a different rider
+from an open active Results surface is explicit navigation back to the
+analysis workspace: the disclosure closes, the rider URL is updated through
+the existing rider writer, and the workspace is focused/revealed without a
+router top reset.
+
+Lap Detail is secondary measured evidence for validating chart trends and
+checking individual lap, rank, cumulative, delta, missing, DNF, and lapped
+values. It is a native closed-by-default disclosure immediately after the
+chart (and after the existing summary cards in the Mobile branch). Its
+summary is specific (`ラップ詳細を表示・N周・選手名`, or an explicit no-valid-
+measured-laps label). The existing `LapDetailTable` is rendered unchanged
+inside the disclosure, so opening it does not remove information or alter
+calculation semantics.
+
+### Disclosure state and transitions
+
+Results keeps its existing Desktop/Mobile local preferences. Lap Detail uses a
+single local preference shared by the responsive presentation because it is
+the same supporting surface; both preferences are initialized closed and are
+not serialized. They remain stable across rider, comparison, metric, and lap
+changes, and across a responsive resize. Leaving analysis (browse or category
+transition) clears both preferences. Browser Back/Forward changes only the
+URL-derived analysis state; it does not create, remove, or serialize a
+disclosure preference unless the resulting state leaves analysis and the
+existing component lifecycle resets it.
+
+Native `summary` semantics provide `aria-expanded`, keyboard open/close, and
+summary focus retention. No custom scroll restoration, timeout, `scrollTo`,
+or new scroll container is introduced. Opening or closing either supporting
+surface does not move the page to the top. Because both surfaces are after the
+chart, their height change cannot move the primary chart; only content below
+the active disclosure changes. A row selection from active Results is the
+explicit navigation exception and may reveal the existing analysis region via
+`scrollIntoView`, then focus a visible analysis control.
+
+### Responsive and data boundaries
+
+Desktop retains the UX2-2 chart top target and visual rail. Mobile retains the
+UX2-3 rider modal, comparison disclosure, compact context, and chart-first
+order. Both widths use the same semantic table content: the existing Results
+bounded list and existing Lap Detail responsive labeled rows. No new page-level
+horizontal overflow, pagination, virtualization, sticky layer, or production
+dependency is introduced. DNF, lap-down, missing/duplicate lap, unavailable,
+and no-valid-measured-lap states continue to be rendered by existing data and
+status components; a compact summary never converts them into zeroes or new
+status categories.
+
+### UX2-4 implementation tasks
+
+1. Add a presentation-only Lap Detail disclosure with an information-scented
+   summary and controlled local open state; keep `LapDetailTable` as the sole
+   data/table renderer.
+2. Add count-bearing Results disclosure summaries and explicit active-result
+   rider-selection return behavior without changing the centralized URL writer.
+3. Reset/preserve local disclosure state according to the transition contract,
+   and retain native focus/scroll semantics.
+4. Add pure label/presentation tests and browser smoke for open/close, result-row
+   selection, 320px/390px overflow, Desktop chart placement, and UX2-1/2/3
+   regressions.
+
+### UX2-4 acceptance additions
+
+- Active initial analysis shows chart/context without the Lap Detail table or
+  full Results table occupying the initial supporting area.
+- Results and Lap Detail have discoverable labels, preserve all existing data,
+  and work in both closed and open states at Desktop and Mobile widths.
+- Disclosure open/close and same-workspace state changes do not force page top;
+  explicit active-result rider selection returns to the chart workspace.
+- Existing table semantics, DNF/lapped/missing values, URL/history, focus,
+  44px controls, and horizontal-overflow protections remain intact.

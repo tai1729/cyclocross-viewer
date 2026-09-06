@@ -241,3 +241,30 @@ following decisions are authoritative for implementation:
    not render chart/lap detail.
 
 These resolutions remove the implementation-blocking ambiguities for UX2-3.
+
+## UX2-4 Results / Lap Detail audit resolutions (2026-09-06)
+
+Two independent auditors reviewed the UX2-4 design and current integration.
+One returned `SPEC_CLEAR`; the other requested explicit definitions for
+counting, empty lap details, lifecycle, selection return, focus, table
+semantics, and task ownership. The Commander resolved them in
+`docs/DESIGN.md` and `docs/ux-redesign-spec-v2.md`:
+
+- Results count is the full rendered upstream rider set
+  (`race.riders.length`), including unavailable rows.
+- Lap Detail remains openable with no valid measured rows; its count is the
+  number of rendered `getMeasuredLapRows` rows, and the existing empty state is
+  exposed when zero.
+- DNF/lapped/missing/duplicate semantics remain in existing summary/table
+  surfaces with no second status model.
+- Disclosure state is local-only: reload starts closed; same-mount analysis
+  changes and resize preserve it; browse/category transitions close it.
+- Native summary focus is retained on ordinary toggles. `RaceViewer`, not the
+  table, owns active Results selection close, conditional workspace reveal, and
+  focus. The existing rider URL push remains `scroll: false`.
+- Results native table and Lap Detail ARIA table semantics remain unchanged;
+  no duplicate table, URL state, chart/data, or dependency change is allowed.
+- Implementation ownership is split between a presentation helper/component,
+  one `RaceViewer` integration task, and a later verification/report task.
+
+No implementation-blocking ambiguity remains for UX2-4.

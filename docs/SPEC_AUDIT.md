@@ -564,3 +564,58 @@ ambiguities. The Commander resolved them in `docs/DESIGN.md`,
 No implementation-blocking ambiguity remains for UX2-3.
 
 STATUS: CLEAR
+
+## UX2-4 Results / Lap Detail / supporting information audit (2026-09-06)
+
+This is the active audit for the bounded UX2-4 implementation. The source of
+truth is `docs/ux-redesign-spec-v2.md` plus the completed UX2-1/2/3 reports.
+Two independent `spec_auditor` agents must inspect those documents and the
+current Results/Lap Detail integration before implementation. They must answer:
+
+1. Whether Results should remain one existing table and what its closed summary
+   must expose for information scent and current-rider discovery.
+2. Whether Lap Detail is closed by default on Desktop/Mobile, how its lap count
+   is derived without changing data semantics, and how no-measured-lap, DNF,
+   lapped, missing, and duplicate states are named.
+3. Whether Results/Lap Detail disclosure state is URL/history state or local
+   presentation state, including rider/category changes, Back/Forward, reload,
+   and responsive resize.
+4. How active Results row selection returns to analysis without violating the
+   UX2-1 `scroll: false` rider contract or turning an explicit action into an
+   accidental page-top reset.
+5. Whether native `details` semantics provide sufficient keyboard/focus
+   behavior, and whether existing table accessibility, bounded scrolling, and
+   320px/390px overflow remain intact.
+6. Whether the proposed component ownership is bounded enough to avoid chart,
+   data-transform, URL, dependency, or UX2-5 scope expansion.
+
+### UX2-4 resolutions
+
+1. The Results summary count is `race.riders.length`, the full rendered table
+   set including unavailable result rows; it is not a graphable-only count.
+2. Lap Detail remains openable with zero valid measured rows and exposes the
+   existing empty state. Its `N周` is exactly
+   `getMeasuredLapRows(primaryRider).length`; no highest-lap or inferred DNF
+   count is used.
+3. Existing context/SummaryCard/table output remains authoritative for
+   DNF/lapped/missing/duplicate meaning. The disclosure summary adds no second
+   status model.
+4. Disclosure state is local-only: fresh reload starts closed; same-mount
+   rider/comparison/metric/lap transitions and resize preserve the preference;
+   browse or category transitions close it synchronously and cannot display
+   stale data.
+5. Native summary retains focus on ordinary open/close. No programmatic focus
+   to a table heading is added. Existing UX2-1 reconciliation covers
+   URL-driven unmounts.
+6. `RaceViewer` owns active Results row close, rider URL push, conditional
+   workspace reveal, and focus. It calls `scrollIntoView` only when the
+   analysis region has no viewport intersection; an already visible workspace
+   is not moved. `RaceResultsTable` only invokes its callback.
+7. Results keeps its native `<table>` and Lap Detail keeps its existing ARIA
+   `role="table"` representation; no duplicate table or semantic conversion is
+   included in this slice.
+8. Implementation ownership is bounded: presentation helper/component/tests,
+   one RaceViewer integration task, then report/browser/validation/review. No
+   chart/data/URL/dependency or UX2-5 implementation is included.
+
+STATUS: CLEAR

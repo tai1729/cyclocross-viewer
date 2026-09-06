@@ -41,16 +41,23 @@ import {
   getAnalysisPresentationOrder,
   getResultsDisclosureOpen,
 } from "@/lib/resultsPresentation";
+import {
+  getResultsSelectionNavigationDecision,
+  getSupportingDisclosureLifecycleDecision,
+  isResultsRiderSelectionNavigation,
+  shouldRevealAnalysisRegion,
+} from "@/lib/resultsInteraction";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { LapSummaryCard } from "@/components/LapSummaryCard";
-import { LapDetailTable } from "@/components/LapDetailTable";
+import { LapDetailDisclosure } from "@/components/LapDetailDisclosure";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { MobileComparisonDisclosure } from "@/components/MobileComparisonDisclosure";
 import { ChartTabs } from "@/components/ChartTabs";
+import { getResultsDisclosureLabel } from "@/lib/supportingPresentation";
 import {
   AnalysisContextBar,
   getAnalysisComparisonLabel,
@@ -212,8 +219,10 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     categoryId: resolvedCategoryId,
     queryString,
   });
+  const resultsSelectionNavigationRef = useRef<string | null>(null);
   const [desktopResultsOpen, setDesktopResultsOpen] = useState(false);
   const [mobileResultsOpen, setMobileResultsOpen] = useState(false);
+  const [lapDetailOpen, setLapDetailOpen] = useState(false);
   const wasAnalyzingRef = useRef(urlViewState.selfRiderId !== null);
 
   const { race, isLoading, error, retry } = useRaceData(
@@ -313,15 +322,27 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     const isProgrammaticNavigation = isProgrammaticNavigationRef.current;
     const isCanonicalization = isCanonicalizationRef.current;
     const isCanonicalizationResult = pendingCanonicalQueryRef.current === queryString;
+    const resultsSelectionDecision = getResultsSelectionNavigationDecision({
+      pendingRiderId: resultsSelectionNavigationRef.current,
+      currentUrlRiderId: urlState.rider || null,
+      queryChanged,
+      isPopstate: isPopstateRef.current,
+    });
+    if (resultsSelectionDecision.shouldClearPending) {
+      resultsSelectionNavigationRef.current = null;
+    }
+    const hasPendingResultsSelection = resultsSelectionDecision.canConsumePending;
     if (isProgrammaticNavigation || isCanonicalization || isCanonicalizationResult) {
       isProgrammaticNavigationRef.current = false;
       isCanonicalizationRef.current = false;
       if (isCanonicalizationResult) pendingCanonicalQueryRef.current = null;
       isPopstateRef.current = false;
-      previousNavigationRef.current = { categoryId: resolvedCategoryId, queryString };
-      return;
+      if (!hasPendingResultsSelection) {
+        previousNavigationRef.current = { categoryId: resolvedCategoryId, queryString };
+        return;
+      }
     }
-    if (!isPopstateRef.current && !queryChanged) return;
+    if (!hasPendingResultsSelection && !isPopstateRef.current && !queryChanged) return;
     if (!race || isLoading || error || !normalizedUrlState) return;
 
     const context = getReturnContext(urlState, meet);
@@ -337,7 +358,17 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      if (previousNavigation.categoryId !== resolvedCategoryId) {
+      if (hasPendingResultsSelection) {
+        const analysisRegion = document.getElementById(ANALYSIS_REGION_ID);
+        if (analysisRegion instanceof HTMLElement) {
+          const rect = analysisRegion.getBoundingClientRect();
+          if (shouldRevealAnalysisRegion(rect, window.innerHeight)) {
+            analysisRegion.scrollIntoView({ block: "start" });
+          }
+        }
+        focusCurrentAnalysisControl();
+        resultsSelectionNavigationRef.current = null;
+      } else if (previousNavigation.categoryId !== resolvedCategoryId) {
         document.querySelector<HTMLElement>("[data-race-category-trigger]")?.focus({ preventScroll: true });
       } else if (!isCurrentVisibleFocusTarget(document.activeElement)) {
         focusCurrentAnalysisControl();
@@ -360,12 +391,19 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
   useEffect(() => {
     const isAnalyzing = selfRiderId !== null;
-    if (isAnalyzing && !wasAnalyzingRef.current) {
+    if (getSupportingDisclosureLifecycleDecision({
+      isLoading,
+      hasError: Boolean(error),
+      hasRace: race !== null,
+      isAnalyzing,
+      wasAnalyzing: wasAnalyzingRef.current,
+    }) === "reset") {
       setDesktopResultsOpen(false);
       setMobileResultsOpen(false);
+      setLapDetailOpen(false);
     }
     wasAnalyzingRef.current = isAnalyzing;
-  }, [selfRiderId]);
+  }, [error, isLoading, race, selfRiderId]);
 
   function pushRaceUrl(patch: UrlStatePatch, action: RaceNavigationAction) {
     const context = getReturnContext(urlState, meet);
@@ -387,6 +425,15 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   function selectPrimaryRider(riderId: string) {
     const nextPinnedRiderIds = pinnedRiderIds.filter((pinnedId) => pinnedId !== riderId);
     pushRaceUrl({ rider: riderId, fixed: nextPinnedRiderIds }, "rider");
+  }
+
+  function selectRiderFromResults(riderId: string) {
+    if (isResultsRiderSelectionNavigation(selfRiderId, riderId)) {
+      resultsSelectionNavigationRef.current = riderId;
+      setDesktopResultsOpen(false);
+      setMobileResultsOpen(false);
+    }
+    selectPrimaryRider(riderId);
   }
 
   function addPinnedRider(riderId: string) {
@@ -511,7 +558,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     <RaceResultsTable
       race={race}
       selectedRiderId={selfRiderId}
-      onSelect={selectPrimaryRider}
+      onSelect={selectRiderFromResults}
       analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
     />
   );
@@ -575,12 +622,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   ) : null;
 
   const analysisLapDetail = summary && selfRider ? (
-    <div>
-      <LapDetailTable
-        primaryRider={selfRider}
-        fixedRiders={fixedRiders}
-      />
-    </div>
+    <LapDetailDisclosure
+      primaryRider={selfRider}
+      fixedRiders={fixedRiders}
+      open={lapDetailOpen}
+      onOpenChange={setLapDetailOpen}
+    />
   ) : null;
 
   const analysisMain = (
@@ -664,7 +711,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       className="order-1 min-w-0 lg:order-2"
     >
       <summary className="hidden min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 lg:flex sm:min-h-8">
-        結果表を表示
+        {getResultsDisclosureLabel(race.riders.length)}
       </summary>
       <div className="mt-3">{resultsTable}</div>
     </details>
@@ -678,7 +725,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       className="min-w-0"
     >
       <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
-        結果表を表示
+        {getResultsDisclosureLabel(race.riders.length)}
       </summary>
       <div className="mt-3">{resultsTable}</div>
     </details>
