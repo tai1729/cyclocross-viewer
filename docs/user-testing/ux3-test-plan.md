@@ -73,22 +73,24 @@
 5. 参加者へは、UIラベルやURL queryを教えず、タスクの目的と必要な対象名だけを読み上げる。
 6. テスト中のデータ読み込み失敗に備え、同じ意味の予備raceを1件用意する。予備への切替は技術的問題として記録し、参加者の失敗には数えない。
 
-## 1セッションの進行（10〜15分）
+## 1セッションの進行（15〜25分）
+
+参加者へは、intro、Task 0〜6、post-test interviewを含めて15〜25分程度と伝える。task後またはsession後の詳細な記録・分類は参加者の待ち時間に含めず、参加者が退出した後に行う。
 
 | 時間 | 内容 | 目的 |
 | ---: | --- | --- |
-| 0:00–0:45 | 同意、think-aloud、禁止事項の説明 | 心理的安全性と記録条件を揃える |
-| 0:45–1:30 | Task 0 First Impression | 第一印象と最初の意図を得る |
-| 1:30–3:00 | Task 1 | 大会結果への到達性 |
-| 3:00–5:00 | Task 2 | 選手分析とchart発見 |
-| 5:00–6:30 | Task 3 | 周囲との比較 |
-| 6:30–8:00 | Task 4 | 指標・変化・lap情報の探索 |
-| 8:00–9:15 | Task 5 | 別選手への切替 |
-| 9:15–10:30 | Task 6 | 自発的発見 |
-| 10:30–13:30 | interviewと1〜5評価 | 言語化された印象と優先順位 |
-| 13:30–15:00 | 余裕があればcritical moment確認 | 記録漏れを補う |
+| 0:00–2:00 | 同意、think-aloud、禁止事項の説明 | 心理的安全性と記録条件を揃える |
+| 2:00–3:00 | Task 0 First Impression | 第一印象と最初の意図を得る |
+| 3:00–5:00 | Task 1 | 大会結果への到達性 |
+| 5:00–8:00 | Task 2 | 選手分析とchart発見 |
+| 8:00–11:00 | Task 3 | 周囲との比較 |
+| 11:00–14:00 | Task 4 | 指標・変化・lap情報の探索 |
+| 14:00–16:00 | Task 5 | 別選手への切替 |
+| 16:00–17:30 | Task 6 | 自発的発見（60〜90秒固定） |
+| 17:30–22:30 | interviewと1〜5評価（4〜6分） | 言語化された印象と優先順位 |
+| 22:30–25:00 | interview follow-up / close buffer（必要時のみ） | 追加確認と終了 |
 
-各タスクの制限時間を超えても、目的達成の見込みが低い場合は中止して次へ進む。中止は失敗ではなく観察データである。時間不足時はTask 0〜3、Task 5、post-testを優先し、Task 4または6を短縮する。
+Task 0〜5は、目的達成の見込みが低く制限時間に達した場合は中止して次へ進む。中止は失敗ではなく観察データである。Task 6はプロンプト後60〜90秒を固定timeboxとして実施し、途中で短縮・省略しない。時間不足時はTask 0〜3、Task 5、post-testを優先し、Task 4のdeep dive、interview follow-up、close bufferを短縮または省略する。
 
 ## Moderator protocol
 
@@ -96,7 +98,7 @@
 
 - participantの目的、発話、迷いを観察し、操作方法を教えない。
 - 参加者が沈黙したときは最低3秒待つ。
-- 3秒以上の停止をfriction eventとして記録するが、すぐ介入しない。
+- およそ3秒の停止だけではfriction eventとしない。control探索、cursorの迷走、探索的な上下scroll、迷い発話などのbehavioral evidenceがある場合だけ`Interaction hesitation`として記録し、chart・表・数値を読むための`Reading / analysis pause`はhesitation countから除外する。判定できない場合は`NR`とする。
 - 参加者が「次に何をすればよいか分からない」と言ったら、まず「今、何を探していますか？」と尋ねる。
 - 「ここです」「このボタンです」「グラフは下です」「比較はここです」「選手変更はこちらです」は言わない。
 - 参加者が結果を得た後に、正しさを先回りして肯定しない。「そう思った理由を教えてください」と聞く。
@@ -113,19 +115,21 @@
 5. 「その表示をどういう意味だと理解しましたか？」
 6. 「別の方法を試すとしたら、何を試しますか？」
 
-介入レベルは `M0=なし`、`M1=上記の中立質問`、`M2=タスクの目的を一度言い直す`、`M3=技術障害への復旧（新規session/予備race）` と記録する。M2/M3を行った場合は理由と時刻を書く。
+介入レベルは `M0=介入なし`、`M1=中立的なThink Aloud reminderまたはprobe（上記の中立質問）`、`M2=中立的な質問・probeでタスク目的を一度言い直す`、`M3=既存定義の技術障害からの復旧（新規session/予備race）` と記録する。現行定義ではM3を直接の操作案内・救済には広げず、control、位置、正解、意味を直接教えた場合は`LEADING`とする。M2/M3/LEADINGを行った場合は理由と時刻を書く。1つのtaskにつき介入コードは1つだけ記録し、範囲表記は使わない。
 
 ### 記録の順序と最小セット
 
 記録負荷を下げるため、moderatorはすべての項目を同時に埋めない。
 
-1. タスク文を読み上げる直前にstart時刻を記録する。
-2. 目的達成、中止、または制限時間到達時にend時刻を記録する。durationは秒で計算し、単位を省略しない。
+1. タスク文を読み上げる直前にstart時刻を秒まで記録する。
+2. 目的達成、中止、または制限時間到達時にend時刻を秒まで記録する。durationは秒で計算し、単位を省略しない。exactなstart/endが取れない場合だけ、`approx.`と明記した近似時間を記録し、推測や捏造はしない。
 3. その場で `success / partial / fail` を1つだけ選ぶ。選べない場合は `NR` とする。
 4. その場で `M0 / M1 / M2 / M3 / LEADING` のいずれか1つを選ぶ。`M0–M3` の範囲表記を結果欄に残さない。
-5. major frictionがあれば1行、participantの原文が取れれば1 quoteだけ記録する。
+5. major hesitation/frictionがあれば1行、participantの原文が取れれば1 quoteだけ記録する。
 
-first click、wrong turn、scroll reversal、interaction hesitationの詳細、severity、suspected causeは、参加者を待たせない範囲でメモし、task後またはsession後に補完する。記録できない値は推測せず `NR` とする。
+その場で必須なのは、task outcome、exactなstart/endがない場合の`approx.`付き時間、major hesitation/friction、介入コード1つ、notable quoteである。real-timeに表の全欄を埋める必要はない。first click、wrong turn、scroll reversal、interaction hesitationの詳細、severity、suspected cause、facilitator findingは、参加者を待たせない範囲でメモし、task後またはsession後に補完する。記録できない値は推測せず `NR` とする。
+
+一問ずつ進めるQ&A形式は将来のprotocol改善候補にとどめ、今回のtable templateを置き換えない。
 
 ### Think Aloudと介入の判定
 
@@ -135,10 +139,10 @@ moderatorがcontrol、位置、正解、意味を直接教えた場合は `LEADI
 
 ### Hesitationの定義
 
-3秒は候補を見つけるための観察閾値であり、単独ではfrictionに数えない。
+およそ3秒は候補を見つけるための観察閾値であり、単独ではfrictionに数えない。
 
-- `Interaction hesitation`: 3秒以上の停止に加え、control間のcursor移動、上下探索、戻る操作、「どこだろう」等の迷い発話があるもの。friction countに含める。
-- `Reading / analysis pause`: chart・表・数値を理解するための停止で、探索行動や迷い発話がないもの。friction countに含めず、必要なら分析pauseとして記録する。
+- `Interaction hesitation`: およそ3秒の停止に加え、control探索、cursorの迷走、探索的な上下scroll、戻る操作、「どこだろう」等の迷い発話のいずれかがあるもの。friction countに含める。
+- `Reading / analysis pause`: chart・表・数値を理解するための停止で、探索行動や迷い発話がないもの。hesitation countとfriction countに含めず、必要なら分析pauseとして記録する。
 - 判定不能: `NR`。読み取りをfrictionに変換しない。
 
 ## タスク
@@ -212,16 +216,16 @@ moderatorがcontrol、位置、正解、意味を直接教えた場合は `LEADI
 | completion | `success` / `partial` / `fail`。目的を自力で達成したかで判定 |
 | completion time | start/endを記録し、秒単位で計算する。単位不明の値は使用しない |
 | first-click correctness | 最初の操作が目的へ直接向かったか。探索クリックはwrong turnとして別記録 |
-| hesitation | 3秒以上かつ操作探索・迷い発話があるinteraction hesitationのみ。reading pauseとは分離 |
+| hesitation | およそ3秒の停止に加え、control探索・cursorの迷走・探索的scroll・迷い発話があるinteraction hesitationのみ。reading / analysis pauseとは分離し、判定不能は`NR` |
 | wrong turn | 目的に向かわない操作、誤った項目、戻る操作。単なる確認クリックは除外 |
 | major scroll reversal | 目的領域を探すため、1 viewport相当以上の上下往復が発生した回数 |
-| moderator intervention | `M0`〜`M3`または`LEADING`を1つだけ。理由と時刻を残す |
+| moderator intervention | `M0` / `M1` / `M2` / `M3` / `LEADING`のいずれか1つだけ。理由と時刻を残す |
 | Ease | タスク直後に1=とても使いにくい〜5=とても使いやすい |
 | Confidence | 1=正しく操作できたか不明〜5=完全に理解した |
 
 ### Friction event
 
-次のいずれかが発生したら時刻を記録する: 3秒以上かつ操作探索を伴う停止、同じ場所の往復、control探索のためのscroll、誤ったcontrol、分からないという発言、browser backを逃げ道として使う、chart/current riderを見失う、unexpected scrollへの反応、disclosureを見つけられない、ラベルの意味の誤解。自然なreading / analysis pauseは別記録とする。
+次のいずれかが発生したら時刻を記録する: およそ3秒の停止に加えてcontrol探索、cursorの迷走、探索的scroll、迷い発話があるinteraction hesitation、同じ場所の往復、control探索のためのscroll、誤ったcontrol、分からないという発言、browser backを逃げ道として使う、chart/current riderを見失う、unexpected scrollへの反応、disclosureを見つけられない、ラベルの意味の誤解。自然なreading / analysis pauseはhesitation countに含めず、別記録とする。判定不能は`NR`とする。
 
 ### Critical moment log
 
@@ -267,11 +271,13 @@ moderatorがcontrol、位置、正解、意味を直接教えた場合は `LEADI
 
 本番の前に1人でpilotを行う。pilotは製品評価ではなく、test kitの品質確認である。
 
-- 15分以内にTask 0〜6とpost-testが収まるか。
+- 参加者が待つ範囲（intro、Task 0〜6、post-test interview）が15〜25分に収まるか。post-session reconstructionやfacilitatorの詳細記録時間は含めない。
+- Task 6の60〜90秒を維持しつつ、post-test interviewまで実施できるか。
 - タスク文がUI名や正解操作を漏らしていないか。
 - race/category/riderの提示が難しすぎないか。
 - 参加者が途中で何をすればよいか分からなくなっても、中立質問だけで進められるか。
-- 記録項目が多すぎて、参加者を待たせたり発話を止めたりしていないか。
+- real-time minimum（task outcome、時間または`approx.`時間、major hesitation、介入コード1つ、notable quote）だけで進行でき、全tableの同時記入を要求していないか。
+- exactな時刻がない場合に`approx.`と明記でき、値を推測していないか。詳細なfriction、severity、cause、facilitator findingsを参加者退出後に補完できるか。
 - 録音・画面共有・個人情報の同意フローが実際に読めるか。
 
 pilotで観察された製品上の問題は、参加者データが1人分しかないため、原則として修正判断に使わない。task文、時間配分、記録方法の調整に使う。

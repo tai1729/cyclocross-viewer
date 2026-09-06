@@ -42,9 +42,9 @@
 
 ### Real-time minimum
 
-各taskで、読み上げ直前にstart、終了時にendを記録する。durationの単位は秒に統一する。介入コードは1つだけ選び、participantを待たせないため、major frictionとquoteは各task最大1件をその場で残す。
+各taskで、読み上げ直前にstart、終了時にendを秒単位で記録する。exactなstart/endが取れない場合は、durationに`approx.`と明記した近似時間を記録し、推測や捏造はしない。participantを待たせないため、real-time minimumはtask outcome、時間、major hesitation/friction、介入コード1つ、notable quoteとし、全tableをその場で埋める必要はない。
 
-| Task | Start | End | Duration (s) | Completion | Intervention (`M0/M1/M2/M3/LEADING`) | Major friction | Notable quote |
+| Task | Start | End | Duration (s; exact or `approx.`) | Completion | Intervention (`M0/M1/M2/M3/LEADING`) | Major hesitation / friction | Notable quote |
 | --- | --- | --- | ---: | --- | --- | --- | --- |
 | 0 First impression |  |  |  | n/a |  |  |  |
 | 1 Race result |  |  |  | success/partial/fail/NR |  |  |  |
@@ -54,11 +54,17 @@
 | 5 Switch rider |  |  |  | success/partial/fail/NR |  |  |  |
 | 6 Free exploration |  |  |  | success/partial/fail/NR |  |  |  |
 
+Task 6 is a fixed 60–90 second timebox; record End when the timebox is reached.
+
 `LEADING` が付いたtaskはclean successとして集計しない。M2/M3/LEADINGの理由と時刻は下記のfriction/event欄へ記録する。
+
+介入コードは1つだけ記録する。`M0`は介入なし、`M1`は中立的なThink Aloud reminderまたはprobe、`M2`は中立的な質問・probeによるタスク目的の言い直し、`M3`は現行定義どおり技術問題からの復旧とする。現行定義で直接の操作案内・救済をM3に含めない。直接教えた場合は`LEADING`とし、定義が判断できない場合は`NR`とする。
+
+一問ずつ進めるQ&A形式は将来のprotocol改善候補にとどめ、このtable templateを置き換えない。
 
 ### Post-task / session reconstruction
 
-参加者の操作を止めないため、次はtask後またはsession後に補完する。読解中の停止は`reading pause`、操作探索を伴う停止だけ`interaction hesitation`とする。
+参加者の操作を止めないため、次はtask後または参加者退出後のsession後に補完する。詳細なfriction、severity、suspected cause、critical moment、facilitator findingsはこの段階で記録する。読解中の停止は`Reading / analysis pause`としてhesitation countから除外し、およそ3秒の停止にcontrol探索、cursorの迷走、探索的scroll、迷い発話が加わる場合だけ`Interaction hesitation`とする。判定できない場合は`NR`とする。
 
 | Task | First click | Interaction hesitations | Reading pauses | Wrong turns | Major scroll reversals | Ease 1–5 | Confidence 1–5 | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -72,7 +78,7 @@
 
 ## Friction events
 
-記録基準: 3秒以上停止、同じ場所の往復、control探索scroll、誤操作、「分からない」、browser back、chart/current rider喪失、unexpected scroll、disclosure未発見、ラベル誤解。
+記録基準: およそ3秒の停止にcontrol探索、cursorの迷走、探索的scroll、迷い発話が加わる`Interaction hesitation`、同じ場所の往復、control探索scroll、誤操作、「分からない」、browser back、chart/current rider喪失、unexpected scroll、disclosure未発見、ラベル誤解。`Reading / analysis pause`はhesitation countに含めず、判定不能は`NR`とする。
 
 | # | Timestamp | Task | Participant action / event | Quote | Suspected friction type | Severity initial | Evidence / screenshot ref |
 | ---: | --- | --- | --- | --- | --- | --- | --- |

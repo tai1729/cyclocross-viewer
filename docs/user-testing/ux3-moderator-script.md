@@ -13,13 +13,15 @@
 - 画面を操作可能な初期状態に戻す。参加者が開始前にページを見ないようにする。
 - 記録用紙、時刻計測、任意の録音・画面共有の同意を準備する。
 
-## 0. 挨拶と同意（約45秒）
+## 0. 挨拶と同意（約2分）
 
 > 今日はこのサイトを使って、いくつかの情報を探していただきます。これはあなたの知識や能力を試すテストではなく、サイトが初めての人に分かりやすいかを調べるものです。分からない、迷う、使いたくない、という反応も大切な結果です。
 >
 > 私は基本的に操作方法を教えません。考えていることを、できる範囲で声に出してください。例えば「ここかな」「この数字は何だろう」のような短い発言で構いません。途中で質問したくなっても、まず自分の考えを声に出してから、可能なら試してみてください。
 >
 > 画面や音声を記録してよいですか？ 記録しない場合も参加できます。記録した内容は参加者IDで管理し、同意した範囲だけ使います。ここまでで質問はありますか？
+
+> 全体で15〜25分程度です。intro、Task 0〜6、最後のinterviewを含みます。終了後にfacilitatorが記録を整理する時間は、あなたの待ち時間には含めません。
 
 同意が得られたら開始時刻を記録する。録音・録画に同意しない場合は `記録なし` とする。
 
@@ -44,27 +46,29 @@
 介入コード:
 
 - `M0`: 介入なし
-- `M1`: 上記の中立質問
-- `M2`: タスク目的を一度だけ言い直す
-- `M3`: 読み込み失敗・セッション切替など、技術問題から復旧
+- `M1`: 中立的なThink Aloud reminderまたはprobe（上記の中立質問）
+- `M2`: 中立的な質問・probeでタスク目的を一度だけ言い直す
+- `M3`: 現行定義どおり、読み込み失敗・セッション切替などの技術問題から復旧
 
-1つのtaskにつきコードは1つだけ記録する。操作方法・control・位置・正解を直接教えた場合は `LEADING` とし、そのtaskはclean successとして集計しない。M2/M3/LEADINGは理由と時刻を記録し、M3後のtaskは技術待ち時間をcompletion timeに含めない。
+1つのtaskにつきコードは1つだけ記録する。M3は現行定義上、直接の操作案内・救済を意味しない。操作方法・control・位置・正解を直接教えた場合は `LEADING` とし、そのtaskはclean successとして集計しない。M2/M3/LEADINGは理由と時刻を記録し、M3後のtaskは技術待ち時間をcompletion timeに含めない。
 
 ## Task中の記録手順
 
 各taskで次の順番を守る。
 
-1. 読み上げ直前にstart時刻を記録する。
-2. 目的達成、中止、または制限時間到達時にend時刻を記録する。durationは秒で明記する。
+1. 読み上げ直前にstart時刻を秒まで記録する。
+2. 目的達成、中止、または制限時間到達時にend時刻を秒まで記録する。durationは秒で明記する。exactなstart/endが取れない場合だけ、`approx.`と明記した近似時間を使い、推測や捏造はしない。
 3. `success / partial / fail` を1つ選ぶ。判断できなければ `NR` とする。
 4. 介入コードを1つ選ぶ。`M0–M3` のような範囲表記は使わない。
-5. major frictionがあれば1行、participantの原文が取れれば1 quoteを記録する。
+5. major hesitation/frictionがあれば1行、participantの原文が取れれば1 quoteを記録する。
 
-first click、wrong turn、scroll reversal、severity、suspected causeは、参加者の操作を止めない範囲でメモし、task後に補完する。記録できない値を推測しない。
+その場でのminimumはtask outcome、exactなstart/endがない場合の`approx.`付き時間、major hesitation/friction、介入コード1つ、notable quoteである。real-timeに全tableを埋める必要はない。first click、wrong turn、scroll reversal、interaction hesitationの詳細、severity、suspected cause、facilitator findingは、participant退出後を含むtask後またはsession後に補完する。記録できない値は`NR`とし、推測しない。
+
+一問ずつ進めるQ&A形式は将来のprotocol改善候補にとどめ、今回のtable templateを置き換えない。
 
 ## HesitationとThink Aloud
 
-3秒以上の停止だけではfrictionと判定しない。cursorの探索、上下scroll、戻る操作、迷い発話などのbehavioral evidenceがあれば `Interaction hesitation`、データを読むための停止なら `Reading / analysis pause` とする。
+およそ3秒の停止だけではfrictionと判定しない。control探索、cursorの迷走、探索的な上下scroll、迷い発話などのbehavioral evidenceがあれば `Interaction hesitation` とし、chart・表・数値を読むための `Reading / analysis pause` はhesitation countから除外する。判定できない場合は`NR`とする。
 
 参加者が5秒程度沈黙して操作を続けているときは、task中1回だけ「考えていることを短く声に出してもらえますか？」と促す。アプリの操作方法は例に使わない。促し後も発話がなければ `TA=low` と記録する。
 
@@ -126,7 +130,7 @@ first click、wrong turn、scroll reversal、severity、suspected causeは、参
 
 操作を促さず、participantが最初に選ぶものを記録する。Lap Detailを使わなかった場合、後で理由を聞くが、ここでは使わせない。
 
-## Post-test interview（約3分）
+## Post-test interview（約5分）
 
 > ここから、正解ではなく印象について伺います。思い出せる範囲で、使っている間の感覚を教えてください。
 
@@ -155,9 +159,11 @@ first click、wrong turn、scroll reversal、severity、suspected causeは、参
 
 ## Pilot後のfacilitator確認
 
-- 全体が15分以内に収まったか。
+- 参加者が待つ範囲（intro、Task 0〜6、post-test interview）が15〜25分に収まったか。post-session reconstructionやfacilitatorの詳細記録時間は含めない。
+- Task 6の60〜90秒を維持し、post-test interviewまで実施できたか。
 - participantが一度もUI名を教えられずに進められたか。
 - 中立質問で十分だったか。M2/M3が多すぎなかったか。
 - 記録のために発話を遮っていないか。
+- real-time minimumだけで進行でき、全tableの同時記入を求めていないか。exactな時刻がない場合は`approx.`と明記し、詳細なfriction、severity、cause、facilitator findingsを参加者退出後に補完できたか。
 - タスク対象のrace/category/riderが難しすぎたり曖昧だったりしないか。
 - 途中のデータエラーがあった場合、製品問題と技術障害を分離できたか。

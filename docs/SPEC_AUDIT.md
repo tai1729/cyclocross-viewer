@@ -732,3 +732,65 @@ chart-calculation change is authorized.
     recovery.
 
 STATUS: CLEAR
+
+## UX3-0.5 final Pilot evaluation audit (2026-09-06)
+
+This bounded documentation change evaluates the existing
+`docs/user-testing/pilot-participant-01.md`. It does not authorize product
+code, CSS, component, chart logic, application configuration, or a full
+participant-record redesign.
+
+Two independent specification auditors reviewed the current Pilot record and
+the UX3 test plan, moderator script, participant record template, observation
+sheet, results-analysis template, and prior Pilot review. The following
+resolutions are authoritative for this review:
+
+1. The Pilot record's Task 1–6 values `5 / 5 / 3 / 5 / 3 / 10` are treated as
+   approximate minutes because the current record describes them as estimated
+   minutes. They sum to approximately 31 minutes. This is an approximate
+   recorded-task duration, not a precise timestamp reconstruction and not a
+   conversion to seconds.
+2. `Pilot actual duration` remains `UNKNOWN` / `NOT RECORDED` because exact
+   session start/end, Task 0, introduction, and post-test interview duration
+   are absent. The recorded task duration is still evaluated as `TOO LONG`
+   against the former 10–15 minute target.
+3. In the final review, evidence status is separate from task outcome:
+   `EVALUABLE` means the stated goal or useful qualitative evidence is directly
+   supported; `PARTIALLY EVALUABLE` means a useful signal exists but completion,
+   timing, or protocol evidence is incomplete; `NOT RECORDED` is used only for
+   an absent field. Missing fields do not make the entire Pilot
+   `NOT EVALUABLE`.
+4. `success / partial / fail / NR` remains the protocol's outcome vocabulary.
+   Pilot outcomes may be reported as `likely success (inferred/provisional)`
+   or `likely partial (inferred/provisional)` only when the record supports
+   that interpretation. They are not clean-success counts.
+5. Every Pilot-only product signal requires main-test confirmation, written
+   literally as `REQUIRED`. A signal may be preserved as a hypothesis, but no
+   product change or formal UX3 finding follows from this one-person Pilot.
+6. The Pilot participant is excluded from formal main-test participant counts,
+   repetition counts, and severity aggregation. `seen once` is usable for
+   protocol validation and a preliminary UX signal, but weak as first-use
+   discoverability evidence. Main-test recruitment should prefer `never used`.
+7. Recording burden is classified as `HIGH (operational recording risk)` for
+   the current form. The revised minimum is considered operationally adequate
+   when it can be captured without delaying the participant; no claim is made
+   about the unmeasured burden of the revised form.
+8. Main-test hesitation requires both an approximately three-second stop and
+   behavioral evidence: control search, cursor wandering, exploratory scroll,
+   or a hesitation utterance. A reading/analysis pause is recorded separately
+   and is not counted as interaction hesitation. Unknown cases remain `NR`.
+9. One task-level intervention code is recorded (`M0`, `M1`, `M2`, `M3`, or
+   `LEADING`). Reasons and timestamps for M2/M3/LEADING go in the event notes.
+   The Pilot's unselected `NR` / placeholder intervention field remains
+   `NOT RECORDED`.
+10. The main-test plan remains Task 0–6 in the existing order and wording.
+    Task 6 keeps a 60–90 second box. The realistic participant-facing session
+    target is 15–25 minutes including introduction, Task 0–6, and interview;
+    post-session classification is excluded from participant wait time.
+11. The final readiness verdict is `UX3-0.5 READY FOR HUMAN FIELD TEST`.
+    Exact timestamps, viewport precision, first-click verdicts, intervention
+    level, and complete friction logs are measurement limitations, not gates
+    that block the field test. The one-question-at-a-time capture approach is
+    a future protocol improvement candidate only.
+
+STATUS: CLEAR
