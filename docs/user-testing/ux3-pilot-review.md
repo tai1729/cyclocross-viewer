@@ -253,3 +253,21 @@ Pilotで校正済みとは言えないため、以下は「変更なしで保持
 `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
 
 これはPilotの製品評価が悪かったという意味ではない。Pilot evidenceがないため、protocolを「10〜15分で実用的」「neutral」「記録可能」「比較可能」と確認するreadiness gateを通過できない、という意味である。実記録が提供され、上記の校正を完了した後に、改めて `READY FOR HUMAN FIELD TEST` を判定する。
+
+## Follow-up evidence review
+
+基準commit `499db3809419a694ff98a62631691ff7cc7f87ff` を起点に、今回の再校正作業でも `docs/user-testing/` を再探索した。追加されたPilot participant recordはなく、見つかったファイルは既存のtest kitと本レビューのみだった。
+
+したがって、今回も次の項目は `NOT RECORDED` ではなく、実record自体がないため `NOT EVALUABLE` とする。
+
+- participant profile / environment
+- actual start/end and total duration
+- Task 0〜6 timeline and completion
+- first click、hesitation、wrong turn、scroll reversal
+- moderator intervention and Think Aloud behavior
+- Ease / Confidence、quotes、critical moments
+- post-test answers
+
+この再確認で得られたのは「recordがまだrepositoryに存在しない」という事実だけであり、product UX signal、protocol defect、Task wordingの変更根拠ではない。既存5つのtest kit、Task order、measurement定義、moderator scriptは変更していない。本番participantsを開始する前に、匿名化したPilot recordを `docs/user-testing/` へ追加する必要がある。
+
+Updated verdict: `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
