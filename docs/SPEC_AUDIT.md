@@ -227,6 +227,61 @@ below governs the lap-detail and summary implementation.
 
 STATUS: CLEAR
 
+## UX3-1C specification audit — resolved
+
+This section records the active UX3-1C audit. The four UX3-1B decision
+documents are authoritative: `docs/feedback/feedback-intake-spec.md`,
+`docs/feedback/feedback-ui-options.md`,
+`docs/feedback/feedback-provider-decision.md`, and
+`docs/ux3-pre-release-adversarial-review.md`. `Human Field Test` remains
+`NOT YET EXECUTED` and is outside this implementation.
+
+Two independent `spec_auditor` agents inspected those documents and the
+current layout, race viewer, URL-state, test, and build configuration. Their
+reports identified implementation-significant questions. The Commander
+resolved them in the active UX3-1C section of `docs/DESIGN.md` as follows:
+
+1. The UX3-1C design section is active; older closed design sections remain
+   historical records. Human Field Test status is unchanged.
+2. Basin receives a server-only form-urlencoded POST with canonical field
+   names and JSON-string context. 2xx is accepted; explicit provider failure,
+   malformed JSON, timeout, 408/425/429/5xx, and other 4xx are mapped to the
+   provider-neutral outcomes documented in DESIGN. Missing endpoint is a
+   generic 503 in every environment and never a build failure.
+3. Unknown top-level/context keys are rejected with 400. Message/email/ID
+   trimming, Unicode code-point limits, bounded ID characters, optional-field
+   omission, viewport clamp, and client-drop/server-reject behavior are fixed
+   in DESIGN.
+4. Honeypot is top-level `website`; nonblank values receive a generic
+   accepted response and never reach the provider. No app-level IP/network
+   rate-limit store is introduced; Basin filtering, allowed domain, bounded
+   validation, honeypot, optional deployment WAF, and client duplicate
+   suppression are the baseline.
+5. The per-form UUID is a non-persisted `Idempotency-Key` header. It is not a
+   strict dedupe store or user identity.
+6. The entry stores only canonical context and an allowlisted same-origin
+   known-key `returnTo` in fixed-key session storage. The return control uses
+   browser history when entry-created, preserving URL and scroll; direct
+   `/feedback` visits return to `/`. Success/departure clears the snapshot.
+7. Field errors focus the first invalid field and provider errors focus a
+   route-local alert; success focuses a live status and replaces the form.
+   Desktop fixed entry and mobile non-sticky footer are layout-owned, with
+   `/feedback` remaining form-primary. Browser smoke is manual/agent-browser
+   evidence without a new browser test dependency.
+8. Raw Basin/provider data and exports are deleted at 90 days without P0/P1
+   exceptions. Only de-identified minimal issue records may remain until
+   resolution +30 days and no longer than 12 months. The report must include
+   the Basin 90-day setting and monthly deletion review as a production gate.
+
+The first auditor reported the stale top-level CLOSED/DRAFT wording, Basin
+transport, env, retention, unknown-key, honeypot, rate-limit, snapshot,
+footer, and browser-evidence questions. The second independently reported the
+same transport/env/response/validation/browser/focus/retention questions.
+All legitimate questions are now resolved in the authoritative design; no
+provider, retention, privacy, or schema decision was redesigned.
+
+STATUS: CLEAR
+
 ## UX2-2 Desktop workspace audit — specification resolution (2026-09-06)
 
 The UX2-2 source documents and the current UX2-1 implementation were checked

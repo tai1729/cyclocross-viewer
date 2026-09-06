@@ -1,7 +1,188 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
-Status: CLOSED
-Active Change: None — Phase 2 is complete; Phase 3 is gated on evidence
+Status: ACTIVE — UX3-1C specification resolved; implementation in progress
+Active Change: UX3-1C Feedback Intake
+
+## Current design - UX3-1C Feedback Intake
+
+Status: IMPLEMENTATION COMPLETE — production provider configuration required
+
+### Goal
+
+Add the UX3-1B-approved feedback intake as a secondary action without changing
+Human Field Test status or the completed analysis workspace. The feature is an
+anonymous, optional-contact feedback form at `/feedback` with a server-owned
+validation and provider boundary.
+
+### Non-goals
+
+- No Human Field Test, micro-feedback, NPS, popup survey, screenshot,
+  attachment, account, feedback history, dashboard, analytics, database, or
+  unrelated UX/layout/chart redesign.
+- No change to the existing URL/history, Results, Lap Detail, rider sheet,
+  comparison, metric, chart, scroll, or focus contracts.
+- No client-side Basin request, provider SDK, secret, tracking identifier,
+  cookie, raw user-agent, full URL, referrer, rider name, screenshot, or
+  arbitrary local-storage capture.
+
+### Approved architecture and data flow
+
+```text
+layout entry / feedback route
+  -> client-only allowlisted URL/context snapshot
+  -> POST /api/feedback
+  -> server schema validation + honeypot boundary
+  -> provider-neutral adapter
+  -> Basin Starter form endpoint
+```
+
+`lib/feedback/feedbackSchema.ts` owns the canonical categories, context enums,
+limits, and server validation. `lib/feedback/context.ts` is a pure,
+testable client-safe boundary that reads only known URL keys, normalizes the
+browser family, bounds viewport values, and emits the approved
+`FeedbackContext`. `lib/feedback/provider.ts` exposes a provider-neutral
+`submitFeedback` interface and contains the server-only Basin adapter. The
+route handler forwards only validated canonical fields and converts all
+provider failures to the public canonical error.
+
+The canonical payload is:
+
+```ts
+type FeedbackSubmission = {
+  schemaVersion: 1;
+  category: FeedbackCategory;
+  message: string;
+  contactEmail?: string;
+  context: FeedbackContext;
+};
+```
+
+`FeedbackContext` contains only `route`, optional app IDs and known analysis
+state (`meetId`, `raceId`, `categoryId`, `riderId`, `fixedRiderIds`, `metric`,
+`comparisonMode`, `lap`, `season`, `series`), bounded viewport dimensions,
+normalized browser family, and public build version. `riderId` is sent without
+the rider name. Unknown query parameters, fragments, raw URL, cookies, raw
+UA, referrer, and arbitrary storage are discarded. The entry stores the
+allowlisted state in a short-lived `sessionStorage` snapshot solely to retain
+race context across navigation to `/feedback`; it is cleared after submit or
+route departure and is never used as a user identity.
+
+### UI and navigation
+
+- Desktop (`min-width: 1024px`): a compact fixed `ご意見・不具合を送る`
+  entry uses `bottom: calc(1rem + env(safe-area-inset-bottom))` and
+  `right: 1rem`, remains visually subordinate to analysis, and has a visible
+  keyboard focus ring. Its clearance is verified at 1440×900, 1280×720,
+  1024×768, and zoom-equivalent narrow layouts.
+- Mobile (`<1024px`): no fixed floating control. The same entry is in a
+  non-sticky global footer with safe-area padding, after page content, so it
+  does not cover the rider sheet, browser controls, chart, Results, or Lap
+  Detail. It remains reachable at 390×844 and 320×568 without page overflow.
+- `/feedback` is a direct route with a clear return link. When entered from a
+  race, the return target preserves the existing race URL query exactly; a
+  direct visit returns to `/`. No overlay or history rewrite is introduced.
+- The form has category, message, optional email, hidden honeypot, concise
+  privacy disclosure, explicit sending text, inline errors, retry without
+  clearing fields, and an announced success state. A successful send clears
+  the temporary context snapshot and prevents resubmission; a failed send
+  retains category, message, contact, and context.
+
+### Validation, abuse, and environment behavior
+
+The server accepts only `POST` with bounded JSON. It validates schema version,
+category enum, non-whitespace message (1–4,000 characters), optional email
+(max 254 and basic format), context key allowlist, ID lengths, max four fixed
+riders, positive lap bounds, explicit enums, and viewport bounds of 240–10,000.
+Unknown payload/context keys are rejected before provider invocation. A filled
+honeypot is treated as an internal non-forwarded rejection with a generic
+success-shaped response. The client disables submit while sending and never
+automatically retries; manual retry is available. Provider/network/timeout /
+malformed responses return the same generic retryable error without details.
+
+`FEEDBACK_BASIN_ENDPOINT` is server-only and is configured separately for
+Development, Preview, and Production. `NEXT_PUBLIC_APP_VERSION` is optional
+public build metadata only; when absent, the package version is used. Missing
+provider configuration does not fail build or page rendering; submit returns a
+controlled failure. Production release additionally requires Basin Starter,
+allowed-domain/basic spam filtering, 90-day form retention, and an operator
+procedure for monthly export/deletion checks. Raw exports are temporary and
+must be deleted within 90 days; only de-identified issue aggregates may remain.
+
+### Acceptance criteria and validation
+
+All UX3-1C AC1–AC21 in the user brief must pass. Required commands are
+`npm.cmd test`, `npx.cmd tsc --noEmit`, `npm.cmd run lint`, `npm.cmd run build`,
+and `git diff --check`, plus browser verification at the specified desktop and
+mobile sizes, security/privacy/UX review, and production smoke when provider
+configuration is available.
+
+### UX3-1C specification audit resolutions
+
+- This UX3-1C section is the active design entry. The older Phase 2 sections
+  below remain historical records and are not an implementation gate for this
+  task. Human Field Test remains `NOT YET EXECUTED`.
+- Basin uses `FEEDBACK_BASIN_ENDPOINT`, a server-only environment variable.
+  The adapter sends a `POST` with `application/x-www-form-urlencoded` body
+  using the canonical field names `schemaVersion`, `category`, `message`,
+  optional `contactEmail`, and `context` as one JSON string. It adds only an
+  ephemeral `Idempotency-Key` header. A 2xx response is accepted; a JSON
+  response with an explicit false `ok`/`success` flag or invalid JSON when
+  JSON content type is declared is malformed. 408/425/429/5xx, timeout, and
+  malformed responses are retryable; other 4xx responses are rejected.
+- Missing `FEEDBACK_BASIN_ENDPOINT` returns a generic 503 retryable response
+  in Development, Preview, and Production. It never fails build or page
+  rendering. Preview and Production must use separate configured Basin
+  endpoints; no environment silently sends to another environment.
+- The canonical user-facing category values remain the slugs and Japanese
+  labels fixed in `feedback-provider-decision.md`. No internal triage type or
+  severity is inferred or added to the client payload; operators may map it
+  later outside this intake contract.
+- Validation trims message/email/IDs, rejects empty or control-only messages,
+  preserves message text as text (no HTML/Markdown rewriting), and uses
+  Unicode code-point counts for limits. Empty optional email is omitted. IDs
+  accept only bounded ASCII identifier characters (`A-Z`, `a-z`, `0-9`, `.`,
+  `_`, `:`, `-`). The client context builder drops invalid optional URL
+  values; the server rejects malformed values. Unknown top-level or context
+  keys are rejected with 400 before provider invocation.
+- The transport honeypot is a top-level string field named `website`. It is
+  visually off-screen, `aria-hidden`, unfocusable, and empty for normal users.
+  A nonblank value returns the same generic accepted response without provider
+  invocation or internal persistence. A non-string honeypot is invalid.
+- No app-level IP/network rate-limit store is added because that would create
+  a new tracking/persistence boundary. Abuse baseline is bounded JSON,
+  validation, honeypot, client duplicate suppression, and Basin basic spam
+  filtering/allowed-domain configuration. Optional deployment WAF/edge limits
+  may be enabled separately and are not part of the feedback payload.
+- The client creates an ephemeral UUID per form instance and sends it only as
+  `Idempotency-Key`; the server/provider do not persist it and no strict
+  cross-session dedupe is claimed. The form disables submit while sending and
+  never automatically retries.
+- Entry navigation stores a `sessionStorage` record under a fixed key with
+  only canonical context plus a same-origin relative `returnTo` path carrying
+  known URL keys (`season`, `series`, `category`, `rider`, `compare`,
+  repeated `fixed`, `tab`, `lap`). Unknown query, fragment, raw UA, cookies,
+  and arbitrary storage are not stored or forwarded. The feedback return
+  control uses browser back when the snapshot came from the entry, preserving
+  the race URL and browser history scroll; direct visits return to `/`.
+  Snapshot data is cleared on successful submit or feedback-route departure.
+- Validation errors focus the first invalid field in category → message →
+  email order and associate each message with `aria-describedby`. Server/
+  provider errors focus a route-local alert summary without moving focus to
+  the application analysis workspace. Success replaces the form with a
+  focusable live status and a return control; the form cannot resubmit.
+- The global layout owns one compact desktop fixed entry and one mobile
+  non-sticky footer row. The fixed control is visually subordinate and the
+  wrapper provides bottom clearance; `/feedback` hides the entry so the form
+  remains primary. Browser smoke is manual/agent-browser evidence with
+  screenshots and console/DOM checks; no browser test dependency is added.
+- Retention is operationally strict: Basin form retention is configured to
+  90 days, exported raw copies are private temporary files deleted within 90
+  days, and raw data is never kept longer for P0/P1. Only a de-identified
+  issue key, minimal reproduction condition, category, severity, occurrence
+  count, and decision note may remain until resolution +30 days and at most
+  12 months. Production setup must record the Basin setting and monthly
+  deletion review before release. Provider configuration remains a separate
+  production gate from code completion.
 
 ## Closed design - Phase 2 Slice 8: data provenance and freshness metadata
 

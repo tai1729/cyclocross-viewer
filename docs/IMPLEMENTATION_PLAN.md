@@ -1,4 +1,124 @@
-# Implementation Plan
+# UX3-1C active implementation plan
+
+Status: COMPLETE — code implemented; production provider configuration required
+
+## Task graph
+
+### UX3-1C-SPEC — Specification audit and resolution
+
+- Status: DONE
+- Objective: Audit the four UX3-1B source documents and current app against
+  the current design entry, identify only implementation-significant
+  ambiguity, and record resolutions in `docs/DESIGN.md` and
+  `docs/SPEC_AUDIT.md`.
+- Scope: documentation only.
+- Dependencies: none.
+- Do-not-change: product code, tests, provider configuration, Human Field Test
+  status, and historical documents.
+- Acceptance: two independent `spec_auditor` reports are collected, every
+  legitimate question is resolved in project documents, and
+  `docs/SPEC_AUDIT.md` ends with exactly `STATUS: CLEAR`.
+- Verification: document review and `git diff --check`.
+
+### UX3-1C-SCHEMA — Canonical schema and context boundary
+
+- Status: DONE
+- Objective: Implement the canonical `FeedbackSubmission`, bounded validation,
+  allowlisted URL context builder, browser normalization, snapshot helpers,
+  and unit tests.
+- Files: `lib/feedback/feedbackSchema.ts`, `lib/feedback/context.ts`,
+  `tests/feedbackSchema.test.ts`, `tests/feedbackContext.test.ts`.
+- Dependencies: UX3-1C-SPEC.
+- Do-not-change: existing URL/data contracts, chart logic, and provider code.
+- Acceptance: all schema/context cases in the user brief pass; forbidden data
+  is absent; no new dependency is required.
+- Verification: targeted feedback tests and TypeScript.
+
+### UX3-1C-PROVIDER — Server endpoint and Basin adapter
+
+- Status: DONE
+- Objective: Implement a server-only POST route with method/content/body
+  checks, honeypot, canonical validation, generic failure mapping, and a
+  provider-neutral Basin adapter with no secret in client code.
+- Files: `app/api/feedback/route.ts`, `lib/feedback/provider.ts`,
+  `tests/feedbackApi.test.ts`.
+- Dependencies: UX3-1C-SCHEMA.
+- Do-not-change: existing data-source and route contracts; no database,
+  authentication, CAPTCHA, or new provider SDK.
+- Acceptance: valid requests forward only canonical data; invalid,
+  honeypot, missing env, 4xx, 5xx, timeout, and malformed responses never
+  expose provider details or forward invalid payloads.
+- Verification: mocked provider/API tests and TypeScript.
+
+### UX3-1C-UI — Entry, route, form, and navigation preservation
+
+- Status: DONE
+- Objective: Implement responsive entry placement, `/feedback` page, form
+  states, privacy copy, focus/live-region behavior, temporary context
+  snapshot, and exact return URL preservation.
+- Files: `app/layout.tsx`, `app/feedback/page.tsx`,
+  `components/feedback/FeedbackEntry.tsx`,
+  `components/feedback/FeedbackForm.tsx`, and focused feedback UI tests.
+- Dependencies: UX3-1C-SCHEMA, UX3-1C-PROVIDER.
+- Do-not-change: chart-first analysis workspace, rider sheet, Results,
+  Lap Detail, global scroll/focus contracts, and mobile fixed-overlay rules.
+- Acceptance: anonymous category+message submit, optional email, sending /
+  success / error / retry, duplicate-click suppression, keyboard-only access,
+  screen-reader announcements, and 320/390/desktop placement all work.
+- Verification: UI tests, full tests, browser verification.
+
+### UX3-1C-REPORT — Documentation and operational gate
+
+- Status: DONE
+- Objective: Create `docs/feedback/feedback-implementation-report.md` with
+  architecture, schema, environment setup, privacy, retention procedure,
+  browser evidence, reviews, known limitations, and deployment gate.
+- Files: `docs/feedback/feedback-implementation-report.md`.
+- Dependencies: UX3-1C-UI, UX3-1C-PROVIDER.
+- Do-not-change: source-of-truth feedback decision documents except for
+  contradiction records if required by audit.
+- Acceptance: report distinguishes code-complete from production provider
+  configuration and does not claim Human Field Test completion.
+- Verification: document review.
+
+### UX3-1C-VERIFY — Required checks, independent review, commit, and push
+
+- Status: DONE
+- Objective: Run all required automated/browser/security/privacy/UX checks,
+  obtain reviewer PASS, then inspect, commit, and push intended changes.
+- Dependencies: UX3-1C-REPORT.
+- Do-not-change: secrets, unrelated worktree changes, and remote history.
+- Acceptance: all applicable ACs pass, reviewer returns PASS, and normal push
+  succeeds; if provider env is absent, final verdict is explicitly
+  `UX3-1C IMPLEMENTATION COMPLETE — PRODUCTION CONFIG REQUIRED`.
+- Verification: full command matrix plus browser evidence.
+
+### UX3-1C-REV-1 — Honeypot client wiring
+
+- Status: DONE
+- Objective: Make the hidden honeypot value mutable to automated bot
+  submission while keeping it out of normal keyboard and screen-reader flows,
+  and include the actual value in the API request.
+- Files: `components/feedback/FeedbackForm.tsx` and focused UI tests only.
+- Dependencies: UX3-1C-UI.
+- Do-not-change: canonical schema, provider contract, existing analysis UX,
+  privacy policy, or Human Field Test status.
+- Acceptance: a nonblank honeypot reaches the API as `website` and is accepted
+  without a provider call; normal users cannot focus or see the field.
+- Verification: focused UI/API tests, full required command matrix, and
+  independent reviewer re-run.
+
+## Execution order
+
+```text
+UX3-1C-SPEC
+  -> UX3-1C-SCHEMA + UX3-1C-PROVIDER
+  -> UX3-1C-UI
+  -> UX3-1C-REPORT
+  -> UX3-1C-VERIFY -> reviewer -> commit/push
+```
+
+# Historical implementation plans
 
 Status: COMPLETE
 Active implementation plan: None — Phase 2 Slice 8 is complete
