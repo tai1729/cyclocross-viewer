@@ -1,11 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  AnalysisContextBar,
   getAnalysisComparisonLabel,
   getAnalysisMetricLabel,
   getAnalysisRiderStatus,
 } from "@/components/AnalysisContextBar";
 import type { Rider } from "@/lib/types";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 const rider: Rider = {
   riderId: "rider-1",
@@ -24,6 +27,26 @@ test("analysis context labels preserve the visible metric and comparison vocabul
   assert.equal(getAnalysisComparisonLabel(2), "±2");
   assert.equal(getAnalysisComparisonLabel("pinned"), "固定");
   assert.equal(getAnalysisComparisonLabel("all"), "全員");
+});
+
+test("mobile context is compact while keeping the active metric visible", () => {
+  const html = renderToStaticMarkup(
+    createElement(AnalysisContextBar, {
+      raceName: "Long race name",
+      categoryName: "Category",
+      riderName: "Rider",
+      riderStatus: "Finished",
+      comparisonMode: "±2",
+      displayedCount: 3,
+      activeMetric: "Lap time",
+      presentation: "mobile",
+    }),
+  );
+
+  assert.match(html, /data-analysis-context-bar/);
+  assert.match(html, /grid-cols-2/);
+  assert.match(html, /col-span-2/);
+  assert.match(html, /Lap time/);
 });
 
 test("analysis context gives status text for finish, lap-down, DNF, and unavailable riders", () => {

@@ -8,12 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { normalizeSearchText } from "@/lib/search";
+import { MobileRiderPickerDialog } from "@/components/MobileRiderPickerDialog";
+
+type RiderSelectorPresentation = "inline" | "mobile-modal";
 
 interface RiderSelectorProps {
   riders: Rider[];
   categoryName: string;
   selectedRiderId: string | null;
   onSelect: (riderId: string) => void;
+  presentation?: RiderSelectorPresentation;
+  closeKey?: string | number;
 }
 
 export function RiderSelector({
@@ -21,9 +26,12 @@ export function RiderSelector({
   categoryName,
   selectedRiderId,
   onSelect,
+  presentation = "inline",
+  closeKey,
 }: RiderSelectorProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(selectedRiderId === null);
+  const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
   const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const riderListRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +60,11 @@ export function RiderSelector({
   }
 
   function openSelector() {
+    if (presentation === "mobile-modal") {
+      setIsMobileDialogOpen(true);
+      return;
+    }
+
     setShouldFocusSearch(window.matchMedia("(min-width: 768px)").matches);
     setIsOpen(true);
   }
@@ -97,7 +110,7 @@ export function RiderSelector({
           aria-label="一つ上の順位の選手へ"
           variant="outline"
           size="icon"
-          className="size-11 sm:size-8"
+          className={cn("size-11", presentation === "inline" && "sm:size-8")}
         >
           ▲
         </Button>
@@ -106,7 +119,11 @@ export function RiderSelector({
           data-race-rider-trigger
           onClick={openSelector}
           variant="outline"
-          className="min-h-11 min-w-0 flex-1 justify-between sm:min-h-8"
+          aria-label={`選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
+          className={cn(
+            "min-h-11 min-w-0 flex-1 justify-between",
+            presentation === "inline" && "sm:min-h-8",
+          )}
         >
           <span className="flex items-baseline gap-2 truncate">
             <span
@@ -128,10 +145,22 @@ export function RiderSelector({
           aria-label="一つ下の順位の選手へ"
           variant="outline"
           size="icon"
-          className="size-11 sm:size-8"
+          className={cn("size-11", presentation === "inline" && "sm:size-8")}
         >
           ▼
         </Button>
+        {presentation === "mobile-modal" && (
+          <MobileRiderPickerDialog
+            riders={riders}
+            categoryName={categoryName}
+            selectedRiderId={selectedRiderId}
+            open={isMobileDialogOpen}
+            closeKey={closeKey}
+            triggerRef={selectedControlRef}
+            onSelect={onSelect}
+            onClose={() => setIsMobileDialogOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -157,7 +186,7 @@ export function RiderSelector({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="選手を検索"
           aria-describedby="rider-search-description"
-          className="min-h-11 w-full md:min-h-8"
+          className={cn("min-h-11 w-full", presentation === "inline" && "md:min-h-8")}
         />
         <FieldDescription id="rider-search-description">
           {categoryName}内の選手名が検索対象です。

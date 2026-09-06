@@ -7,6 +7,9 @@ import {
 } from "@/hooks/useComparisonRiders";
 import { Field, FieldDescription, FieldTitle } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
+
+type ComparisonAdjusterPresentation = "desktop" | "mobile";
 
 interface ComparisonAdjusterProps {
   mode: ComparisonMode;
@@ -14,6 +17,7 @@ interface ComparisonAdjusterProps {
   totalRiderCount: number;
   pinnedCount?: number;
   onChange: (mode: ComparisonMode) => void;
+  presentation?: ComparisonAdjusterPresentation;
 }
 
 const OPTIONS: { mode: ComparisonMode; label: string }[] = [
@@ -33,6 +37,7 @@ export function ComparisonAdjuster({
   totalRiderCount,
   pinnedCount,
   onChange,
+  presentation = "desktop",
 }: ComparisonAdjusterProps) {
   const allDisabled = totalRiderCount > MAX_ALL_COMPARISON_RIDERS;
 
@@ -70,7 +75,10 @@ export function ComparisonAdjuster({
                 ? `固定した選手を比較（固定選手は最大${MAX_PINNED_FIXED_RIDERS}名）`
                 : `最終順位の前後${opt.mode}位以内を比較`
             }
-            className="min-h-11 min-w-11 aria-pressed:font-bold aria-pressed:ring-2 aria-pressed:ring-foreground/70 sm:min-h-7 sm:min-w-7"
+            className={cn(
+              "min-h-11 min-w-11 aria-pressed:font-bold aria-pressed:ring-2 aria-pressed:ring-foreground/70",
+              presentation === "desktop" && "sm:min-h-7 sm:min-w-7",
+            )}
           >
             {opt.label}
           </ToggleGroupItem>

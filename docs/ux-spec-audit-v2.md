@@ -200,3 +200,44 @@ native disclosure class names; neither changes state, URL, focus, scroll,
 responsive boundary, or data semantics.
 
 VERDICT: READY FOR IMPLEMENTATION
+
+## UX2-3 Mobile workspace resolutions (2026-09-06)
+
+Two independent specification auditors identified conflicts between the
+UX2-2 pre-Mobile boundary and the broader Mobile workspace direction. The
+following decisions are authoritative for implementation:
+
+1. Browse remains full-results-first. Active Mobile replaces that table's
+   position with one native, closed-by-default `details` disclosure after the
+   chart-first workspace. The table itself and its bounded scroll behavior are
+   unchanged; this is placement/disclosure only and UX2-4 owns richer redesign.
+2. Active Mobile DOM and visual order is compact context → compact rider and
+   comparison controls → `ChartTabs`/chart → existing summary cards → existing
+   `LapDetailTable` → results disclosure. Desktop remains the UX2-2 branch.
+3. Rider selection uses a native modal `<dialog>` styled as a bottom sheet.
+   `showModal()` supplies inert background/body-scroll prevention; only the
+   list scrolls internally with overscroll containment. Search gets initial
+   focus, Escape/close/backdrop close, one rider selection closes after the
+   existing URL push, and focus returns to the opener with `preventScroll`.
+4. Comparison uses an inline native `details`, stays open after mode changes,
+   and keeps existing pinned IDs, all-mode guard, URL writer, and 44px targets.
+   There is no second comparison modal.
+5. Sheet/details state is local and never enters URL/history. Browser
+   Back/Forward changes URL-derived state; URL changes close transient Mobile
+   UI and focus the current visible trigger when possible. No transient history
+   entry is created.
+6. The existing `ChartTabs` remains immediately after the Mobile action row.
+   Four metric semantics and URL keys are unchanged. At 320px only an
+   internally scrolling tab strip is allowed if needed; document overflow and
+   accidental wrapped control rows are not.
+7. No new sticky Mobile layer is added. The existing `RaceHeader` is the only
+   sticky surface; long context values wrap, and the sheet uses
+   `min(70dvh, 32rem)` plus bottom safe-area padding. Resize/hydration changes
+   presentation only.
+8. Existing UX2-1 writer/focus rules remain: first result-row selection keeps
+   its analysis-region navigation, while in-analysis rider/comparison/metric/
+   lap changes use `scroll: false`. Loading/error/not-found/unavailable/DNF/
+   lapped/missing-data meaning remains unchanged and unavailable analysis does
+   not render chart/lap detail.
+
+These resolutions remove the implementation-blocking ambiguities for UX2-3.

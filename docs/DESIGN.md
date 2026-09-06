@@ -997,3 +997,78 @@ The two independent auditors' questions are resolved as follows before code:
   `ChartTabs`; at or above `1024px`, `ChartTabs` precedes `LapDetailTable`,
   followed by the control rail. CSS grid only changes Desktop placement of the
   rail and does not rely on CSS order to define the Mobile reading order.
+## UX2-3 implementation design — Mobile analysis workspace (resolved 2026-09-06)
+
+UX2-1 and UX2-2 remain the state, URL/history, scroll, focus, and Desktop
+presentation boundaries. This slice changes only the active presentation below
+`1024px`; browse and Desktop behavior remain separate branches.
+
+### Resolved Mobile structure
+
+Browse keeps the full results table before the analysis entry and the existing
+inline rider list. Active Mobile analysis uses this normative DOM and visual
+order:
+
+```text
+compact context
+  → compact rider trigger + comparison disclosure
+  → ChartTabs (metric tabs and chart)
+  → existing SummaryCard / LapSummaryCard
+  → existing LapDetailTable
+  → closed results details disclosure
+```
+
+The existing results table is rendered once. It is full and before analysis in
+browse, and is inside a closed native `details` after the workspace in active
+Mobile. Results and lap-detail content are not otherwise redesigned in UX2-3;
+UX2-4 owns the later disclosure/content review.
+
+### Rider and comparison controls
+
+The selected rider is always shown in the compact context and a 44px trigger.
+The trigger opens a native modal `<dialog>` styled as a bottom sheet. The
+dialog uses `showModal()` and therefore makes the page inert and prevents body
+scroll while open. Only its bounded rider list scrolls with
+`overscroll-behavior: contain`; the sheet is capped at
+`min(70dvh, 32rem)` and includes bottom safe-area padding. Search receives
+focus on open, Escape/explicit close/backdrop click close the sheet, and the
+opener regains focus with `preventScroll` after close. Selecting one rider
+updates the existing URL once and closes the sheet. Search text resets on
+close; reopening reveals the selected row within the internal list.
+
+Comparison remains an inline native `details`, not a second modal. Its summary
+always shows the current mode and count; all mode choices retain the existing
+44px targets and URL writer. The disclosure stays open after a mode change so
+the user can continue to the pinned-rider picker. Existing fixed IDs, all-mode
+limits, and pinned semantics are unchanged. Removing a pinned row returns
+focus to the comparison summary only if the removed control disappears.
+
+### Metric, transient state, and navigation
+
+The existing `ChartTabs` remains immediately after the Mobile action row. Its
+tab semantics and four metric keys remain unchanged; at narrow widths the tab
+strip may scroll internally, but the page never gains horizontal overflow.
+Short visual labels may be used only when each tab retains its full accessible
+name. Mobile sheet/disclosure open state is local only and never enters the
+URL or browser history. Browser Back/Forward traverses the existing URL state;
+any open Mobile sheet is closed when the URL key changes, then focus returns to
+the current visible trigger when available.
+
+Existing UX2-1 navigation options are retained: first result-row selection
+enters the analysis region using its existing navigation behavior; in-analysis
+rider, comparison, metric, and lap changes use `scroll: false`. Category/route
+changes close transient Mobile UI through unmount/loading and preserve the
+existing loading, error, not-found, DNF, lapped, missing-lap, and unavailable
+branches. An unavailable rider keeps context and the existing alert but does
+not render a chart or lap detail.
+
+### Responsive and accessibility boundary
+
+No additional sticky Mobile toolbar is introduced in UX2-3. The existing
+`RaceHeader` remains the only sticky layer, avoiding an unmeasured offset and
+preserving usable content at 320px. Resize/hydration changes presentation only;
+durable URL state and Desktop disclosure preference are not changed. The
+dialog has a labeled title, native modal semantics, visible close control,
+Escape and backdrop handling, internal list scroll, and focus return. The
+implementation must verify 390px/320px, long names, large lists, virtual
+keyboard visibility, safe area, and no page-level overflow.

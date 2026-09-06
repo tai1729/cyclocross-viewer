@@ -553,8 +553,9 @@ two spec auditors -> specification resolution -> P2S4-1
 ## UX redesign audit v2 — implementation plan
 
 This plan is the bounded follow-up to the documentation-only audit in
-`docs/ux-redesign-spec-v2.md`. UX2-1 and UX2-2 are complete. UX2-3 through
-UX2-5 remain gated by their stated dependencies.
+`docs/ux-redesign-spec-v2.md`. UX2-1 and UX2-2 are complete and UX2-3 is the
+active implementation slice. UX2-4 and UX2-5 remain gated by their stated
+dependencies.
 
 ### UX2-1 — Workspace state and scroll intent
 
@@ -608,24 +609,44 @@ UX2-5 remain gated by their stated dependencies.
 
 ### UX2-3 — Responsive compact controls
 
-- Status: BLOCKED by UX2-2
-- Objective: Keep current context/metric/comparison visible on Mobile and move
-  low-frequency rider/fixed-rider lists into accessible bounded sheets/dialogs.
-- Scope: `RiderSelector.tsx`, `ComparisonAdjuster.tsx`,
-  `ComparisonRiderPicker.tsx`, responsive workspace styles, existing Base UI or
-  native dialog primitives.
+- Status: DONE (2026-09-06; independent reviewer PASS)
+- Objective: Make active Mobile analysis chart-first while keeping current
+  context visible and moving low-frequency rider selection into an accessible
+  native bottom sheet and comparison choices into a native disclosure.
+- Scope: `RaceViewer.tsx`, `RiderSelector.tsx`, `ChartTabs.tsx`, a Mobile
+  comparison disclosure/presentation helper, responsive workspace styles,
+  focused tests, and UX2-3 report documentation.
 - Dependencies: UX2-2; coordinate with UX2-2 without parallel edits to the
   same integration file.
-- Do not change: 44px target policy, graphable/all limit, four fixed-rider
-  limit, or page-level overflow boundary.
-- Acceptance: 390px/320px primary controls and chart are reachable without
-  large vertical roundtrips; sheet focus return and long-name wrapping pass.
-- Verification: keyboard smoke, overflow assertions, screenshots at both
-  mobile sizes.
+- Do not change: URL keys/history semantics, chart/data/result calculations,
+  graphable/all limit, four fixed-rider limit, Desktop UX2-2 branch, or page
+  scroll ownership.
+- Acceptance: browse remains results-first; active Mobile is context → compact
+  controls → chart → existing supporting content → one closed results
+  disclosure; rider sheet and comparison disclosure preserve focus/scroll,
+  keyboard, long-name, safe-area, and virtual-keyboard behavior at 390px/320px.
+- Verification: full tests, new presentation/sheet tests, typecheck, lint,
+  production build, diff check, keyboard/touch browser smoke, screenshots at
+  both mobile sizes, and Desktop regression smoke.
+
+#### UX2-3 resolved implementation tasks
+
+1. Extend the presentation classifier so browse remains full-result-first,
+   active Mobile mounts one closed results disclosure after the workspace, and
+   active Desktop remains the UX2-2 disclosure branch.
+2. Add the compact Mobile context/action row and native modal rider sheet;
+   reuse existing rider search/filter/selection semantics and return focus to
+   the trigger without URL or scroll workarounds.
+3. Add the native Mobile comparison disclosure while preserving existing
+   comparison callbacks, pinned IDs, all-mode guard, labels, and 44px targets.
+4. Render active Mobile chart-first with explicit DOM order; keep existing
+   SummaryCard, LapSummaryCard, LapDetailTable, error, and unavailable meaning.
+5. Verify the 1024px boundary, 390px/320px overflow and keyboard states,
+   repeated analysis, UX2-1, and UX2-2 Desktop regressions.
 
 ### UX2-4 — State/error/accessibility regression coverage
 
-- Status: BLOCKED by UX2-2 and UX2-3
+- Status: READY NEXT (after UX2-3; implementation intentionally not started)
 - Objective: Cover loading, error, empty, unavailable, DNF, lapped, missing,
   duplicate, pinned, all-limit, direct URL, and browser navigation states.
 - Scope: behavior-focused tests and browser matrix; no data-model change.
@@ -650,5 +671,5 @@ UX2-5 remain gated by their stated dependencies.
 ### Future execution order
 
 ```text
-UX2-1 -> (UX2-2 || UX2-3) -> UX2-4 -> UX2-5
+UX2-1 -> UX2-2 -> UX2-3 -> UX2-4 -> UX2-5
 ```

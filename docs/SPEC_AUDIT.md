@@ -518,7 +518,49 @@ questions for this bounded Desktop slice:
    390×844, and 320×568. Desktop screenshots/measurements are evidence; exact
    pixel coordinates are not fixed requirements.
 
-No implementation-blocking ambiguity remains for UX2-2. UX2-3, UX2-4, and UX2-5
-remain out of scope and blocked.
+No implementation-blocking ambiguity remains for UX2-2. UX2-3 was then
+audited separately before implementation.
+
+## UX2-3 Mobile workspace audit — specification resolution (2026-09-06)
+
+Two independent `spec_auditor` reviews identified the following legitimate
+ambiguities. The Commander resolved them in `docs/DESIGN.md`,
+`docs/IMPLEMENTATION_PLAN.md`, `docs/ux-redesign-spec-v2.md`, and
+`docs/ux-spec-audit-v2.md`:
+
+1. Browse keeps the existing full results table before analysis. Active Mobile
+   moves the same single table after the chart-first workspace into a native
+   closed-by-default `details` disclosure named `結果表を表示`. Its open state
+   is local only and does not enter URL/history; UX2-4 owns deeper table/lap
+   disclosure redesign.
+2. Active Mobile DOM/visual order is compact context → compact rider and
+   comparison controls → `ChartTabs`/chart → existing summary cards → existing
+   `LapDetailTable` → results disclosure. Desktop UX2-2 order and grid are
+   unchanged; CSS order is not the Mobile reading-order mechanism.
+3. Rider change uses a native modal `<dialog>` bottom sheet with `showModal`,
+   labeled title, initial search focus, Escape/explicit close/backdrop close,
+   one-selection close, opener focus return with `preventScroll`, bounded list
+   scroll, overscroll containment, and bottom safe-area padding. Search resets
+   on close and selected-row visibility is restored on reopen.
+4. Comparison is an inline native `details` with current mode/count in its
+   summary. It remains open after mode changes; pinned IDs, all-mode guard,
+   existing callbacks, and 44px targets remain unchanged. Focus falls back to
+   its summary only when a removed control disappears.
+5. Sheet/disclosure open state is local and creates no history entry. Browser
+   Back/Forward continues URL traversal; URL changes close transient sheet UI
+   and use the existing visible-control focus fallback. First result-row rider
+   entry preserves UX2-1 behavior; in-analysis changes preserve `scroll:false`.
+6. `ChartTabs` remains immediately after the Mobile action row with existing
+   metric semantics. If 320px requires it, only the tab strip may scroll
+   internally; page horizontal overflow and accidental two-row controls are
+   prohibited.
+7. No additional sticky Mobile toolbar is added. `RaceHeader` remains the only
+   sticky layer. Long values wrap, sheet height is capped at `min(70dvh,32rem)`
+   with safe-area padding, and resize/hydration changes presentation only.
+8. Loading/error/not-found/unavailable/no-checkpoint/DNF/lapped/missing-lap,
+   large-data, URL, history, and data/chart semantics remain unchanged. An
+   unavailable rider keeps its context/alert but has no chart/lap detail.
+
+No implementation-blocking ambiguity remains for UX2-3.
 
 STATUS: CLEAR

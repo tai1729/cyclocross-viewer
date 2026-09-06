@@ -11,6 +11,7 @@ interface AnalysisContextBarProps {
   comparisonMode: string;
   displayedCount: number;
   activeMetric: string;
+  presentation?: "desktop" | "mobile";
 }
 
 export function getAnalysisMetricLabel(tab: ChartTab): string {
@@ -68,15 +69,30 @@ export function AnalysisContextBar({
   comparisonMode,
   displayedCount,
   activeMetric,
+  presentation = "desktop",
 }: AnalysisContextBarProps) {
+  const isMobilePresentation = presentation === "mobile";
+
   return (
     <div
       data-analysis-context-bar
-      className="min-w-0 rounded-lg border border-border bg-muted/20 px-3 py-3 sm:px-4"
+      className={cn(
+        "min-w-0 rounded-lg border border-border bg-muted/20 px-3 py-3 sm:px-4",
+        isMobilePresentation && "py-2",
+      )}
       aria-label="分析コンテキスト"
     >
-      <dl className="grid min-w-0 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-        <ContextItem label="大会" value={raceName} className="lg:col-span-2" />
+      <dl
+        className={cn(
+          "grid min-w-0 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4",
+          isMobilePresentation && "grid-cols-2 gap-x-3",
+        )}
+      >
+        <ContextItem
+          label="大会"
+          value={raceName}
+          className={cn("lg:col-span-2", isMobilePresentation && "col-span-2")}
+        />
         <ContextItem label="カテゴリー" value={categoryName} />
         <ContextItem label="注目選手" value={`${riderName}・${riderStatus}`} />
         <ContextItem label="比較" value={`${comparisonMode}・${displayedCount}名表示`} />

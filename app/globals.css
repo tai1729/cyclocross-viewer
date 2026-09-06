@@ -146,3 +146,37 @@ body {
     @apply font-sans;
   }
 }
+
+.rider-picker-dialog {
+  position: fixed;
+  inset: auto 0 0;
+  width: min(100%, 40rem);
+  max-height: min(70dvh, 32rem);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 -0.5rem 2rem rgb(23 22 15 / 18%);
+}
+
+.rider-picker-dialog::backdrop {
+  background: rgb(23 22 15 / 42%);
+}
+
+.rider-picker-dialog__content {
+  display: flex;
+  min-height: 0;
+  max-height: inherit;
+  flex-direction: column;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.rider-picker-dialog__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(70dvh, 32rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

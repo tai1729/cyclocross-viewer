@@ -1,4 +1,7 @@
-export type ResultsPresentation = "full" | "desktop-disclosure";
+export type ResultsPresentation =
+  | "full"
+  | "desktop-disclosure"
+  | "mobile-disclosure";
 
 export interface AnalysisPresentationOrder {
   mainBeforeRail: boolean;
@@ -9,14 +12,15 @@ export function classifyResultsPresentation(
   isDesktop: boolean,
   isAnalysisState: boolean,
 ): ResultsPresentation {
-  return isDesktop && isAnalysisState ? "desktop-disclosure" : "full";
+  if (!isAnalysisState) return "full";
+  return isDesktop ? "desktop-disclosure" : "mobile-disclosure";
 }
 
 export function getResultsDisclosureOpen(
   presentation: ResultsPresentation,
   userPreference: boolean,
 ): boolean {
-  return presentation === "desktop-disclosure" && userPreference;
+  return presentation !== "full" && userPreference;
 }
 
 export function getAnalysisPresentationOrder(isDesktop: boolean): AnalysisPresentationOrder {

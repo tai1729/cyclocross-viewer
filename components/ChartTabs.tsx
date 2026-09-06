@@ -15,27 +15,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type TabKey = ChartTab;
 
-const TABS: { key: TabKey; label: string; howToRead: string }[] = [
+const TABS: {
+  key: TabKey;
+  label: string;
+  mobileLabel: string;
+  howToRead: string;
+}[] = [
   {
     key: "rank",
     label: "順位",
+    mobileLabel: "順位",
     howToRead: "周回ごとの順位の変化を線で表示。上にあるほど順位が良いです",
   },
   {
     key: "gap",
     label: "タイム差",
+    mobileLabel: "差",
     howToRead:
       "累積タイム差（各周終了時点）。注目選手が±0の基準です。プラスは比較選手が遅れている（後ろ）、マイナスは先行している（速い）ことを示します",
   },
   {
     key: "pace",
     label: "周回差",
+    mobileLabel: "周回",
     howToRead:
       "周回ごとのタイム差。注目選手が±0の基準です。プラスは比較選手が遅い（後ろ）、マイナスは速い（前）ことを示します",
   },
   {
     key: "lap",
     label: "ラップ",
+    mobileLabel: "ラップ",
     howToRead: "各選手の1周ごとのタイム推移。太い線が注目選手です",
   },
 ];
@@ -108,14 +117,18 @@ export function ChartTabs({
         className="contents"
       >
         <CardHeader>
-          <TabsList variant="line" className="w-full">
+          <TabsList variant="line" className="w-full min-w-0">
             {TABS.map((tab) => (
               <TabsTrigger
                 key={tab.key}
                 value={tab.key}
-                className="min-h-11 text-muted-foreground data-active:font-bold data-active:text-foreground sm:min-h-8"
+                aria-label={tab.label}
+                className="min-h-11 min-w-0 px-1 text-muted-foreground data-active:font-bold data-active:text-foreground lg:min-h-8 lg:px-1.5"
               >
-                {tab.label}
+                <span aria-hidden="true" className="lg:hidden">
+                  {tab.mobileLabel}
+                </span>
+                <span className="hidden lg:inline">{tab.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>

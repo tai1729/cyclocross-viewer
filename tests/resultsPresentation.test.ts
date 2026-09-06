@@ -6,8 +6,9 @@ import {
   getResultsDisclosureOpen,
 } from "../lib/resultsPresentation";
 
-test("mobile and browse states use the full results presentation", () => {
-  assert.equal(classifyResultsPresentation(false, true), "full");
+test("browse stays full while active Mobile uses its own disclosure presentation", () => {
+  assert.equal(classifyResultsPresentation(false, false), "full");
+  assert.equal(classifyResultsPresentation(false, true), "mobile-disclosure");
   assert.equal(classifyResultsPresentation(true, false), "full");
 });
 
@@ -19,8 +20,16 @@ test("active Desktop uses a closed disclosure by default and honors user prefere
   assert.equal(getResultsDisclosureOpen(presentation, true), true);
 });
 
-test("mobile presentation does not turn the Desktop preference into an open state", () => {
-  assert.equal(getResultsDisclosureOpen(classifyResultsPresentation(false, true), true), false);
+test("Desktop and Mobile disclosure preferences remain independent", () => {
+  const desktopPresentation = classifyResultsPresentation(true, true);
+  const mobilePresentation = classifyResultsPresentation(false, true);
+  const desktopPreference = false;
+  const mobilePreference = true;
+
+  assert.equal(getResultsDisclosureOpen(desktopPresentation, desktopPreference), false);
+  assert.equal(getResultsDisclosureOpen(mobilePresentation, false), false);
+  assert.equal(getResultsDisclosureOpen(mobilePresentation, mobilePreference), true);
+  assert.equal(getResultsDisclosureOpen(mobilePresentation, desktopPreference), false);
 });
 
 test("analysis DOM order follows the mobile vertical and Desktop workspace contracts", () => {

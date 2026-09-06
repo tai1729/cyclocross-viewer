@@ -72,7 +72,7 @@ export function ComparisonRiderPicker({
           onChange={(event) => setQuery(event.target.value)}
           placeholder="選手名または選手ID"
           aria-describedby={SEARCH_DESCRIPTION_ID}
-          className="min-h-11 w-full sm:min-h-8"
+          className="min-h-11 w-full lg:min-h-8"
         />
         <FieldDescription id={SEARCH_DESCRIPTION_ID}>
           グラフに固定する選手を検索して追加できます（最大{MAX_PINNED_FIXED_RIDERS}名）。
@@ -97,7 +97,7 @@ export function ComparisonRiderPicker({
                   size="sm"
                   onClick={() => onRemove(rider.riderId)}
                   aria-label={`${rider.name}を固定から外す`}
-                  className="min-h-11 shrink-0 sm:min-h-8"
+                  className="min-h-11 shrink-0 lg:min-h-8"
                 >
                   外す
                 </Button>
@@ -135,7 +135,7 @@ export function ComparisonRiderPicker({
                 onClick={() => onAdd(rider.riderId)}
                 disabled={atPinnedLimit}
                 aria-label={`${rider.name}を固定する`}
-                className="min-h-11 shrink-0 sm:min-h-8"
+                className="min-h-11 shrink-0 lg:min-h-8"
               >
                 追加
               </Button>

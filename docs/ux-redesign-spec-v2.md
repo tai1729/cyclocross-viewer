@@ -470,3 +470,68 @@ status meaning, or comparison eligibility changes.
   Desktop uses chart tabs, lap detail, then control rail. Desktop grid placement
   moves the rail visually left without relying on CSS `order` to define the
   Mobile DOM or assistive-technology sequence.
+
+## UX2-3 Mobile workspace resolution (2026-09-06)
+
+The UX2-3 mobile slice supersedes the UX2-2 “pre-UX2-3 mobile composition”
+boundary below `1024px` while leaving the UX2-2 Desktop branch unchanged.
+
+### Active and browse presentation
+
+- Browse (`rider` absent) keeps the existing full results table before the
+  analysis region and the existing inline rider list.
+- Active Mobile (`rider` present and viewport `<1024px`) renders, in both DOM
+  and visual order: compact context, compact rider/comparison controls,
+  `ChartTabs` (metric controls and chart), existing summary cards,
+  `LapDetailTable`, then a closed results disclosure.
+- The existing `RaceResultsTable` is rendered exactly once. Active Mobile uses
+  native `<details>` with summary `結果表を表示`, closed by default, local-only
+  open state, and no URL/history state. The table remains the existing bounded
+  scroll surface. UX2-4 owns any richer results/lap-detail redesign.
+- Active Desktop continues to use the UX2-2 chart-first grid and Desktop
+  results disclosure without changing its local preference contract.
+
+### Mobile controls
+
+- The compact context always identifies race, category, rider and status,
+  comparison mode/count, and the active metric. Long values wrap; no required
+  context is conveyed only by truncation or color.
+- Rider change uses a native modal `<dialog>` rendered as a bottom sheet. It is
+  opened by a 44px trigger that retains the current rider name and accessible
+  full label. `showModal()` supplies modal/inert behavior; the sheet is capped
+  at `min(70dvh, 32rem)`, adds `env(safe-area-inset-bottom)` padding, and only
+  its list region scrolls with overscroll containment. Search receives focus on
+  open; Escape, explicit close, and backdrop click close it. A single rider
+  selection closes it after one existing URL push. Search resets on close and
+  the selected row is revealed when reopened. The opener receives focus with
+  `preventScroll` after close.
+- Comparison uses a native inline `<details>` because its mode list is small.
+  The summary exposes current mode/count and all existing choices remain 44px
+  targets. It stays open after mode changes so pinned selection can continue;
+  fixed IDs, all-mode limits, and existing URL semantics are preserved. If a
+  removed pinned control disappears, focus falls back to the comparison
+  summary with `preventScroll`.
+- `ChartTabs` stays directly after the compact action row. Its tab semantics,
+  keys, and URL writer are unchanged. Narrow widths may use an internally
+  scrolling tab strip only; document horizontal overflow and a second
+  accidental wrapping interaction row are not allowed.
+
+### Transient state, navigation, and edge states
+
+- Mobile sheet/disclosure open state is React-local only. Opening/closing does
+  not create history. Browser Back/Forward continues to traverse URL-derived
+  state; a URL change closes any open Mobile sheet and returns focus to the
+  current visible trigger if one exists.
+- First rider selection from the results table keeps the UX2-1 analysis-region
+  navigation/focus behavior. In-analysis rider, comparison, metric, and lap
+  changes continue to use the centralized `scroll: false` writer. Category and
+  route changes retain their existing loading/top-navigation semantics and
+  unmount stale transient controls.
+- Loading, network/http/invalid-data, not-found, unavailable, no-checkpoint,
+  DNF, lapped, missing-lap, and large-data branches keep their existing
+  behavior. An unavailable rider keeps context and the existing alert but
+  omits chart and lap detail. No analysis calculation or upstream data rule
+  changes.
+- No extra Mobile sticky layer is introduced. `RaceHeader` remains the only
+  sticky surface; resize/hydration changes presentation only and do not write
+  URL state or Desktop disclosure preference.

@@ -49,6 +49,7 @@ import { LapSummaryCard } from "@/components/LapSummaryCard";
 import { LapDetailTable } from "@/components/LapDetailTable";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
+import { MobileComparisonDisclosure } from "@/components/MobileComparisonDisclosure";
 import { ChartTabs } from "@/components/ChartTabs";
 import {
   AnalysisContextBar,
@@ -211,7 +212,8 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     categoryId: resolvedCategoryId,
     queryString,
   });
-  const [resultsOpen, setResultsOpen] = useState(false);
+  const [desktopResultsOpen, setDesktopResultsOpen] = useState(false);
+  const [mobileResultsOpen, setMobileResultsOpen] = useState(false);
   const wasAnalyzingRef = useRef(urlViewState.selfRiderId !== null);
 
   const { race, isLoading, error, retry } = useRaceData(
@@ -359,7 +361,8 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   useEffect(() => {
     const isAnalyzing = selfRiderId !== null;
     if (isAnalyzing && !wasAnalyzingRef.current) {
-      setResultsOpen(false);
+      setDesktopResultsOpen(false);
+      setMobileResultsOpen(false);
     }
     wasAnalyzingRef.current = isAnalyzing;
   }, [selfRiderId]);
@@ -604,13 +607,77 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     </div>
   );
 
-  const activeResultsDisclosure = isAnalysisState ? (
+  const mobileAnalysisActions = (
+    <div
+      data-mobile-analysis-actions
+      className="grid min-w-0 gap-3 sm:grid-cols-2"
+    >
+      <RiderSelector
+        riders={race.riders}
+        categoryName={race.category}
+        selectedRiderId={selfRiderId}
+        onSelect={selectPrimaryRider}
+        presentation="mobile-modal"
+        closeKey={queryString}
+      />
+      <MobileComparisonDisclosure
+        mode={comparisonMode}
+        displayedCount={comparisonRiders.length}
+        totalRiderCount={graphableRiders.length}
+        pinnedCount={pinnedRiderIds.length}
+        onChange={changeComparisonMode}
+        riders={graphableRiders}
+        primaryRiderId={selfRiderId}
+        pinnedRiderIds={pinnedRiderIds}
+        onAdd={addPinnedRider}
+        onRemove={removePinnedRider}
+      />
+    </div>
+  );
+
+  const mobileAnalysisContent = (
+    <div data-mobile-analysis-content className="flex min-w-0 flex-col gap-4">
+      {selfRider && !hasValidData ? (
+        <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
+      ) : selfRider && !hasLapData ? (
+        <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
+      ) : summary && selfRider ? (
+        <>
+          {analysisChart}
+          <SummaryCard summary={summary} />
+          <LapSummaryCard
+            primaryRider={selfRider}
+            fixedRiders={fixedRiders}
+          />
+          {analysisLapDetail}
+        </>
+      ) : (
+        <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
+      )}
+    </div>
+  );
+
+  const activeDesktopResultsDisclosure = isAnalysisState ? (
     <details
-      open={getResultsDisclosureOpen(resultsPresentation, resultsOpen)}
-      onToggle={(event) => setResultsOpen(event.currentTarget.open)}
+      open={getResultsDisclosureOpen(resultsPresentation, desktopResultsOpen)}
+      onToggle={(event) => setDesktopResultsOpen(event.currentTarget.open)}
       className="order-1 min-w-0 lg:order-2"
     >
       <summary className="hidden min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 lg:flex sm:min-h-8">
+        結果表を表示
+      </summary>
+      <div className="mt-3">{resultsTable}</div>
+    </details>
+  ) : null;
+
+  const activeMobileResultsDisclosure = isAnalysisState ? (
+    <details
+      data-mobile-results-disclosure
+      open={getResultsDisclosureOpen(resultsPresentation, mobileResultsOpen)}
+      onToggle={(event) => setMobileResultsOpen(event.currentTarget.open)}
+      className="min-w-0"
+    >
+      <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
         結果表を表示
       </summary>
       <div className="mt-3">{resultsTable}</div>
@@ -674,10 +741,16 @@ export function RaceViewer({ meet }: RaceViewerProps) {
                 comparisonMode={getAnalysisComparisonLabel(comparisonMode)}
                 displayedCount={comparisonRiders.length}
                 activeMetric={getAnalysisMetricLabel(currentViewState.activeTab)}
+                presentation={resultsPresentation === "mobile-disclosure" ? "mobile" : "desktop"}
               />
             </div>
           ) : null}
-          {analysisPresentationOrder.mainBeforeRail ? (
+          {resultsPresentation === "mobile-disclosure" ? (
+            <>
+              {mobileAnalysisActions}
+              {mobileAnalysisContent}
+            </>
+          ) : analysisPresentationOrder.mainBeforeRail ? (
             <>
               {analysisMain}
               {analysisRail}
@@ -689,7 +762,8 @@ export function RaceViewer({ meet }: RaceViewerProps) {
             </>
           )}
         </section>
-        {resultsPresentation === "desktop-disclosure" ? activeResultsDisclosure : null}
+        {resultsPresentation === "desktop-disclosure" ? activeDesktopResultsDisclosure : null}
+        {resultsPresentation === "mobile-disclosure" ? activeMobileResultsDisclosure : null}
       </div>
       ) : null}
     </div>
