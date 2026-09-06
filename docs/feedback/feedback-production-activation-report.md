@@ -10,14 +10,14 @@ The Human Field Test remains `NOT YET EXECUTED`.
 
 ## Source and deployment identity
 
-- Source commit: `8d1e551b1d8eebd40cb7750ec674a38df3fe24dd`
+- Source commit: `020809a6cc7ce77aba6e917e42a2d90396dc751d` (`docs: record UX3-1D production activation blocker`)
 - Branch: `main`
 - Repository state: clean; `main` matches `origin/main`
 - Target Vercel project: `ajocc-laptime-viewer`
-- Production deployment: `dpl_8kRLdye5SR5R7JwkTEPDXRDh4fRw`
+- Production deployment: `dpl_CK7RxsKDMEZhADgdCofPYjRxMA3Q`
 - Deployment status: `READY`
 - Production alias: `https://ajocc-laptime-viewer.vercel.app/`
-- Deployment source commit: `8d1e551b1d8eebd40cb7750ec674a38df3fe24dd`
+- Deployment source commit: `020809a6cc7ce77aba6e917e42a2d90396dc751d`
 - Deployed timestamp: 2026-09-06 (Vercel deployment metadata)
 
 The local `.vercel/project.json` points to a separate project named
@@ -98,7 +98,7 @@ continues to call only `/api/feedback`; the Basin endpoint is read server-side.
 - AC2 Retention is 90 days: **BLOCKED — not verified**
 - AC3 Production env configured: **FAIL — variable absent**
 - AC4 Post-config deployment READY: **BLOCKED — redeploy pending**
-- AC5 Alias points to latest configured deployment: **BLOCKED — current READY deployment predates activation**
+- AC5 Alias points to latest configured deployment: **BLOCKED — no configured deployment exists yet**
 - AC6 Desktop entry production-usable: **PENDING production smoke**
 - AC7 Mobile entry production-usable: **PENDING production smoke**
 - AC8 Anonymous production submission: **NOT RUN**
