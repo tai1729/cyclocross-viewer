@@ -115,6 +115,32 @@
 
 介入レベルは `M0=なし`、`M1=上記の中立質問`、`M2=タスクの目的を一度言い直す`、`M3=技術障害への復旧（新規session/予備race）` と記録する。M2/M3を行った場合は理由と時刻を書く。
 
+### 記録の順序と最小セット
+
+記録負荷を下げるため、moderatorはすべての項目を同時に埋めない。
+
+1. タスク文を読み上げる直前にstart時刻を記録する。
+2. 目的達成、中止、または制限時間到達時にend時刻を記録する。durationは秒で計算し、単位を省略しない。
+3. その場で `success / partial / fail` を1つだけ選ぶ。選べない場合は `NR` とする。
+4. その場で `M0 / M1 / M2 / M3 / LEADING` のいずれか1つを選ぶ。`M0–M3` の範囲表記を結果欄に残さない。
+5. major frictionがあれば1行、participantの原文が取れれば1 quoteだけ記録する。
+
+first click、wrong turn、scroll reversal、interaction hesitationの詳細、severity、suspected causeは、参加者を待たせない範囲でメモし、task後またはsession後に補完する。記録できない値は推測せず `NR` とする。
+
+### Think Aloudと介入の判定
+
+参加者が5秒程度沈黙して操作を続けている場合、1回だけ「考えていることを短く声に出してもらえますか？」と促す。操作方法やアプリの例は提示しない。促し後も発話がない場合は `TA=low` と記録し、無理に質問を重ねない。
+
+moderatorがcontrol、位置、正解、意味を直接教えた場合は `LEADING` と記録し、そのtaskをclean successとして数えない。中立質問や一般的なThink Aloud reminderは `M1` とする。
+
+### Hesitationの定義
+
+3秒は候補を見つけるための観察閾値であり、単独ではfrictionに数えない。
+
+- `Interaction hesitation`: 3秒以上の停止に加え、control間のcursor移動、上下探索、戻る操作、「どこだろう」等の迷い発話があるもの。friction countに含める。
+- `Reading / analysis pause`: chart・表・数値を理解するための停止で、探索行動や迷い発話がないもの。friction countに含めず、必要なら分析pauseとして記録する。
+- 判定不能: `NR`。読み取りをfrictionに変換しない。
+
 ## タスク
 
 以下は参加者へ読み上げる目的文。UIの固有名称は含めない。
@@ -171,9 +197,9 @@
 
 測定: rider change discovery、別選手表示までの時間、chartへの復帰、scroll reversal、context loss、focusの見失い、URLを使う発話があった場合の記録。
 
-### Task 6 — 自由探索（1〜2分）
+### Task 6 — 自由探索（60〜90秒）
 
-> 「ここから1〜2分、気になる情報を自由に見てみてください。使わない機能があっても問題ありません。」
+> 「ここから60〜90秒、気になる情報を自由に見てみてください。使わない機能があっても問題ありません。」
 
 特定機能を促さない。何を最初に選ぶか、どの情報を掘り下げるか、どの機能を無視するかを記録する。Lap Detailを使わなかった場合は、後で理由を聞くが、使用を要求しない。
 
@@ -184,18 +210,18 @@
 | 指標 | 記録方法 |
 | --- | --- |
 | completion | `success` / `partial` / `fail`。目的を自力で達成したかで判定 |
-| completion time | タスク文を読み終えた時点から、目的達成または中止までの秒数 |
+| completion time | start/endを記録し、秒単位で計算する。単位不明の値は使用しない |
 | first-click correctness | 最初の操作が目的へ直接向かったか。探索クリックはwrong turnとして別記録 |
-| hesitation | 3秒以上の停止回数。停止中の視線／発話をメモ |
+| hesitation | 3秒以上かつ操作探索・迷い発話があるinteraction hesitationのみ。reading pauseとは分離 |
 | wrong turn | 目的に向かわない操作、誤った項目、戻る操作。単なる確認クリックは除外 |
 | major scroll reversal | 目的領域を探すため、1 viewport相当以上の上下往復が発生した回数 |
-| moderator intervention | `M0`〜`M3`と理由 |
+| moderator intervention | `M0`〜`M3`または`LEADING`を1つだけ。理由と時刻を残す |
 | Ease | タスク直後に1=とても使いにくい〜5=とても使いやすい |
 | Confidence | 1=正しく操作できたか不明〜5=完全に理解した |
 
 ### Friction event
 
-次のいずれかが発生したら時刻を記録する: 3秒以上停止、同じ場所の往復、control探索のためのscroll、誤ったcontrol、分からないという発言、browser backを逃げ道として使う、chart/current riderを見失う、unexpected scrollへの反応、disclosureを見つけられない、ラベルの意味の誤解。
+次のいずれかが発生したら時刻を記録する: 3秒以上かつ操作探索を伴う停止、同じ場所の往復、control探索のためのscroll、誤ったcontrol、分からないという発言、browser backを逃げ道として使う、chart/current riderを見失う、unexpected scrollへの反応、disclosureを見つけられない、ラベルの意味の誤解。自然なreading / analysis pauseは別記録とする。
 
 ### Critical moment log
 
@@ -252,6 +278,6 @@ pilotで観察された製品上の問題は、参加者データが1人分し�
 
 ## 成果物と終了条件
 
-各セッション後に `ux3-participant-record-template.md` を1部埋める。全セッション終了後に `ux3-observation-sheet.md` と `ux3-results-analysis-template.md` を更新する。
+各セッション後に `participant-01.md`、`participant-02.md` の形式で `ux3-participant-record-template.md` を1部コピーして埋める。Pilotは `pilot-participant-01.md` として正式datasetから分離する。全セッション終了後に `ux3-observation-sheet.md` と `ux3-results-analysis-template.md` を更新する。
 
 この準備フェーズの終了条件は、次の5ファイルが存在し、facilitatorがpilotを実施できることだけである。参加者データがない状態でUX3の実装着手や「使いやすくなった」という判定は行わない。

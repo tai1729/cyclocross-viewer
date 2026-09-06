@@ -32,7 +32,7 @@
 
 ## Task aggregate
 
-`Success rate = success人数 / valid参加者数`。中央値は、技術障害で中断したtaskを除き、除外理由をNotesに残す。少人数のためp値や統計的有意差は計算しない。
+`Success rate = success人数 / valid参加者数`。`LEADING`介入のtaskはclean successに含めない。durationはstart/endがあり、単位が秒で明示された値だけを集計する。`NR`、placeholder、単位不明の数値を推測して補完しない。中央値は、技術障害で中断したtaskを除き、除外理由をNotesに残す。少人数のためp値や統計的有意差は計算しない。
 
 | Task | Valid participants | Success | Partial | Fail | Success rate | Median time (s) | First-click correct count | Median Ease | Median Confidence | Notes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |

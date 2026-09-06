@@ -36,7 +36,7 @@ Sample caveat: 3〜5人のformative testであり、母集団への成功率推�
 
 ## Task success and time
 
-`Success rate = success人数 / valid participant数`。`Partial` と `Fail` の理由をNotesに書く。技術障害の時間は製品task時間から除くが、技術障害自体は別に報告する。
+`Success rate = success人数 / valid participant数`。`Partial` と `Fail` の理由をNotesに書く。`LEADING`介入のtaskはclean successに含めない。durationはstart/endがあり、秒単位が明示された値だけを集計し、`NR`・placeholder・単位不明の値は推測しない。技術障害の時間は製品task時間から除くが、技術障害自体は別に報告する。
 
 | Task | Valid N | Success | Partial | Fail | Success rate | Median time | First-click correct | Median Ease | Median Confidence | Notes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |

@@ -1,273 +1,267 @@
 # UX3-0.5 Human User Test Pilot Calibration Review
 
-ステータス: `BLOCKED — PILOT RECORD NOT FOUND`
+ステータス: `FINAL CALIBRATION — PILOT EVIDENCE REVIEWED`
 
-暫定判定: `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
+判定: `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
 
-## Review scope
+## Review history
 
-このレビューの対象はproduct UXではなく、UX3-0の人間ユーザーテストprotocolである。Pilot participant 1名の実記録を根拠に、task文、moderator行動、測定項目、所要時間、記録負荷を校正することを目的とした。
+- `499db3809419a694ff98a62631691ff7cc7f87ff`: Pilot recordがrepository内に存在せず、推測を避けて停止。
+- `50312288981b06f23a465ffd594d8b10cf9d3272`: 再探索でもrecord未発見であることを記録。
+- 今回: `docs/user-testing/pilot-participant-01.md` を追加し、実recordを読んで校正を再開。
 
-ただし、対象となるPilot recordがこのrepository内で特定できなかった。したがって、以下ではPilot participantの行動・時間・発話・介入・task結果を推測していない。
+前2回の「recordなし」という判断は削除せず、今回record追加によって更新された内容をこの文書に残す。今回もproduct codeは変更していない。
 
-## Source documents confirmed
+## Evidence source
 
-次の5つのtest kitは読み込み済みである。
+今回読んだ実record:
+
+- `docs/user-testing/pilot-participant-01.md`
+
+併せて確認したtest kit:
 
 - `docs/user-testing/ux3-test-plan.md`
 - `docs/user-testing/ux3-moderator-script.md`
 - `docs/user-testing/ux3-participant-record-template.md`
 - `docs/user-testing/ux3-observation-sheet.md`
 - `docs/user-testing/ux3-results-analysis-template.md`
+- 本ファイルの前回レビュー履歴
 
-## Pilot record discovery
+## Pilot participant and environment
 
-### Search scope
-
-- `docs/user-testing/` の全ファイル名と内容
-- `docs/` 配下のMarkdown、text、JSONの候補
-- repository全体の、`pilot`、`participant`、`user test`、`Participant ID`、`UX3-0.5` 等の文字列
-- hidden fileを含む検索。ただし `.git` と `node_modules` は除外
-
-### Found files
-
-見つかったのは次のtemplateだけである。
-
-- `ux3-test-plan.md`
-- `ux3-moderator-script.md`
-- `ux3-participant-record-template.md`
-- `ux3-observation-sheet.md`
-- `ux3-results-analysis-template.md`
-
-### Missing evidence
-
-以下を持つPilot実記録は見つからなかった。
-
-- Pilot participant IDまたは背景
-- 実施日時、端末、viewport、browser
-- Task 0〜6の開始・終了時刻
-- participantの発話・hesitation・wrong turn
-- moderator intervention
-- Ease / Confidence
-- critical moment
-- post-test interview
-
-この状態では、Pilotが実施済みか、別の場所に保存されているか、記録が未提出なのかをrepositoryだけから判断できない。
-
-## Pilot participant / duration / timeline
-
-| Item | Result |
+| Item | Evidence |
 | --- | --- |
-| Pilot participant | `NOT EVALUABLE — record missing` |
-| Participant background | `NOT EVALUABLE` |
-| Device / viewport | `NOT EVALUABLE` |
-| Start / end time | `NOT EVALUABLE` |
-| Total duration | `NOT EVALUABLE` |
-| Task 0〜6 timeline | `NOT EVALUABLE` |
-| Post-test interview | `NOT EVALUABLE` |
-| Moderator interventions | `NOT EVALUABLE` |
-| Recording burden | `NOT EVALUABLE` |
+| Participant ID | `P_1_1` |
+| Background | A: 自転車競技に詳しい |
+| AJOCC familiarity | `uses it` |
+| Race/lap analysis experience | `low` |
+| Prior product experience | `seen once` |
+| Device | Desktop PC、27インチモニター |
+| OS | Windows 11 |
+| Browser | Chrome（versionは未記録） |
+| Input | mouse + keyboard |
+| Orientation | landscape |
+| URL | production URL |
+| Date / start / end | `not recorded` |
+| Target race/category/riders | `not recorded` |
+| Data fallback | `no / yes, describe` のplaceholderが残っており確定不能 |
 
-10〜15分の判定（`TOO SHORT / GOOD / TOO LONG`）は、実測時間なしには行わない。
+参加者は、サイトの目的を「レース結果をグラフ化し、ほかの選手と比較できるもの」と理解していた。最初の視線は結果表→グラフ→トップ差の順で、最初の操作意図は大会選択→選手選択→グラフ切替だった。これは第一印象と目的理解の証拠として扱うが、1名のPilot-only evidenceであり、正式なUX findingにはしない。
 
-## Protocol audit result
+## Pilot timeline reconstruction
 
-実Pilotに基づく校正は実施できない。各項目を「問題なし」とは判定せず、`PENDING RECORD` とする。
+Recordの時間欄は見出しが「秒」だが、start/end時刻がなく、値の実単位も確認できない。したがって、数値を合計したり、分へ変換したりしない。
 
-| Audit area | Result | Reason |
-| --- | --- | --- |
-| Task wording neutrality | `PENDING RECORD` | participantがどう解釈・反応したか不明 |
-| Task realism | `PENDING RECORD` | 自然な目的として理解されたか不明 |
-| Task difficulty | `PENDING RECORD` | 完了時間、失敗、介入が不明 |
-| Task dependency / learning effect | `PENDING RECORD` | 後続taskで学習効果が出たか不明 |
-| Moderator intervention | `PENDING RECORD` | 発言ログが不明 |
-| Three-second rule | `PENDING RECORD` | hesitationの種類と回数が不明 |
-| Think Aloud | `PENDING RECORD` | 発話量・沈黙・実況化の有無が不明 |
-| Measurement feasibility | `PENDING RECORD` | 実際に記録できたか不明 |
-| Recording burden | `PENDING RECORD` | moderatorの負荷が不明 |
-| Ease / Confidence wording | `PENDING RECORD` | participantの理解が不明 |
-| Critical moment template | `PENDING RECORD` | 記録可能性が不明 |
-| Post-test interview | `PENDING RECORD` | 重複・疲労・回答価値が不明 |
+| Phase | Duration | Friction | Moderator intervention |
+| --- | ---: | --- | --- |
+| Introduction | `not recorded` | `not recorded` | `not recorded` |
+| Task 0 | `not recorded` | 余白、表の横長、グラフの小ささへの反応 | `not recorded` |
+| Task 1 | `5`（record欄のraw value。unit未確認） | 位置の分かりにくさ、空白、major scroll reversal `あり`、hesitation `あり` | `not recorded`。欄は`M0–M3` placeholder |
+| Task 2 | `5`（raw value。unit未確認） | 情報が複数箇所に散らばる | `not recorded` |
+| Task 3 | `3`（raw value。unit未確認） | 比較できるが比較している感覚が弱い | `not recorded` |
+| Task 4 | `5`（raw value。unit未確認） | 複数線・他選手との関係を読み取りにくい | `not recorded` |
+| Task 5 | `3`（raw value。unit未確認） | 選手変更方法は分かるが最初に探した | `not recorded` |
+| Task 6 / free exploration | `10`（raw value。unit未確認） | hesitation、wrong turn、major scroll reversal `あり`。押せる場所と結果の予測が困難 | `not recorded` |
+| Post-test interview | `not recorded` | 一部質問の回答欄が空欄 | `not recorded` |
+| Total | `not recorded` | start/endがないため判定不能 | — |
 
-### Static preflight（Pilot evidenceではない）
+### Duration gate
 
-test kitの構造上は、Task 0〜6、10〜15分の時間枠、中立質問、M0〜M3介入コード、3秒停止ルール、participant record、横断matrix、P0〜P3分類を定義済みである。しかし、これは資料を読んだ結果であり、Pilotで実運用できたという証拠ではない。
+判定: `UNKNOWN`。
 
-## Task wording audit
+目標は10〜15分だが、実際の総時間、Introduction、Task 0、post-testの時間がない。Task 1〜6のraw valueもunitが検証できないため、`5+5+3+5+3+10`をdurationとして合計しない。今回のPilotだけから`PASS / TOO SHORT / TOO LONG`を決めることはできない。
 
-Pilot recordがないため、Task 0〜6の各判定は確定しない。
+これはproduct UXの問題ではなく、開始・終了時刻と単位を必須化できていなかったmeasurement protocolの問題である。main testでは各taskとsession全体のstart/endを秒で記録する。
 
-| Task | Static intent | Pilot judgment |
-| --- | --- | --- |
-| 0 First Impression | 操作なしで目的と第一印象を聞く | `PENDING RECORD` |
-| 1 Race Result | 大会・categoryという目的だけを与える | `PENDING RECORD` |
-| 2 Rider Analysis | 選手の走りの理解を求める | `PENDING RECORD` |
-| 3 Comparison | 周囲との比較という目的を与える | `PENDING RECORD` |
-| 4 Investigation | ペース・順位の変化を探す | `PENDING RECORD` |
-| 5 Another Rider | 同じcategoryの別選手を見る | `PENDING RECORD` |
-| 6 Free Exploration | 使用機能を指定せず自由探索 | `PENDING RECORD` |
+## Task-by-task audit
 
-現時点で、`Slightly Leading` や `Leading` へ変更する根拠はない。根拠なしにTask文を変更すると、本番participantsとの比較可能性を損なうため、Pilot record受領までは変更しない。
+判定基準: `KEEP`、`REWORD`、`MERGE`、`REMOVE`。Pilotの1名のproduct反応はTask文変更の根拠にせず、文が目的を伝えたか、実施上の重複や不明瞭さがあったかだけを見る。
 
-## Task order / learning effect
-
-現在の順序は、第一印象から結果、個人分析、比較、変化探索、別選手、自由探索へ進む設計である。PilotがTask 2で学習した操作をTask 5へ持ち越したか、またその影響が発生したかは記録不在のため判定不能。
-
-本番の比較可能性を優先し、現時点では順序を変更しない。Pilot record受領後に、次のいずれかを証拠付きで判断する。
-
-- 順序を維持する
-- Task 5を別sessionの独立taskにする
-- 一部taskを統合・短縮する
-- learning effectをprotocol上の既知の制約として許容する
-
-## Moderator intervention audit
-
-許可済みのM1中立質問、境界的な発言、操作方法を教えるM2/M3以外の逸脱があったかは確認できない。Pilot record受領時は、moderatorの逐語ログまたは時刻付きメモを次のように分類する。
-
-| Classification | 判定基準 | 今回 |
-| --- | --- | --- |
-| Allowed | 「今何を探していますか？」等の中立質問、Think Aloud reminder | `NOT EVALUABLE` |
-| Borderline | participantの方向・解釈に影響した可能性がある発言 | `NOT EVALUABLE` |
-| Disallowed | control、位置、操作、正解を明示した発言 | `NOT EVALUABLE` |
-
-## Three-second rule
-
-現在のtest kitでは、3秒以上の停止をfriction eventとして記録する。ただし、自然なデータ読解のための停止と、操作方法を探す停止を同一視しない方針は、Pilotで確認する必要がある。
-
-本番用の暫定記録ルールは次のとおり。Pilot recordで問題がなかったことを意味しない。
-
-- `Interaction hesitation`: control、次の導線、選択方法を探して停止。friction countに含める。
-- `Reading / analysis pause`: chartや数値の意味を考えて停止。自然な読解として別カウントにする。
-- 判定不能: `NR` とし、勝手にfrictionへ分類しない。
-
-## Think Aloud audit
-
-参加者が考えを声に出せたか、操作実況になったか、沈黙が増えたか、正解を当てようとしたかはPilot record不在のため不明。台本には既に、アプリの操作方法を使わない一般例（「ここかな」「この数字は何だろう」）と、短い発話でよいことを含めている。Pilot evidenceなしに追加説明はしない。
-
-## Measurement audit
-
-| Measurement | Classification now | Pilot evidence |
-| --- | --- | --- |
-| success / partial / fail | `KEEP — audit pending` | なし |
-| completion time | `KEEP — audit pending` | なし |
-| first-click correctness | `KEEP — audit pending` | なし |
-| hesitation | `CLARIFY — distinguish interaction vs reading` | なし |
-| wrong turn | `KEEP — audit pending` | なし |
-| major scroll reversal | `KEEP — audit pending` | なし |
-| moderator intervention | `KEEP — audit pending` | なし |
-| Ease | `KEEP — audit pending` | なし |
-| Confidence | `KEEP — audit pending` | なし |
-| quotes | `KEEP — audit pending` | なし |
-| critical moments | `SIMPLIFY at capture time; retain evidence fields` | なし |
-| suspected cause / severity | `DEFER to after-session analysis` | なし |
-
-実記録がないため、現時点では `REMOVE` を決めない。リアルタイム必須は success、time、major friction、quote とし、severity、suspected cause、P0〜P3の最終判定はsession後に記録する方針を維持する。
-
-## Critical moment capture
-
-既存の9項目すべてをリアルタイムに埋める必要はない。Pilot record受領後に実運用負荷を確認するまでは、次の最小 capture を本番時の必須項目とする。
-
-| 必須（その場） | 後から補完 |
-| --- | --- |
-| timestamp、task、participant action、verbatim quote | expected、actual、suspected cause、severity、follow-up |
-
-記録できなかった項目は推測で補完せず `NR` とする。
-
-## Post-test interview audit
-
-post-test質問の重複、疲労、誘導性はPilot recordがないため未判定。重要質問「なんとなく使いづらいと感じた瞬間」は維持する。ただし、前の質問が回答を誘導したかは実際の順序・回答ログで確認する。
-
-現時点の本番運用は次のとおり。
-
-1. まず自由回答を聞く。
-2. その後にEase / Confidenceの数値を聞く。
-3. 「なんとなく使いづらい」の有無と瞬間を最後に聞く。
-4. 最後に「1つだけ直せるなら」を聞く。
-
-## Pilot-only UX signals
-
-Pilot recordがないため、観察されたUX signalはない。
-
-| Signal | Evidence | Pilot only | Needs confirmation |
+| Task | Verdict | Pilot evidence | Protocol decision |
 | --- | --- | --- | --- |
-| No pilot signal can be asserted | Pilot participant record not found | YES | Pilot record must be supplied before analysis |
+| 0 First Impression | `KEEP` | サイト目的と最初の行動を言語化できた。第一印象の配置・密度への反応も得られた | 目的文と操作なしを維持 |
+| 1 Race Result | `KEEP` | 大会選択は直感的と記録され、結果を探す目的は成立。completionは未選択 | UI名を示さない目的文を維持。完了値を必須化 |
+| 2 Rider Analysis | `KEEP` | 「選手の分析はどうなっているか分かる」が情報の散在を指摘。目的の理解不足という証拠はない | 文を変更せず、結果解釈を1つ聞く形式を維持 |
+| 3 Comparison | `KEEP` | 「何となく比較している」と理解。比較の確信が弱い | product signalとして本番確認。task文は変更しない |
+| 4 Investigation | `KEEP` | ペース・順位の変化を探す目的は成立。線の関係理解に困難 | Task 2との重複はなく、深掘りtaskとして維持 |
+| 5 Another Rider | `KEEP` | 別選手へ切り替える目的は成立。最初に導線を探した | Task 2で学習した操作を再利用する repeated-analysis taskとして維持 |
+| 6 Free Exploration | `KEEP`（時間box明確化） | 自由探索で操作可能性と結果予測への困難が表出。自由探索の目的自体は有効 | 文の目的は維持し、制限を1〜2分から60〜90秒へ明示 |
 
-comparison未発見、Results未使用、chart理解不足、focus問題などをPilot signalとして報告していない。これらを推測で埋めることは禁止する。
+全Taskについて、Pilot recordには実際の読み上げ発話やmoderator説明の記録がないため、neutralityを完全に証明するものではない。ただし、record上にUI名を教えたという証拠はない。main testではmoderator codeと発言を記録する。
+
+## Task order and learning effect
+
+順序は変更しない。Task 2で選手分析の導線を学び、Task 5で別選手への切替を繰り返すため、Task 5は純粋な初回discoverabilityではなく、学習後の反復操作を測るtaskになる。この差はUX3の目的に合っており、削除・独立化しない。
+
+Task 3とTask 4はどちらもchart解釈を含むが、Task 3は周囲との比較、Task 4はレース中の変化と詳細確認で目的が異なる。統合しない。
+
+## Protocol friction vs product UX friction
+
+### Test protocol friction
+
+Pilot recordから確認できるprotocol / recording上の問題:
+
+- 総時間、Introduction、Task 0、post-testの開始終了がない。
+- Task時間欄の単位が検証できない。
+- `success/partial/fail` が全Taskでplaceholderのまま。
+- first click、moderator interventionが未確定。`M0–M3`は範囲placeholderで、実コードではない。
+- Think Aloudの逐語発話、促し、沈黙の長さがない。
+- critical moment欄が未記録。
+- quote欄が空欄で、観察者の要約とparticipantの原文が区別できない。
+- overall ease、would use again、backlog check等が未記録。
+
+これにより、Pilotを10〜15分に分類したり、clean successを集計したりできない。main testではリアルタイム必須項目を絞り、後から補完する項目を分ける。
+
+### Pilot-only product UX signals
+
+以下はPilotで記録された潜在的なUX signalである。すべて `Main test confirmation needed = YES` とし、正式finding・実装targetへ昇格させない。
+
+| Signal | Evidence | Severity candidate | Main test confirmation needed |
+| --- | --- | --- | --- |
+| 初期画面の余白・情報配置への違和感 | Task 0、interviewで「余白の無駄」「配置・見せ方がいまいち」「パッと見いまいち」 | P2 candidate | YES |
+| 結果表の横幅・空白で選手とtimeの対応が読みづらい | Task 1、interviewの表への指摘 | P2 candidate | YES |
+| 比較導線・比較状態の意味が弱い | pre-testで比較場所が不明、Task 3で「比較している感がない」 | P2 candidate | YES |
+| 複数線・他選手との関係が読みづらい | Task 4で線の関係を理解しづらい | P2/P3 candidate | YES |
+| 選手変更導線の初回discoverability | Task 5で最初に探した | P2 candidate | YES |
+| 自由探索で操作可能性・結果予測が分かりにくい | Task 6でhesitation/wrong turn/scrollあり | P2 candidate | YES |
+| 小さい文字・buttonと小さな摩擦の累積 | post-testの快適さ2、button/文字への指摘 | P2/P3 candidate | YES |
+
+これらは1名のself-reportと不完全なtask completion記録から得た仮説であり、UX3-1でparticipant countとoccurrenceを確認する。
+
+## Moderator intervention review
+
+実recordでは、各Taskの欄が`M0–M3`で、実際の介入種類・時刻・発言が選択されていない。したがって、NEUTRAL / THINK-ALOUD REMINDER / BORDERLINE / LEADINGの分類は `not recorded` である。
+
+main testでは次を確定する。
+
+- taskごとにコードは1つだけ選ぶ。
+- 中立質問または一般的なThink Aloud reminderは `M1`。
+- task目的の言い直しは `M2`。
+- 技術障害からの復旧は `M3`。
+- control、位置、操作、正解、意味を教えた場合は `LEADING`。
+- `LEADING` taskはclean successとして集計しない。
+
+## Think-Aloud review
+
+recordにはparticipantの発言欄が空で、Task commentsも逐語quoteではなく要約形式である。Think Aloudが十分だったか、操作実況だったか、無言だったかは `not recorded`。このためPilotから「実用的だった」とは判定しない。
+
+main testでは、5秒程度沈黙して操作を続けるときにtask中1回だけ「考えていることを短く声に出してもらえますか？」と促す。アプリ操作を例にしない。促し後も無言なら`TA=low`と記録し、taskを説明し直さない。
+
+## Hesitation definition and three-second rule
+
+Pilot recordのhesitation欄は`あり`または`あまりなし`で、秒数・行動・発話がない。このrecordから、3秒閾値のfalse positive頻度は検証できない。
+
+main testでは次を正式定義とする。
+
+- `Interaction hesitation`: 3秒以上の停止 **かつ** cursorのcontrol間移動、上下探索、戻る操作、または「どこだろう」等の迷い発話がある。friction countへ含める。
+- `Reading / analysis pause`: chart・表・数値を理解する停止で、操作探索や迷い発話がない。friction countへ含めず、別のreading pauseとして記録する。
+- 判定できない場合は`NR`とする。
+
+したがって、単純な「3秒以上停止」は採用しない。3秒は観察開始の閾値として残し、behavioral evidenceを必須にする。これはPilot evidenceが完全だったからではなく、Pilotの記録粒度では単純閾値を検証できなかったためのmeasurement保護である。
+
+## Recording burden and measurement changes
+
+判定: `HIGH (operational recording risk)`。
+
+実際のmoderator所要時間はrecordされていないため、時間負荷そのものは測定できない。一方で、必須項目を含むparticipant recordにcompletion、介入、時刻、quote、critical momentsが大量に残っておらず、現行templateの同時記録負荷または入力ルールの曖昧さが高いことは確認できる。
+
+### Real-time minimum for main test
+
+- session start/end
+- task start/end（秒）
+- `success / partial / fail / NR`
+- `M0 / M1 / M2 / M3 / LEADING` の1コード
+- major frictionの短いメモ
+- notable quote最大1件
+
+### Post-task / post-session reconstruction
+
+- first click
+- interaction hesitation count
+- reading pause count
+- wrong turn
+- major scroll reversal
+- severity、suspected cause、UX recommendation
+- critical momentのexpected / actual / follow-up
+
+Ease / Confidenceはpost-testの5項目を必須とし、taskごとの数値は記録できる場合だけ残す。測定できない項目を成功・失敗へ変換しない。
+
+## Post-test interview review
+
+| Question area | Pilot evidence | Decision |
+| --- | --- | --- |
+| 一番分かりやすかったところ | 大会選択という具体的回答 | KEEP |
+| 一番分かりにくかったところ | 比較場所という具体的回答 | KEEP |
+| 何度も戻った/探した場所 | scroll範囲と上下移動への回答 | KEEP |
+| もっと目立ってほしいもの | 選手選択、グラフ、選択中内容 | KEEP |
+| 画面を取りすぎるもの | context、rider/lap/comparison、横長表 | KEEP |
+| グラフ・条件変更 | chart切替は直感的、lap選択は不明 | KEEP |
+| もう一度使う見込み | 回答は記録されたが設問欄はplaceholder | KEEP; `NR`を許可 |
+| 「なんとなく使いづらい」 | 「パッと見いまいちが勝つ」 | KEEP |
+| 1つだけ直すなら | 配置・見せ方 | KEEP |
+
+質問の重複・誘導性を示すPilot evidenceはない。自由回答を先に聞き、数値評価、「なんとなく使いづらい」、最後の改善要望の順にする現在の流れを維持する。空欄は`NR`とする。
 
 ## Test kit changes
 
-### Changes made
+### Changed
 
-- 既存5ファイル: 変更なし。
-- product source code: 変更なし。
-- UX3 backlog: 変更なし。
-- 新規作成: 本レビュー報告のみ。
+- `ux3-test-plan.md`: Task 6を60〜90秒へ明示。記録順序、real-time minimum、`LEADING`、Think Aloud、interaction/reading pause定義を追加。participant file命名規則を追加。
+- `ux3-moderator-script.md`: taskごとのstart/end・completion・単一介入コード・lead interventionの記録手順、Think Aloud reminder、Task 6の60〜90秒を追加。
+- `ux3-participant-record-template.md`: real-time minimumとpost-task reconstructionを分離。start/end、duration unit、completion、単一介入コード、interaction/reading pauseを明示。
+- `ux3-observation-sheet.md`: `LEADING`除外、秒単位・NR・placeholderを推測しない集計ルールを追加。
+- `ux3-results-analysis-template.md`: `LEADING`とduration集計の除外ルールを追加。
+- `ux3-pilot-review.md`: 本文を実測ベースへ更新し、過去のrecord欠落履歴を保持。
 
-### Pending changes
+### Unchanged
 
-Pilot record受領後、必要な場合だけ、次の最小変更を行う。
+- Task 0〜6の目的文は維持。Task 6の時間boxだけ明確化。
+- Task orderは維持。
+- product source code、tests、application config、UX3 backlogは変更なし。
 
-- task文の一部修正
-- 時間配分またはtask統合
-- neutral probeの整理
-- hesitationの分類説明
-- realtime / post-session measurementの分離
-- critical momentのcapture簡略化
+## Final main-test protocol
 
-変更する場合は、Pilot recordの該当行と理由をこの報告へ追記し、本番participants全員へ同じ改訂版を使用する。
+本番participantsへは次を同じ順序・同じ目的文で実施する。
 
-## Final main-test protocol（暫定）
-
-Pilotで校正済みとは言えないため、以下は「変更なしで保持している暫定protocol」である。
-
-1. Task 0 First Impression
-2. Task 1 Race Result
-3. Task 2 Rider Analysis
-4. Task 3 Comparison
-5. Task 4 Investigation
-6. Task 5 Another Rider
-7. Task 6 Free Exploration
+1. Task 0 — First Impression
+2. Task 1 — Race Result
+3. Task 2 — Rider Analysis
+4. Task 3 — Comparison
+5. Task 4 — Investigation
+6. Task 5 — Another Rider
+7. Task 6 — Free Exploration（60〜90秒）
 8. Post-test interview
 
-参加者間の比較可能性を優先し、Pilot recordのレビュー前に内容・順序を変えない。Pilot参加者は本番datasetへ自動的に含めない。
+main test開始後は、参加者間比較のためprotocolを変更しない。技術障害だけはM3として記録し、同じ条件の予備raceへ切り替える。
 
-## Participant recommendation
+### File naming
 
-- 本番人数: 3〜5人
-- Pilot participant: protocol calibration用として正式datasetから除外
-- 構成: A cycling knowledgeable、B sports/data app user、C general userを分散
-- Desktop/Mobile: 両方の観察が得られるよう割り当てる
+- Pilot: `pilot-participant-01.md`（正式dataset外）
+- Main: `participant-01.md`、`participant-02.md`、`participant-03.md`、必要に応じて`participant-04.md`、`participant-05.md`
 
-## Missing input required
+### Expected duration
 
-次のいずれかを提供する必要がある。
+目標: `12〜15分`。Intro、Task 0〜6、post-test、最小限の記録を含む。Task 6を60〜90秒に固定し、Task後の分析用補完はparticipant退出後に行うため、participantの待ち時間へ含めない。
 
-- `docs/user-testing/` 配下へPilot recordを追加
-- repository内の別パスを明示
-- 画面・音声・手書きメモ等の記録を匿名化して貼付
+## Readiness gate
 
-必要最低限: participant ID、実施時間、Task 0〜6の時系列、moderator intervention、主要発話、post-test回答。個人情報は削除してよい。
+| Gate | Result |
+| --- | --- |
+| Pilot record identified and read | PASS |
+| Task wording usable without UI instruction | PASS with moderator-delivery logging required |
+| Task order comparable | PASS |
+| Actual Pilot total duration measured | FAIL — start/end and units missing |
+| Moderator intervention rule clear | PASS after protocol revision |
+| Hesitation definition clear | PASS after protocol revision; Pilot frequency remains unknown |
+| Recording burden acceptable | FAIL for old form; revised split capture required |
+| Think Aloud protocol operational | PASS after protocol revision; Pilot quality not measurable |
+| Participant template usable | PASS after template revision |
+| Product code unchanged | PASS |
 
-## Readiness verdict
+総時間の実測欠落と旧recordの記録負荷は、main test開始前に解消すべきprotocol上のblocking issueである。新templateで別のPilotを再実施するか、facilitatorが実recordのstart/end・単位・介入・completionを補足してから本番へ進む。
+
+## Final verdict
 
 `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
 
-これはPilotの製品評価が悪かったという意味ではない。Pilot evidenceがないため、protocolを「10〜15分で実用的」「neutral」「記録可能」「比較可能」と確認するreadiness gateを通過できない、という意味である。実記録が提供され、上記の校正を完了した後に、改めて `READY FOR HUMAN FIELD TEST` を判定する。
-
-## Follow-up evidence review
-
-基準commit `499db3809419a694ff98a62631691ff7cc7f87ff` を起点に、今回の再校正作業でも `docs/user-testing/` を再探索した。追加されたPilot participant recordはなく、見つかったファイルは既存のtest kitと本レビューのみだった。
-
-したがって、今回も次の項目は `NOT RECORDED` ではなく、実record自体がないため `NOT EVALUABLE` とする。
-
-- participant profile / environment
-- actual start/end and total duration
-- Task 0〜6 timeline and completion
-- first click、hesitation、wrong turn、scroll reversal
-- moderator intervention and Think Aloud behavior
-- Ease / Confidence、quotes、critical moments
-- post-test answers
-
-この再確認で得られたのは「recordがまだrepositoryに存在しない」という事実だけであり、product UX signal、protocol defect、Task wordingの変更根拠ではない。既存5つのtest kit、Task order、measurement定義、moderator scriptは変更していない。本番participantsを開始する前に、匿名化したPilot recordを `docs/user-testing/` へ追加する必要がある。
-
-Updated verdict: `UX3-0.5 NEEDS TEST PROTOCOL REVISION`
+今回の判定はPilot participantのproduct UXが悪かったという意味ではない。実測recordを読んだ結果、Task文・Task order・product codeには変更不要だった一方、総時間を判定できる時刻情報と、main testで比較可能なcompletion / intervention / hesitation記録が不足していた。上記のprotocol改訂を適用し、実時間を取得できる確認を1回行った後に、`UX3-0.5 READY FOR HUMAN FIELD TEST` を再判定する。

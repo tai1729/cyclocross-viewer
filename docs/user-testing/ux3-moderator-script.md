@@ -48,7 +48,25 @@
 - `M2`: タスク目的を一度だけ言い直す
 - `M3`: 読み込み失敗・セッション切替など、技術問題から復旧
 
-M2/M3は、その理由と時刻を記録する。M3後のtaskは、completion timeに技術待ち時間を含めない。
+1つのtaskにつきコードは1つだけ記録する。操作方法・control・位置・正解を直接教えた場合は `LEADING` とし、そのtaskはclean successとして集計しない。M2/M3/LEADINGは理由と時刻を記録し、M3後のtaskは技術待ち時間をcompletion timeに含めない。
+
+## Task中の記録手順
+
+各taskで次の順番を守る。
+
+1. 読み上げ直前にstart時刻を記録する。
+2. 目的達成、中止、または制限時間到達時にend時刻を記録する。durationは秒で明記する。
+3. `success / partial / fail` を1つ選ぶ。判断できなければ `NR` とする。
+4. 介入コードを1つ選ぶ。`M0–M3` のような範囲表記は使わない。
+5. major frictionがあれば1行、participantの原文が取れれば1 quoteを記録する。
+
+first click、wrong turn、scroll reversal、severity、suspected causeは、参加者の操作を止めない範囲でメモし、task後に補完する。記録できない値を推測しない。
+
+## HesitationとThink Aloud
+
+3秒以上の停止だけではfrictionと判定しない。cursorの探索、上下scroll、戻る操作、迷い発話などのbehavioral evidenceがあれば `Interaction hesitation`、データを読むための停止なら `Reading / analysis pause` とする。
+
+参加者が5秒程度沈黙して操作を続けているときは、task中1回だけ「考えていることを短く声に出してもらえますか？」と促す。アプリの操作方法は例に使わない。促し後も発話がなければ `TA=low` と記録する。
 
 ## Task 0 — First Impression（操作しない）
 
@@ -102,9 +120,9 @@ M2/M3は、その理由と時刻を記録する。M3後のtaskは、completion t
 
 記録: 別選手への到達経路、時間、scroll reversal、context loss、chart復帰、focusへの反応。
 
-## Task 6 — 自由探索（1〜2分）
+## Task 6 — 自由探索（60〜90秒）
 
-> ここから1〜2分、気になる情報を自由に見てみてください。使わない機能があっても問題ありません。
+> ここから60〜90秒、気になる情報を自由に見てみてください。使わない機能があっても問題ありません。
 
 操作を促さず、participantが最初に選ぶものを記録する。Lap Detailを使わなかった場合、後で理由を聞くが、ここでは使わせない。
 
