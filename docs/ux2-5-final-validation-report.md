@@ -20,6 +20,7 @@ Date: 2026-09-06 (JST)
   are validation/design documentation only. The CLI does not expose a Git SHA
   field on the deployment object, so the baseline association is evidenced by
   the matching `origin/main` SHA, timing, and live UX2-4 behavior.
+- Recovery closeout commit pushed to `origin/main`: `46cd003314738e7e40cdcd226722a76c8d78d97b`.
 - Temporary production deployments were used only while diagnosing a P2
   first-entry pointer-focus observation. The candidate deployment above is
   the pre-commit production smoke artifact; final post-push evidence is added
@@ -60,6 +61,54 @@ The recovery scope is limited to correcting evidence/documentation, rerunning
 the required validation, obtaining a fresh technical reviewer verdict, and
 completing the normal commit/push/deployment gate. No UX3 redesign, analysis
 logic change, or speculative focus patch is included.
+
+## Final post-push production verification
+
+The recovery commit was pushed normally on `main`; `git rev-parse HEAD` and
+`git rev-parse origin/main` both resolved to
+`46cd003314738e7e40cdcd226722a76c8d78d97b` before this post-push evidence was
+recorded. The requested public URL resolved to this separate production
+deployment:
+
+- Public alias: `https://ajocc-laptime-viewer.vercel.app/`
+- Deployment: `dpl_FX2zjRv9wQhPSsuZyB1kXfomVHbU`
+- Deployment URL: `https://ajocc-laptime-viewer-9als86r9j-tai1729.vercel.app/`
+- Vercel state: `READY`, target `production`
+- Aliases: the requested public alias, the project alias, and the Git main
+  alias were all present in `vercel inspect`.
+- Created: `2026-09-06 15:25:07 +09:00` (JST)
+- The linked project deployment `dpl_8CEL7ZQi87RcRaBrve9XxtnT9o92` was also
+  `READY`/production and aliased to `01ajocc-laptime-viewer.vercel.app`; the
+  public requested alias was verified against the `dpl_FX...` deployment above.
+
+Post-push public smoke results:
+
+1. Home loaded with 66 events. The representative race opened with category
+   `ME1`; selecting `和田 良平` produced an analysis URL and a visible analysis
+   region at document top `275.25px` without horizontal overflow.
+2. Metric `タイム差` and comparison `±5` changed the URL to
+   `tab=gap&compare=5`; focus stayed on the comparison control and the page
+   did not reset to document top (`scrollY=313` after the control interaction).
+3. Results opened, `黒田 将広` was selected, and the URL/context changed to
+   the second rider while the workspace remained available (`scrollY=490`,
+   no document overflow, stale supporting disclosures closed).
+4. Lap Detail opened and closed from the second-rider workspace. The disclosure
+   retained summary focus and `scrollY=490` on both states.
+5. A post-push public mobile-specific run was not physically emulated because
+   the connected browser exposes a fixed desktop host and no IAB/mobile
+   viewport. This is not silently claimed as an exact-device measurement:
+   the product code is unchanged from the already production-tested UX2-3
+   artifact, whose 390px/320px responsive smoke and source/tests remain the
+   supporting mobile evidence. No new mobile code was introduced in recovery.
+6. The representative deep link
+   `/race/MMJ-256-005?rider=KNS-000-4368&compare=5&tab=gap&lap=1` restored the
+   expected rider, comparison, metric, lap, context, and `scrollY=0`; reload
+   preserved all of them. The invalid route showed the existing not-found
+   recovery message and `大会一覧へ戻る` link with no horizontal overflow.
+
+The production smoke was run against the public alias itself after the pushed
+deployment reached `READY`. The mobile limitation is recorded as an evidence
+boundary rather than converted into an unsupported exact-width claim.
 
 ## Test environment and evidence limits
 
@@ -381,11 +430,15 @@ documented in `docs/SPEC_AUDIT.md`.
 | AC18 Error Recovery | PASS | Invalid route/malformed deep link and existing recovery tests pass |
 | AC19 No Horizontal Page Overflow | PASS | Existing responsive protections and prior matrix pass |
 | AC20 Regression | PASS | UX2-1 through UX2-4 contracts remain intact |
-| AC21 Production | PENDING | Final commit/push and post-push production smoke are required |
+| AC21 Production | PASS | `46cd003` pushed to `origin/main`; public alias resolved to `dpl_FX2zjRv9wQhPSsuZyB1kXfomVHbU` in READY production state and post-push smoke 1–6 passed with the documented mobile-emulation limitation |
 
 ## Final verdict
 
-Pending final technical review, commit/push, and post-push production smoke.
-The exact mobile viewport/device evidence limitation and the residual P2
-first-entry pointer-focus observation are explicitly recorded and are not
-represented as P0/P1 blockers.
+P0=0 and P1=0. The fresh technical recovery reviewer returned `PASS`.
+Automated validation passed, the recovery commit was pushed, and the public
+production alias passed the required post-push smoke. The exact mobile
+viewport/device evidence limitation and the residual P2 first-entry
+pointer-focus observation are explicitly recorded and are not represented as
+P0/P1 blockers.
+
+`UX2 FINAL — RELEASE READY`

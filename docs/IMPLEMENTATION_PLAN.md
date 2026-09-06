@@ -680,7 +680,7 @@ dependencies.
 
 ### UX2-5 — Full verification, user test, review, and closeout
 
-- Status: IN PROGRESS (2026-09-06)
+- Status: COMPLETE (2026-09-06 recovery closeout)
 - Objective: Run the integrated fresh-user, production, responsive,
   accessibility, URL/history, recovery, and regression gate for UX2-1–UX2-4.
 - Scope: tests/typecheck/lint/build, `git diff --check`, public production
@@ -717,6 +717,11 @@ verification PASS.
    project checks and obtain the recorded usability-first PASS plus a fresh
    technical reviewer PASS before commit/push. The post-push public smoke is
    then required for AC21.
+
+Recovery closeout supersedes the intermediate graph labels above: UX2-5-C
+and UX2-5-D are DONE after the final report, validation, technical review,
+commit/push, and public production smoke. The historical intermediate labels
+are retained as an audit trail rather than rewritten.
 
 #### UX2-5 no-change boundary
 
