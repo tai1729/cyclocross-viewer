@@ -21,8 +21,10 @@ Date: 2026-09-06 (JST)
   field on the deployment object, so the baseline association is evidenced by
   the matching `origin/main` SHA, timing, and live UX2-4 behavior.
 - Initial reviewed recovery commit pushed to `origin/main`:
-  `46cd003314738e7e40cdcd226722a76c8d78d97b`. Final evidence closeout commit
-  pushed afterward: `9b7c985ead33e8614e4a0a6518e8cac1d54e6cc6`.
+  `46cd003314738e7e40cdcd226722a76c8d78d97b`. Final application/evidence
+  commit used for the production deployment: `9b7c985ead33e8614e4a0a6518e8cac1d54e6cc6`.
+  A report-only closeout commit follows; it does not change product code or
+  the deployed application artifact.
 - Temporary production deployments were used only while diagnosing a P2
   first-entry pointer-focus observation. The candidate deployment above is
   the pre-commit production smoke artifact; final post-push evidence is added
@@ -66,10 +68,13 @@ logic change, or speculative focus patch is included.
 
 ## Final post-push production verification
 
-The recovery commits were pushed normally on `main`; the final
-`git rev-parse HEAD` and `git rev-parse origin/main` both resolve to
+The recovery commits were pushed normally on `main`. At the time of the final
+public deployment and smoke, `git rev-parse HEAD` and `git rev-parse
+origin/main` both resolved to the application/evidence commit
 `9b7c985ead33e8614e4a0a6518e8cac1d54e6cc6`. The requested public URL was
-explicitly deployed from this final clean worktree to the production project:
+explicitly deployed from that clean worktree to the production project. The
+later report-only closeout commit contains documentation only, so the tested
+production application artifact is unchanged.
 
 - Public alias: `https://ajocc-laptime-viewer.vercel.app/`
 - Deployment: `dpl_62BogVqgRrV5fGz423aqByTnY38Z`
@@ -432,7 +437,7 @@ documented in `docs/SPEC_AUDIT.md`.
 | AC18 Error Recovery | PASS | Invalid route/malformed deep link and existing recovery tests pass |
 | AC19 No Horizontal Page Overflow | PASS | Existing responsive protections and prior matrix pass |
 | AC20 Regression | PASS | UX2-1 through UX2-4 contracts remain intact |
-| AC21 Production | PASS | `9b7c985` pushed to `origin/main`; public alias resolved to `dpl_62BogVqgRrV5fGz423aqByTnY38Z` in READY production state and post-push smoke 1–6 passed with the documented mobile-emulation limitation |
+| AC21 Production | PASS | Application/evidence commit `9b7c985` was pushed to `origin/main`; public alias resolved to `dpl_62BogVqgRrV5fGz423aqByTnY38Z` in READY production state and post-push smoke 1–6 passed with the documented mobile-emulation limitation. The later report-only closeout does not alter the application artifact. |
 
 ## Final verdict
 
