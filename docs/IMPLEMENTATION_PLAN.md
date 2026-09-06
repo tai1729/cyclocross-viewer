@@ -680,15 +680,51 @@ dependencies.
 
 ### UX2-5 — Full verification, user test, review, and closeout
 
-- Status: READY NEXT (after UX2-4; implementation intentionally not started)
-- Objective: Run required checks, independent review, and a three-person
-  first-use comparison against the baseline audit.
-- Scope: tests/typecheck/lint/build, `git diff --check`, browser smoke, task
-  metrics, reviewer, documentation closeout.
+- Status: IN PROGRESS (2026-09-06)
+- Objective: Run the integrated fresh-user, production, responsive,
+  accessibility, URL/history, recovery, and regression gate for UX2-1–UX2-4.
+- Scope: tests/typecheck/lint/build, `git diff --check`, public production
+  smoke, task metrics, bounded P0/P1 fixes only, independent usability and
+  technical review, final report, and UX3 backlog handoff.
 - Dependencies: UX2-4.
 - Acceptance: all required checks pass, reviewer returns PASS, and Task 1–5
   show improved Time to Insight without regression of existing semantics.
 - Verification: project required commands plus the v2 user-test protocol.
+
+Final acceptance override: AC1–AC21 from the UX2-5 task brief are individually
+reported. `RELEASE READY` requires all 21 PASS, zero P0/P1 findings, required
+automated checks PASS, both independent reviewers PASS, and final production
+verification PASS.
+
+#### UX2-5 bounded task graph
+
+1. **UX2-5-A — Specification audit and resolution** — DONE. Two independent
+   auditors reviewed the source-of-truth documents and current implementation;
+   decisions are recorded in `docs/SPEC_AUDIT.md`, which ends in
+   `STATUS: CLEAR`. Recovery resolutions preserve the historical
+   `revision_cycles=4/3` state, reuse the unchanged usability PASS, require a
+   fresh technical PASS, and define the post-push evidence required for AC21.
+2. **UX2-5-B — Integrated production and fresh-user verification** — DONE.
+   Operate the public alias and collect task, accessibility, responsive,
+   recovery, URL/history, and regression evidence. Product-code changes are
+   allowed only for observed P0/P1 or small low-risk blocking defects.
+3. **UX2-5-C — Final evidence and backlog** — IN PROGRESS. Write
+   `docs/ux2-5-final-validation-report.md` and, for non-blocking future work,
+   `docs/ux3-backlog.md`; preserve historical reports. The human-authorized
+   recovery is a single bounded continuation and does not reset revision
+   history.
+4. **UX2-5-D — Required validation and independent review** — READY. Run the
+   project checks and obtain the recorded usability-first PASS plus a fresh
+   technical reviewer PASS before commit/push. The post-push public smoke is
+   then required for AC21.
+
+#### UX2-5 no-change boundary
+
+No UX2-5 implementation may add a feature, route, URL key, dependency, data
+field, chart formula, or UX3-scale layout. The existing Vercel production
+deployment is verified separately from local checks; unavailable browser
+instrumentation is recorded as a limitation, not silently substituted with
+an assertion.
 
 ### Future execution order
 

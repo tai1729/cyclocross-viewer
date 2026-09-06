@@ -618,4 +618,117 @@ current Results/Lap Detail integration before implementation. They must answer:
    one RaceViewer integration task, then report/browser/validation/review. No
    chart/data/URL/dependency or UX2-5 implementation is included.
 
+## Current audit — UX2-5 final UX regression and production readiness (2026-09-06)
+
+This is the release-gate audit for the final integrated verification. The
+implementation scope is verification and documentation first; product-code
+changes are permitted only for observed P0/P1 regressions, accessibility
+failures, responsive failures, interaction bugs, or a small low-risk blocking
+hierarchy fix. No new UX structure, analysis feature, data-model change, or
+chart-calculation change is authorized.
+
+### UX2-5 audit findings and resolutions
+
+1. The UX2-5 user request is the authoritative definition of AC1–AC21 and
+   Task 1–7 for this slice. The older v2 audit's Tasks 1–5 and acceptance
+   criteria remain historical context; they do not silently omit the final
+   slice's AC16–AC21. Each AC is reported individually as PASS, FAIL, or
+   BLOCKED with evidence. `RELEASE READY` requires AC1–AC21 PASS, zero P0/P1,
+   required automated checks PASS, both independent reviews PASS, and final
+   production verification PASS.
+2. P0 means unusable flow, data/status correctness regression, or severe
+   accessibility/security regression. P1 means a major-task blocker or a
+   regression in an established UX2-1–UX2-4 contract. P0 and P1 findings must
+   be fixed or the verdict is `NEEDS REVISION`; a tooling limitation is not
+   relabeled as a product PASS and is recorded separately as evidence scope.
+   Small, low-risk P2 findings may be fixed; larger P2/P3 findings are
+   backlog-only in `docs/ux3-backlog.md`.
+3. The release environment is the public alias
+   `https://ajocc-laptime-viewer.vercel.app/`. A production verdict requires
+   that alias to resolve to the tested final commit or an artifact-equivalent
+   deployment, with deployment readiness, alias, timestamp, and repository
+   commit evidence recorded. Local or preview-only evidence cannot substitute
+   for the production gate. Here “first use” means a fresh browser session
+   with no prior app state; the evaluator may receive only the task wording,
+   not the implementation or UX reports. A three-minute result is a
+   deterministic task criterion, not a claim of statistically significant
+   user research; a larger participant study remains future research.
+4. The later UX2-4 resolution is authoritative for disclosure focus: native
+   `details`/`summary` keeps focus on the toggle during ordinary open/close;
+   no programmatic jump to a heading or table header is required. The older
+   generic focus-to-heading wording is superseded for Results and Lap Detail.
+   When content is explicitly selected from Results, the existing UX2-1
+   rider-navigation contract applies: the URL/state changes with the
+   established focus fallback and `scroll:false` behavior where applicable.
+5. URL-owned state is validated by direct deep links, reload/canonicalization,
+   and source-level URL/history tests. Transient disclosure state, focus,
+   scroll, hover, and tooltip state remain local and are not expected to be
+   restored by reload or browser history. Browser Back/Forward must restore
+   durable URL state without preserving a stale transient overlay. Invalid
+   routes and malformed known query values must retain the existing safe
+   error/canonicalization behavior.
+6. The required responsive boundary is the pair `1023px` (Mobile
+   presentation) and `1024px` (Desktop presentation), plus a resize smoke
+   where tooling allows. The presentation split is not a new state contract;
+   it must preserve URL state, focus safety, and no page overflow. Exact
+   390px/320px measurements and screenshots are preferred evidence. If the
+   connected browser cannot emulate those dimensions, the report must state
+   the limitation and use existing responsive tests/source evidence rather
+   than inventing measurements; this evidence limitation alone is not a
+   product P0/P1.
+7. Accessibility release evidence consists of visible keyboard focus,
+   logical tab order, native disclosure/table/tab/dialog semantics, selected
+   and current-state announcements in the accessibility tree, usable 44px
+   mobile targets, and no focused hidden controls. A full assistive-technology
+   certification is outside this bounded slice unless a blocking defect is
+   observed; any unverified high-risk assistive-technology behavior is listed
+   as a limitation/backlog item.
+8. The large-data gate uses the largest representative public category that
+   is available in the tested data, with approximately 98 riders as the
+   target and 60 riders as the minimum fallback when no 98-rider category is
+   available. The pass condition is practical access to chart, picker, and
+   bounded Results/Lap Detail without page overflow, status loss, or a
+   blocking interaction delay; no performance threshold or virtualization
+   feature is introduced by UX2-5.
+9. Error/recovery evidence covers the existing not-found route, malformed
+   deep-link canonicalization, and the existing loading/network/http/
+   invalid-data/retry automated tests. A production network outage is not
+   manufactured by altering deployed data or code; if it cannot be safely
+   reproduced, the existing tested error boundary and its recovery controls
+   are recorded as the evidence. No stale success content may be claimed as
+   an error pass.
+10. The final review uses two independent `reviewer` passes where available:
+    the first operates the public build before reading source (usability),
+    and the second checks source, tests, contracts, and evidence (technical).
+    Either reviewer returning `NEEDS_REVISION` enters the bounded revision
+    loop. No UX3 redesign is implemented during this slice.
+
+### UX2-5 human recovery resolutions (2026-09-06)
+
+11. The user-authorized recovery preserves `revision_cycles=4` and
+    `max_revision_cycles=3` exactly as historical state. The additive recovery
+    record identifies this as cycle 1; no hook-owned counter or prior failure
+    record is reset or fabricated.
+12. The prior usability-first `PASS` is reusable for this recovery because the
+    product code is unchanged from the reviewed candidate. A new technical
+    reviewer must independently inspect the final report, final diff, tests,
+    and current candidate build before commit/push. The recovery does not
+    reuse the prior technical `NEEDS_REVISION` verdict; post-push production
+    smoke remains the separate AC21 gate.
+13. AC21 is `PASS` only after the final commit SHA is pushed to `origin/main`,
+    the public alias resolves to a `READY` production deployment with its ID,
+    URL, alias, and timestamp recorded, and the post-push smoke covers the
+    required home-to-chart flow, metric/comparison changes, Results rider
+    selection, Lap Detail open/close, a mobile smoke, and a representative
+    deep link. Prior pre-push evidence cannot satisfy AC21 by itself.
+14. AC8 remains a qualified `PASS`: the established keyboard focus contract,
+    native disclosure focus, tab/comparison focus, and no-hidden-focus checks
+    pass. The first-entry pointer selection leaving `body` is a recorded P2
+    limitation, not a P0/P1 release blocker; it remains explicitly visible in
+    the final report and UX3 backlog rather than being called fixed.
+15. Closeout commits the intended UX2-5 documentation files on the current
+    `main` branch and pushes normal history to `origin/main`; no product code,
+    tests, dependencies, or deployment configuration are changed by the
+    recovery.
+
 STATUS: CLEAR

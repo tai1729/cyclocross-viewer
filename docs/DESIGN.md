@@ -1169,3 +1169,54 @@ status categories.
   explicit active-result rider selection returns to the chart workspace.
 - Existing table semantics, DNF/lapped/missing values, URL/history, focus,
   44px controls, and horizontal-overflow protections remain intact.
+
+## UX2-5 final validation contract (resolved 2026-09-06)
+
+UX2-5 is a bounded release-readiness verification slice, not a new product
+design phase. The public alias `https://ajocc-laptime-viewer.vercel.app/` is
+the production acceptance target. A release-ready verdict requires the alias
+to serve the tested commit or an artifact-equivalent deployment, all AC1–AC21
+to pass, zero P0/P1 findings, required automated validation to pass, and
+independent usability and technical review to pass.
+
+The UX2-5 Task 1–7 definitions and AC1–AC21 in the task brief are the current
+acceptance source. Fresh use means a clean browser session with no prior app
+state. Existing UX2-4 disclosure resolution is authoritative: native
+`details` open/close retains focus on its summary and does not programmatically
+scroll to a heading. Durable URL state is restored by reload and history;
+transient disclosure, focus, scroll, hover, and tooltip state are local.
+
+Only P0/P1 regressions, accessibility/responsive/interaction failures, and
+small low-risk blocking fixes may be implemented in this slice. Larger
+improvements are backlog items for UX3. Exact viewport measurements that the
+connected browser cannot provide must be reported as limitations and must not
+be represented as invented evidence.
+
+### UX2-5 human-authorized recovery resolution (2026-09-06)
+
+The recovery is one bounded continuation of the existing UX2-5 task. The
+previous `revision_cycles=4` and `max_revision_cycles=3` remain unchanged and
+are preserved as failure history; an additive recovery-cycle record is used
+instead of resetting either value. The recovery may complete documentation,
+validation, one fresh technical review, commit/push, and the final production
+smoke only. The technical review happens before commit/push; the public
+post-push smoke is the separate AC21 artifact check. It may not start a new
+redesign or speculative P2 polish.
+
+The existing usability-first PASS may be reused because the product code is
+unchanged and the final public smoke revalidates the integrated behavior. A
+new technical reviewer PASS is still mandatory. AC8 remains PASS for the
+established keyboard/focus contract; the observed first-entry pointer focus
+handoff is explicitly a non-blocking P2 limitation and remains in the UX3
+backlog.
+
+AC21 requires all of the following to be recorded after the final commit:
+the commit SHA and matching `origin/main` SHA, the production deployment ID,
+URL, READY/production state, alias, deployment timestamp, and the required
+post-push public smoke covering home/race/category/rider/chart, metric and
+comparison changes, Results rider selection, Lap Detail open/close, a mobile
+smoke, and a representative deep link.
+
+Closeout is authorized on the current `main` branch by committing the
+intended UX2-5 documentation files and pushing `main` to `origin/main` using
+normal non-force Git operations.
