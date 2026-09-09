@@ -15,6 +15,7 @@ export type RoleAwareTooltipProps = TooltipContentProps<ValueType, NameType> & {
   formatValue: (value: number) => React.ReactNode;
   formatLabel?: (label: string | number) => React.ReactNode;
   riderLapMaps?: ReadonlyMap<string, TooltipLapMap>;
+  showContextDetails?: boolean;
 };
 
 export function formatLapTooltipLabel(label: string | number): string {
@@ -57,6 +58,7 @@ export function RoleAwareTooltip({
   formatValue,
   formatLabel,
   riderLapMaps,
+  showContextDetails = false,
 }: RoleAwareTooltipProps): React.ReactNode {
   if (!active || !payload?.length) {
     return null;
@@ -147,7 +149,22 @@ export function RoleAwareTooltip({
             </li>
           );
         })}
-        {contextMinimum !== null && contextMaximum !== null && contextStyle && (
+        {showContextDetails &&
+          contextEntries.map(({ id, name, style, value }) => (
+            <li key={id} className="flex min-w-0 items-start gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-1.5 size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: style.color }}
+              />
+              <span className="min-w-0 break-words">
+                <span className="font-medium">{style.roleLabel}</span>
+                <span className="text-muted-foreground">・{name}: </span>
+                <span>{formatValue(value)}</span>
+              </span>
+            </li>
+          ))}
+        {!showContextDetails && contextMinimum !== null && contextMaximum !== null && contextStyle && (
           <li className="flex min-w-0 items-start gap-2">
             <span
               aria-hidden="true"

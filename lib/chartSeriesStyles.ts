@@ -35,12 +35,23 @@ export const FIXED_RIDER_STYLE = {
 
 export const CONTEXT_RIDER_STYLE = {
   role: "context",
-  color: "#77736b",
-  opacity: 0.5,
+  color: "#555555",
+  opacity: 0.72,
   strokeWidth: 1.5,
   strokeDasharray: "5 4",
   roleLabel: "参考選手",
 } satisfies RiderSeriesStyle;
+
+export const CONTEXT_RIDER_COLORS = [
+  CONTEXT_RIDER_STYLE.color,
+  "#005a9c",
+  "#7a1f5b",
+  "#006b5c",
+  "#8a4b08",
+  "#4b3f8f",
+  "#8c1d18",
+  "#245a2a",
+] as const;
 
 export function buildRiderSeriesStyles(
   riders: Rider[],
@@ -67,6 +78,7 @@ export function buildRiderSeriesStyles(
 
   const fixedRiderIdSet = new Set(fixedRiderIds);
   const styles: Record<string, RiderSeriesStyle> = {};
+  let contextColorIndex = 0;
   for (const rider of riders) {
     const { riderId } = rider;
     if (riderId in styles) {
@@ -87,7 +99,11 @@ export function buildRiderSeriesStyles(
       continue;
     }
 
-    styles[riderId] = { ...CONTEXT_RIDER_STYLE };
+    styles[riderId] = {
+      ...CONTEXT_RIDER_STYLE,
+      color: CONTEXT_RIDER_COLORS[contextColorIndex % CONTEXT_RIDER_COLORS.length],
+    };
+    contextColorIndex += 1;
   }
 
   return styles;

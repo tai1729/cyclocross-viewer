@@ -1,5 +1,158 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
+## Current design - UX3-5 Limited Scope Implementation
+
+Status: COMPLETE — UX3-5 implementation recorded; external human field test remains blocked
+Active Change: UX3-5 MR-01 / MR-02 / MR-03 only
+
+### Goal
+
+Apply only the three UX3-4 `Fix Now` findings with the smallest safe changes:
+
+- MR-01: make comparison lines, names, and roles traceable when many riders
+  are shown;
+- MR-02: make `周回差` visibly mean single-lap time difference and distinguish
+  it from result-table `-1周` without changing any numeric semantics;
+- MR-03: keep the direction and sign meaning of every chart metric visible at
+  the point of use.
+
+The change must preserve POS-01 through POS-05: readable results, chart-first
+value, the meet/category/result path, metric switching, and comparison value.
+
+### Non-goals
+
+- No MR-04 through MR-12 implementation, no deferred-finding redesign, and no
+  new Human Field Test claim.
+- No change to URL/deep-link, browser history, category selection, rider
+  selection, comparison state, metric state, lap state, disclosure state, or
+  chart data/semantics.
+- No change to `DNF`, lap-down, `-1周`, cumulative gap, or single-lap delta
+  calculations and no upstream data-contract change.
+- No mobile redesign. Mobile checks are regression checks for the three direct
+  changes only.
+
+### Expected behavior
+
+- In crowded comparison mode (`isAllMode` or more than eight displayed riders),
+  the chart is followed by a wrapping, accessible series key containing every
+  unique `comparisonRiders` entry, including the primary rider, and its role.
+  Context lines receive deterministic categorical colors from the displayed
+  rider order while retaining a dashed, lower-emphasis style. For a bounded
+  crowded non-`all` view of at most twelve displayed riders, tooltips expose
+  individual context rider names and values; `all` mode and larger datasets
+  retain the existing aggregate context summary to avoid large-tooltip
+  overflow. The key remains the complete name-to-line reference.
+- The visible active-tab chart-reading guide states that `周回差` is
+  single-lap time difference and is not the result-table `-1周` status. It
+  also states that differences are relative to the selected rider and gives
+  positive/negative meaning.
+- The guide states that a smaller rank number is better and is drawn higher,
+  while a lower lap-time value is faster and is drawn lower. It keeps the
+  existing step/linear chart rendering. The lap-detail label uses a
+  clarifying single-lap-time name for the pace metric.
+
+### Architecture and data flow
+
+`ChartTabs` remains the composition boundary. `lib/chartSeriesStyles.ts`
+assigns deterministic styles from the already displayed rider order. A small
+series-key view is rendered by `ChartTabs`; `RoleAwareTooltip` receives an
+explicit crowded-mode flag to expose context entries. A pure
+`lib/chartReadingGuide.ts` owns the four explanatory strings so unit tests can
+assert the evidence-backed terminology and direction guarantees. Existing
+`dataTransform`, URL serialization, and `RaceViewer` interaction callbacks
+remain unchanged.
+
+```text
+displayed riders -> series style map -> chart lines / crowded series key / tooltip
+active metric -> reading guide -> visible chart explanation + accessible description
+```
+
+### Error and edge behavior
+
+- Empty rider lists, missing lap data, unavailable comparison data, loading,
+  error, and not-found states keep their existing branches and copy.
+- A series key wraps within its card at 390px and 320px-class widths; it must
+  not create page-level horizontal overflow. Long rider names may break.
+- Color remains supplemental: every key contains text role/name labels and the
+  tooltip contains text names. Keyboard focus, target size, and all existing
+  disclosure controls remain unchanged.
+- The style helper handles duplicate rider IDs using its existing first-entry
+  behavior and cycles deterministically if more context riders exist than the
+  palette. Palette assignment is intentionally based on the current displayed
+  order: it is stable across rerenders and metric tabs, while changing the
+  comparison set may reassign context colors.
+
+### Compatibility constraints
+
+Keep `/`, `/race/[meetId]`, upstream types, chart metric formulas, `stepAfter`
+rank rendering, `linear` time rendering, and existing test/runtime dependencies.
+Only the relevant chart components, pure style/guide helpers, tests, and the
+UX3-5 implementation report/design-plan/audit documents may change. Existing
+UX3-4 and review evidence files are preserved byte-for-byte.
+
+### Acceptance criteria
+
+1. MR-01: crowded comparison shows every unique displayed rider name and role
+   in a wrapping series key; context line colors are deterministic and distinct
+   until palette cycling; bounded non-`all` crowded tooltip entries include
+   rider names while large/`all` views retain the aggregate safety behavior.
+2. MR-02: visible guide and lap-detail label identify `周回差` as single-lap
+   time difference and explicitly distinguish result-table `-1周`; formulas
+   and displayed numeric values are unchanged.
+3. MR-03: the active-tab visible guide covers rank, cumulative gap, single-lap
+   difference, and lap-time direction/sign semantics relative to the selected
+   rider where applicable.
+4. POS-01–POS-05 are preserved, and no URL, state, disclosure, or error branch
+   regresses.
+5. Unit tests cover style assignment and the four guide strings. Full test,
+   typecheck, lint, build, `git diff --check`, and browser checks pass.
+
+### Validation commands
+
+- `npm test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- `git diff --check`
+- Browser verification at 1440×900, 1280×720, optional 1024×768, 390×844,
+  and 320px-class width, including reload and back/forward.
+
+### UX3-5 specification audit resolutions
+
+- `isAllMode || comparisonRiders.length > 8` is the crowded condition. The
+  series key lists the unique displayed `comparisonRiders` in their supplied
+  order exactly once, using the existing role labels `注目選手`, `固定比較`,
+  and `参考選手`. Gap/Pace charts still omit the primary plotted line; the
+  key includes it because it is the selected reference.
+- Context colors use a separate eight-color categorical palette with at least
+  the existing chart palette's intended chart-background contrast. Assignment
+  follows displayed order, is deterministic across rerenders and metric tabs,
+  and cycles only after the palette is exhausted. It is not a persistent rider
+  identity color contract across comparison-mode changes.
+- Crowded non-`all` tooltips show all valid context payload entries when there
+  are at most twelve displayed riders. `all` mode and larger datasets keep the
+  existing aggregate context range; no missing-value inference is added. The
+  complete static series key is the authoritative name-to-line mapping.
+- The four authoritative guide strings are tab-specific and active-tab
+  visible: rank says smaller numeric rank is better and visually higher; gap
+  says the selected rider is the zero reference and positive is slower/behind,
+  negative is faster/ahead; pace says the same and explicitly distinguishes
+  chart single-lap difference from result `-1周`; lap says smaller time is
+  faster and visually lower. No signed meaning is invented for rank/lap.
+- Browser acceptance checks use the existing production fixture when available
+  and require: no document-level horizontal overflow; the crowded key exists,
+  contains each displayed name and role once, wraps within the viewport, and
+  has no clipped item; all four tabs expose their guide; existing results,
+  selection, comparison, metric, lap, disclosure, reload, and back/forward
+  flows still work. Tooltip name inspection is manual/pointer-based and is
+  bounded to the non-`all` twelve-rider case.
+- POS-01 through POS-05 are verified through the existing automated behavior
+  tests plus the browser flow: result table unchanged; chart-first structure
+  and rank/lap value remain; meet/category/result navigation remains; four
+  metric tabs remain operable; comparison count/fixed selection remain
+  operable. Step/linear types, `connectNulls={false}`, sparse values, and
+  missing-lap behavior remain unchanged.
+
 Status: ACTIVE — UX3-1C specification resolved; implementation in progress
 Active Change: UX3-1C Feedback Intake
 

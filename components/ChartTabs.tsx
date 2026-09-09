@@ -3,7 +3,11 @@
 import { useMemo } from "react";
 import type { RaceResult, Rider } from "@/lib/types";
 import { getRaceLapNumbers } from "@/lib/dataTransform";
-import { buildRiderSeriesStyles } from "@/lib/chartSeriesStyles";
+import {
+  buildRiderSeriesStyles,
+  type RiderSeriesStyle,
+} from "@/lib/chartSeriesStyles";
+import { getChartReadingGuide } from "@/lib/chartReadingGuide";
 import type { ChartTab } from "@/lib/urlState";
 import { RankBumpChart } from "@/components/RankBumpChart";
 import { GapChart } from "@/components/GapChart";
@@ -19,35 +23,30 @@ const TABS: {
   key: TabKey;
   label: string;
   mobileLabel: string;
-  howToRead: string;
 }[] = [
   {
     key: "rank",
     label: "順位",
     mobileLabel: "順位",
-    howToRead: "周回ごとの順位の変化を線で表示。上にあるほど順位が良いです",
   },
   {
     key: "gap",
     label: "タイム差",
     mobileLabel: "差",
-    howToRead:
-      "累積タイム差（各周終了時点）。注目選手が±0の基準です。プラスは比較選手が遅れている（後ろ）、マイナスは先行している（速い）ことを示します",
   },
   {
     key: "pace",
     label: "周回差",
     mobileLabel: "周回",
-    howToRead:
-      "周回ごとのタイム差。注目選手が±0の基準です。プラスは比較選手が遅い（後ろ）、マイナスは速い（前）ことを示します",
   },
   {
     key: "lap",
     label: "ラップ",
     mobileLabel: "ラップ",
-    howToRead: "各選手の1周ごとのタイム推移。太い線が注目選手です",
   },
 ];
+
+const CHART_READING_GUIDE_ID = "chart-reading-guide";
 
 interface ChartTabsProps {
   race: RaceResult;
@@ -96,7 +95,7 @@ export function ChartTabs({
   const otherRiders = comparisonRiders.filter(
     (r) => r.riderId !== selfRider.riderId,
   );
-  const activeTabDef = TABS.find((t) => t.key === activeTab) ?? TABS[0];
+  const readingGuide = getChartReadingGuide(activeTab);
   const seriesStyles = buildRiderSeriesStyles(
     comparisonRiders,
     selfRider.riderId,
@@ -106,6 +105,8 @@ export function ChartTabs({
     comparisonRiders.map((rider) => [rider.riderId, rider.name]),
   );
   const isCrowded = isAllMode || comparisonRiders.length > 8;
+  const showContextDetails =
+    isCrowded && !isAllMode && comparisonRiders.length <= 12;
 
   return (
     <Card>
@@ -117,7 +118,11 @@ export function ChartTabs({
         className="contents"
       >
         <CardHeader>
-          <TabsList variant="line" className="w-full min-w-0">
+          <TabsList
+            variant="line"
+            className="w-full min-w-0"
+            aria-describedby={CHART_READING_GUIDE_ID}
+          >
             {TABS.map((tab) => (
               <TabsTrigger
                 key={tab.key}
@@ -134,8 +139,14 @@ export function ChartTabs({
           </TabsList>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">
-            {activeTabDef.howToRead}
+          <p
+            id={CHART_READING_GUIDE_ID}
+            className="text-sm text-muted-foreground"
+          >
+            <span className="font-medium text-foreground">
+              {readingGuide.label}
+            </span>{" "}
+            {readingGuide.text}
           </p>
 
           <TabsContent value="rank">
@@ -148,12 +159,19 @@ export function ChartTabs({
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
                 isCrowded={isCrowded}
+                showContextDetails={showContextDetails}
                 raceLapNumbers={raceLapNumbers}
                 activeLapNumber={activeLapNumber}
                 onLapHover={handleLapHover}
                 onLapSelect={handleLapSelect}
               />
             </figure>
+            {isCrowded && activeTab === "rank" && (
+              <ChartSeriesKey
+                riders={comparisonRiders}
+                seriesStyles={seriesStyles}
+              />
+            )}
             <ChartDetailPanel
               metricKind="rank"
               primaryRider={selfRider}
@@ -180,6 +198,7 @@ export function ChartTabs({
                   seriesStyles={seriesStyles}
                   riderNames={riderNames}
                   isCrowded={isCrowded}
+                  showContextDetails={showContextDetails}
                   raceLapNumbers={raceLapNumbers}
                   activeLapNumber={activeLapNumber}
                   onLapHover={handleLapHover}
@@ -188,6 +207,12 @@ export function ChartTabs({
               </figure>
             ) : (
               <NoComparisonRiders />
+            )}
+            {isCrowded && activeTab === "gap" && (
+              <ChartSeriesKey
+                riders={comparisonRiders}
+                seriesStyles={seriesStyles}
+              />
             )}
             <ChartDetailPanel
               metricKind="gap"
@@ -215,6 +240,7 @@ export function ChartTabs({
                   seriesStyles={seriesStyles}
                   riderNames={riderNames}
                   isCrowded={isCrowded}
+                  showContextDetails={showContextDetails}
                   raceLapNumbers={raceLapNumbers}
                   activeLapNumber={activeLapNumber}
                   onLapHover={handleLapHover}
@@ -223,6 +249,12 @@ export function ChartTabs({
               </figure>
             ) : (
               <NoComparisonRiders />
+            )}
+            {isCrowded && activeTab === "pace" && (
+              <ChartSeriesKey
+                riders={comparisonRiders}
+                seriesStyles={seriesStyles}
+              />
             )}
             <ChartDetailPanel
               metricKind="pace"
@@ -246,12 +278,19 @@ export function ChartTabs({
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
                 isCrowded={isCrowded}
+                showContextDetails={showContextDetails}
                 raceLapNumbers={raceLapNumbers}
                 activeLapNumber={activeLapNumber}
                 onLapHover={handleLapHover}
                 onLapSelect={handleLapSelect}
               />
             </figure>
+            {isCrowded && activeTab === "lap" && (
+              <ChartSeriesKey
+                riders={comparisonRiders}
+                seriesStyles={seriesStyles}
+              />
+            )}
             <ChartDetailPanel
               metricKind="lap"
               primaryRider={selfRider}
@@ -267,6 +306,51 @@ export function ChartTabs({
         </CardContent>
       </Tabs>
     </Card>
+  );
+}
+
+function ChartSeriesKey({
+  riders,
+  seriesStyles,
+}: {
+  riders: Rider[];
+  seriesStyles: Record<string, RiderSeriesStyle>;
+}) {
+  const uniqueRiders = riders.filter(
+    (rider, index, allRiders) =>
+      allRiders.findIndex((candidate) => candidate.riderId === rider.riderId) ===
+      index,
+  );
+
+  return (
+    <ul
+      data-chart-series-key
+      aria-label="比較チャートの線"
+      className="flex min-w-0 flex-wrap gap-x-3 gap-y-1 border-t border-border/60 pt-2 text-xs"
+    >
+      {uniqueRiders.map((rider) => {
+        const style = seriesStyles[rider.riderId];
+        return (
+          <li
+            key={rider.riderId}
+            className="flex min-w-0 max-w-full items-center gap-1.5"
+          >
+            <span
+              aria-hidden="true"
+              className="inline-block w-4 shrink-0"
+              style={{
+                borderTopColor: style.color,
+                borderTopStyle: style.strokeDasharray ? "dashed" : "solid",
+                borderTopWidth: Math.max(2, style.strokeWidth),
+              }}
+            />
+            <span className="min-w-0 break-words">
+              {style.roleLabel}・{rider.name}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

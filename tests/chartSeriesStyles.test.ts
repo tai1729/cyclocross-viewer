@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   buildRiderSeriesStyles,
+  CONTEXT_RIDER_COLORS,
   CONTEXT_RIDER_STYLE,
   FIXED_RIDER_COLORS,
   FIXED_RIDER_STYLE,
   PRIMARY_RIDER_STYLE,
 } from "../lib/chartSeriesStyles";
+import {
+  RoleAwareTooltip,
+  type RoleAwareTooltipProps,
+} from "../components/RoleAwareTooltip";
 import type { Rider } from "../lib/types";
 
 function rider(riderId: string, finalPosition: number): Rider {
@@ -79,4 +86,69 @@ test("does not create duplicate style keys for duplicate supplied riders", () =>
 
   assert.deepEqual(Object.keys(styles), ["primary", "fixed"]);
   assert.equal(Object.keys(styles).length, new Set(Object.keys(styles)).size);
+});
+
+test("assigns deterministic distinct context colors by displayed order and cycles", () => {
+  const contextRiders = Array.from({ length: CONTEXT_RIDER_COLORS.length + 1 }, (_, index) =>
+    rider(`context-${index}`, index + 2),
+  );
+  const riders = [rider("primary", 1), ...contextRiders, rider("context-0", 99)];
+
+  const first = buildRiderSeriesStyles(riders, "primary", []);
+  const second = buildRiderSeriesStyles(riders, "primary", []);
+
+  assert.equal(CONTEXT_RIDER_COLORS.length, 8);
+  assert.equal(new Set(CONTEXT_RIDER_COLORS).size, CONTEXT_RIDER_COLORS.length);
+  for (const [index, contextRider] of contextRiders.entries()) {
+    assert.equal(
+      first[contextRider.riderId].color,
+      CONTEXT_RIDER_COLORS[index % CONTEXT_RIDER_COLORS.length],
+    );
+    assert.equal(first[contextRider.riderId].color, second[contextRider.riderId].color);
+  }
+  assert.deepEqual(first["context-0"], {
+    ...CONTEXT_RIDER_STYLE,
+    color: CONTEXT_RIDER_COLORS[0],
+  });
+  assert.equal(first["context-0"].color, CONTEXT_RIDER_COLORS[0]);
+});
+
+test("tooltip keeps aggregate context summary by default and exposes valid details when enabled", () => {
+  const seriesStyles = {
+    primary: PRIMARY_RIDER_STYLE,
+    contextA: CONTEXT_RIDER_STYLE,
+    contextB: { ...CONTEXT_RIDER_STYLE, color: CONTEXT_RIDER_COLORS[1] },
+  };
+  const baseProps = {
+    active: true,
+    label: 2,
+    payload: [
+      { dataKey: "primary", value: 0, graphicalItemId: "primary" },
+      { dataKey: "contextA", value: 10, graphicalItemId: "contextA" },
+      { dataKey: "contextB", value: 20, graphicalItemId: "contextB" },
+      { dataKey: "contextB", value: Number.NaN, graphicalItemId: "contextB" },
+    ],
+    coordinate: undefined,
+    accessibilityLayer: false,
+    activeIndex: undefined,
+    seriesStyles,
+    riderNames: { primary: "Primary", contextA: "Rider A", contextB: "Rider B" },
+    formatValue: (value: number) => `value:${value}`,
+  } satisfies RoleAwareTooltipProps;
+
+  const aggregateMarkup = renderToStaticMarkup(
+    createElement(RoleAwareTooltip, baseProps),
+  );
+  const detailMarkup = renderToStaticMarkup(
+    createElement(RoleAwareTooltip, { ...baseProps, showContextDetails: true }),
+  );
+
+  assert.match(aggregateMarkup, /value:10/);
+  assert.match(aggregateMarkup, /value:20/);
+  assert.doesNotMatch(aggregateMarkup, /Rider A|Rider B/);
+  assert.match(detailMarkup, /Rider A/);
+  assert.match(detailMarkup, /Rider B/);
+  assert.match(detailMarkup, /value:10/);
+  assert.match(detailMarkup, /value:20/);
+  assert.doesNotMatch(detailMarkup, /NaN/);
 });

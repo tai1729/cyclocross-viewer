@@ -25,7 +25,7 @@ interface ChartDetailPanelProps {
 const METRIC_LABELS: Record<ChartDetailMetricKind, string> = {
   rank: "順位",
   gap: "タイム差",
-  pace: "周回差",
+  pace: "周回差（単周タイム差）",
   lap: "ラップタイム",
 };
 

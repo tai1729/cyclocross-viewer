@@ -1,4 +1,88 @@
-# UX3-1C active implementation plan
+# UX3-5 active implementation plan
+
+Status: COMPLETE — bounded MR-01 / MR-02 / MR-03 implementation recorded
+
+## Task graph
+
+### UX3-5-SPEC — Evidence-backed design and specification audit
+
+- Status: DONE
+- Objective: record the UX3-4 source-of-truth findings, exact boundaries,
+  acceptance criteria, and verification plan before code changes.
+- Files: `docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`,
+  `docs/SPEC_AUDIT.md`.
+- Do-not-change: product code, source review evidence, unrelated user changes.
+- Acceptance: two independent specification audits complete; every legitimate
+  ambiguity is resolved in the project documents; `docs/SPEC_AUDIT.md` ends
+  exactly with `STATUS: CLEAR`.
+- Verification: document review and `git diff --check`.
+
+### UX3-5-CHART-STYLES — MR-01 series identification
+
+- Status: DONE
+- Objective: give context series deterministic categorical colors while
+  preserving primary/fixed roles and add crowded-mode name/value exposure.
+- Files: `lib/chartSeriesStyles.ts`, `components/RoleAwareTooltip.tsx`,
+  `components/ChartTabs.tsx`, `tests/chartSeriesStyles.test.ts`.
+- Dependencies: UX3-5-SPEC.
+- Do-not-change: rider ordering, comparison limits, data transforms, URL state,
+  chart formulas, or selection callbacks.
+- Acceptance: every unique displayed rider is text-identifiable once in the
+  crowded key; bounded non-`all` crowded tooltips expose valid context names;
+  `all`/large datasets retain aggregate tooltip safety; context colors are
+  deterministic by displayed order; the key wraps on mobile.
+- Verification: targeted style tests plus full test/typecheck/lint/build.
+
+### UX3-5-READING-GUIDE — MR-02/MR-03 terminology and direction
+
+- Status: DONE
+- Objective: centralize and expose the four metric explanations, including the
+  `周回差`/`-1周` distinction and direction/sign semantics.
+- Files: `lib/chartReadingGuide.ts`, `components/ChartTabs.tsx`,
+  `components/ChartDetailPanel.tsx`, `tests/chartReadingGuide.test.ts`.
+- Dependencies: UX3-5-SPEC.
+- Do-not-change: numeric calculations, chart axes, step/linear rendering,
+  metric URL keys, and lap selection behavior.
+- Acceptance: active-tab guides state rank/lap direction and selected-rider
+  difference signs; pace explicitly says single-lap time difference and
+  distinguishes result `-1周`.
+- Verification: guide unit tests plus browser text/interaction checks.
+
+### UX3-5-REPORT — Implementation and regression record
+
+- Status: DONE
+- Objective: create `docs/user-testing/ux3-5-limited-scope-implementation.md`
+  with MR-01–03 acceptance results, POS-01–05 protection, browser results,
+  automated checks, deferred findings, and remaining Human status.
+- Files: report only.
+- Dependencies: UX3-5-CHART-STYLES, UX3-5-READING-GUIDE, verification.
+- Do-not-change: UX3-4 report and all source review files.
+- Acceptance: report records no external Human completion and no scope creep.
+- Verification: Markdown structure, links, and `git diff --check`.
+
+### UX3-5-VERIFY — Full validation, browser review, commit, and push
+
+- Status: DONE — automated validation, browser review, and independent review passed
+- Objective: run all repository checks, browser verification at requested
+  sizes/flows, independent reviewer, then commit and push only UX3-5 changes.
+- Dependencies: UX3-5-REPORT.
+- Do-not-change: unrelated existing user changes and UX3-4 evidence.
+- Acceptance: tests, typecheck, lint, build, browser verification, and reviewer
+  PASS; commit message `feat(ux): implement UX3-5 prioritized review fixes`.
+- Verification: commands in `docs/DESIGN.md` and browser evidence in report.
+
+## UX3-5 dependency order
+
+```text
+UX3-5-SPEC
+  -> UX3-5-CHART-STYLES + UX3-5-READING-GUIDE
+  -> UX3-5-REPORT
+  -> UX3-5-VERIFY -> reviewer -> commit/push
+```
+
+---
+
+# UX3-1C historical implementation plan
 
 Status: COMPLETE — code implemented; production provider configuration required
 

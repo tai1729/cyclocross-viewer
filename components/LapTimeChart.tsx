@@ -26,6 +26,7 @@ interface LapTimeChartProps {
   seriesStyles: Record<string, RiderSeriesStyle>;
   riderNames: Record<string, string>;
   isCrowded: boolean;
+  showContextDetails?: boolean;
   /** レース全体の有効チェックポイントにある周回番号の和集合。 */
   raceLapNumbers: readonly number[];
   activeLapNumber?: number | null;
@@ -38,6 +39,7 @@ export function LapTimeChart({
   seriesStyles,
   riderNames,
   isCrowded,
+  showContextDetails = false,
   raceLapNumbers,
   activeLapNumber = null,
   onLapHover,
@@ -104,6 +106,7 @@ export function LapTimeChart({
                 {...props}
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
+                showContextDetails={showContextDetails}
                 formatLabel={formatLapTooltipLabel}
                 formatValue={formatSecToClock}
               />

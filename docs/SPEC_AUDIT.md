@@ -1,5 +1,77 @@
 # Specification Audit
 
+## UX3-5 specification audit — in progress
+
+Current Change: UX3-5 Limited Scope Implementation
+
+This audit covers only the UX3-5 implementation of MR-01, MR-02, and MR-03
+from `docs/user-testing/ux3-4-multi-reviewer-synthesis.md`. It must verify the
+exact source evidence, intended UI boundary, semantic-preservation rules,
+responsive constraints, regression protection for POS-01 through POS-05, and
+the automated/browser validation gate before implementation begins.
+
+Required audit questions:
+
+1. Does the MR-01 series-key/color/tooltip approach improve line-name mapping
+   without changing rider ordering, comparison mode, or chart data?
+2. Does the MR-02 copy clearly distinguish chart `周回差` (single-lap time
+   difference) from result-table `-1周` without changing calculations or
+   official semantics?
+3. Does the MR-03 guide state the correct direction/sign for rank, cumulative
+   gap, single-lap difference, and lap time without changing step/linear chart
+   rendering?
+4. Are the proposed changes limited to MR-01–03, and are MR-04–12 explicitly
+   deferred?
+5. Are 320px-class/390px mobile checks regression-only, with no claim that
+   Mobile human/synthetic triangulation is complete?
+6. Do tests and browser checks cover POS-01–POS-05, URL state, disclosures,
+   rider selection, comparison, metrics, lap selection, reload, and
+   back/forward without requiring a new dependency or new review participant?
+
+Audit status: IN PROGRESS
+
+## UX3-5 specification audit — resolutions
+
+The two independent auditors raised ambiguities about color assignment,
+crowded-mode scope, tooltip size, exact Japanese copy, sign reference, POS
+coverage, and browser pass conditions. The Commander resolves them as follows:
+
+1. Crowded means the existing code condition `isAllMode ||
+   comparisonRiders.length > 8`. The series key lists unique displayed
+   `comparisonRiders` exactly once in supplied order, including the primary,
+   with the existing role labels `注目選手`, `固定比較`, and `参考選手`.
+2. Context colors use a separate eight-color categorical palette and are
+   assigned by current displayed order. This is deterministic across rerenders
+   and metric tabs, cycles after palette exhaustion, and is not a persistent
+   rider-identity color contract when the comparison set changes.
+3. Gap/Pace retain the primary as the zero reference but do not add a primary
+   numeric payload. The static key includes the primary; tooltips list only
+   valid numeric payload entries. Crowded non-`all` tooltips show individual
+   context names for at most twelve displayed riders. `all` and larger views
+   retain aggregate context ranges to prevent large-data tooltip overflow.
+4. The guide is active-tab-specific and always visible in the chart card. Rank
+   uses smaller numeric rank = better and visually higher; gap and pace are
+   relative to the selected rider, with positive = comparison rider slower/
+   behind and negative = faster/ahead; pace explicitly says single-lap time
+   difference and distinguishes result `-1周`; lap uses smaller time = faster
+   and visually lower. No signed semantics are added to absolute metrics.
+5. Browser checks require no document horizontal overflow, a complete and
+   unclipped wrapping key with one name/role per displayed rider, all four
+   guide strings, and preservation of existing result/selection/comparison/
+   metric/lap/disclosure/reload/back-forward behavior. Tooltip name inspection
+   is bounded to the non-`all` twelve-rider case. Exact mobile checks are run
+   when the browser tool supports the requested viewport; any tooling limit is
+   recorded without claiming Mobile triangulation is complete.
+6. POS-01–POS-05 are protected by the existing automated behavior tests and
+   browser flow, plus explicit source checks that preserve `stepAfter`,
+   `linear`, `connectNulls={false}`, sparse values, URL keys, and disclosure
+   branches. No new dependency, participant, review, or deferred finding is
+   introduced.
+
+Audit status: RESOLVED
+
+STATUS: CLEAR
+
 Current Change: None (last closed change: Phase 2 Slice 8 — data provenance and freshness metadata)
 
 ## Last audit - Phase 2 Slice 8

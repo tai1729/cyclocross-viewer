@@ -32,6 +32,7 @@ interface PaceChartProps {
   seriesStyles: Record<string, RiderSeriesStyle>;
   riderNames: Record<string, string>;
   isCrowded: boolean;
+  showContextDetails?: boolean;
   raceLapNumbers: readonly number[];
   activeLapNumber?: number | null;
   onLapHover?: (lapNumber: number) => void;
@@ -45,6 +46,7 @@ export function PaceChart({
   seriesStyles,
   riderNames,
   isCrowded,
+  showContextDetails = false,
   raceLapNumbers,
   activeLapNumber = null,
   onLapHover,
@@ -124,6 +126,7 @@ export function PaceChart({
                 seriesStyles={seriesStyles}
                 riderNames={riderNames}
                 riderLapMaps={riderLapMaps}
+                showContextDetails={showContextDetails}
                 formatLabel={formatLapTooltipLabel}
                 formatValue={formatGapSec}
               />
