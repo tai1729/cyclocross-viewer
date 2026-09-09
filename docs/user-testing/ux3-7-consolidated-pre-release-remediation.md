@@ -13,8 +13,9 @@ The release candidate passes 125 automated tests, typecheck, lint, build, and
 diff validation. The bounded marker revision now gives fixed riders four and
 numeric context riders ten independently unique dash/marker assignments; the
 same SVG marker contract is rendered in the shared key and all four chart
-series, including crowded mode. The independent final review is still pending
-at this report checkpoint; no S0 or release-blocking S1 finding is known.
+series, including crowded mode. The independent final review returned PASS;
+the candidate was committed, pushed, deployed, and smoke-tested in
+Production. No S0 or release-blocking S1 finding remains.
 External Human pre-release validation was not executed because participants
 were unavailable; that fact remains an evidence limitation and is not a
 release gate.
@@ -399,19 +400,28 @@ Post-remediation remaining finding counts:
 | S3 | 4 | Exact mobile evidence gap, MR-08, MR-09, MR-12; all have specific bounded reasons. |
 | S4 | 0 | None tracked as a remaining finding. |
 
-Release gate: pending final independent reviewer result. S0 and S1 are zero;
-the former S2 marker issue is remediated and covered by focused tests.
+Release gate: PASS. S0 and S1 are zero; the former S2 marker issue is
+remediated, directly tested, and independently reviewed.
 
 ## 18. Production Release
 
-Pre-push release candidate status: READY FOR FINAL REVIEW. No commit/push or
-deployment smoke was performed for UX3-7 at this report checkpoint. The
-intended production URL is
+Production release status: RELEASED. Commit `30ee798a2dbc82f828fc0f28837c9663ee9bbd39`
+was pushed to `origin/main`; the intended production URL is
 `https://ajocc-laptime-viewer.vercel.app/`.
 
 The repository has `origin/main` configured. No deployment configuration was
 changed in UX3-7; production promotion is expected to follow the repository's
 normal main-push workflow.
+
+Vercel reports deployment `dpl_HJB4ASjKa2Ykb7PDJq61xdFwawW2` as `READY`,
+target `production`, with the same commit SHA, and the alias
+`ajocc-laptime-viewer.vercel.app` mapped to it. Production smoke covered page
+load, race/results, explicit rider deep link, metric switching, comparison
+add/remove, lap detail and Results disclosures, URL state, and reload. The
+fresh no-query first-rider behavior was also confirmed on the deployment URL;
+the connected browser's cached alias session opened the browse state until an
+explicit rider deep link was used, so that cache variance is recorded rather
+than treated as completed fresh-entry evidence on the alias.
 
 The pre-existing user-owned modification in
 `docs/feedback/feedback-production-activation-report.md` and the pre-existing
@@ -432,15 +442,14 @@ real reports and regressions over additional unbounded synthetic review.
 
 ## 20. Final Verdict
 
-Current verdict pending final reviewer, commit/push, and production smoke:
+Final verdict:
 
 ```text
 UX3-7:
-PRE-RELEASE REMEDIATION PASS — RELEASE PENDING
+RELEASED — POST-RELEASE HUMAN VALIDATION CONTINUES
 ```
 
-Reason: the former S2 chart-marker issue is implemented and automated/browser
-validation is green. Final independent review and the required commit/push/
-production smoke remain before the released verdict is recorded. External
-Human participant availability is not a blocker, and Human validation is not
-claimed complete.
+Reason: the former S2 chart-marker issue is implemented, automated/browser
+validation is green, reviewer returned PASS, and the pushed Production
+deployment is READY. External Human participant availability is not a blocker,
+and Human validation is not claimed complete.
