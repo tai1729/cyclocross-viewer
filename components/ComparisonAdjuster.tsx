@@ -27,7 +27,7 @@ const OPTIONS: { mode: ComparisonMode; label: string }[] = [
   { mode: 3, label: "±3" },
   { mode: 4, label: "±4" },
   { mode: 5, label: "±5" },
-  { mode: "pinned", label: "固定" },
+  { mode: "pinned", label: "固定比較" },
   { mode: "all", label: "全員" },
 ];
 
@@ -43,7 +43,7 @@ export function ComparisonAdjuster({
 
   return (
     <Field className="items-start">
-      <FieldTitle>比較対象</FieldTitle>
+      <FieldTitle>比較する選手</FieldTitle>
       <div className="w-full">
         <ToggleGroup
           value={[String(mode)]}
@@ -72,7 +72,7 @@ export function ComparisonAdjuster({
                   ? `全員比較は${MAX_ALL_COMPARISON_RIDERS}名以下のカテゴリーで利用できます`
                   : "カテゴリー内の全員を比較"
                 : opt.mode === "pinned"
-                ? `固定した選手を比較（固定選手は最大${MAX_PINNED_FIXED_RIDERS}名）`
+                ? `固定比較を選ぶ（最大${MAX_PINNED_FIXED_RIDERS}名）`
                 : `最終順位の前後${opt.mode}位以内を比較`
             }
             className={cn(
@@ -87,14 +87,14 @@ export function ComparisonAdjuster({
       </div>
       <FieldDescription id="comparison-description">
         {allDisabled && mode !== "pinned"
-          ? `比較可能な選手が${totalRiderCount}名いるため、全員比較は利用できません。±5または固定で比較してください（現在${displayedCount}名）。`
+          ? `比較可能な選手が${totalRiderCount}名いるため、全員比較は利用できません。±5または固定比較で選んでください（現在${displayedCount}名）。`
           : mode === "all"
           ? `カテゴリー内の全員・現在${displayedCount}名`
           : mode === "pinned"
-          ? pinnedCount === undefined
-            ? `固定した選手を比較（固定選手は最大${MAX_PINNED_FIXED_RIDERS}名）・現在${displayedCount}名`
-            : `固定した選手${pinnedCount}名を比較（最大${MAX_PINNED_FIXED_RIDERS}名）・現在${displayedCount}名`
-          : `注目選手の最終順位から前後${mode}位以内・現在${displayedCount}名`}
+            ? pinnedCount === undefined
+            ? `固定比較（最大${MAX_PINNED_FIXED_RIDERS}名）・現在${displayedCount}名`
+            : `固定比較${pinnedCount}名・現在${displayedCount}名`
+          : `注目選手の最終順位から前後${mode}位以内を比較・現在${displayedCount}名`}
       </FieldDescription>
     </Field>
   );

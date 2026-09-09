@@ -20,6 +20,11 @@ import {
   getRiderSummary,
   getValidCheckpoints,
 } from "@/lib/dataTransform";
+import {
+  canAutoSelectDefaultRider,
+  getFirstGraphableRider,
+  type DefaultRiderProvenance,
+} from "@/lib/raceDefaultAnalysis";
 import type { MeetEntry } from "@/lib/types";
 import {
   normalizeRaceUrlState,
@@ -215,6 +220,10 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const isProgrammaticNavigationRef = useRef(false);
   const isCanonicalizationRef = useRef(false);
   const pendingCanonicalQueryRef = useRef<string | null>(null);
+  const defaultRiderSourceQueryRef = useRef<string | null>(null);
+  const defaultRiderProvenanceRef = useRef<DefaultRiderProvenance>(
+    searchParams.has("rider") ? "explicit" : "fresh",
+  );
   const previousNavigationRef = useRef({
     categoryId: resolvedCategoryId,
     queryString,
@@ -307,6 +316,38 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       );
     }
   }, [meet, normalizedUrlState, pathname, queryString, race, router, urlState]);
+
+  useEffect(() => {
+    if (searchParams.has("rider")) {
+      defaultRiderProvenanceRef.current = "explicit";
+      defaultRiderSourceQueryRef.current = null;
+      return;
+    }
+    if (!canAutoSelectDefaultRider(defaultRiderProvenanceRef.current)) return;
+    if (!normalizedUrlState || !race) return;
+
+    const context = getReturnContext(urlState, meet);
+    const canonicalQuery = serializeRaceUrlState({
+      ...normalizedUrlState,
+      season: context.season,
+      series: context.series,
+    });
+    if (canonicalQuery !== queryString) return;
+
+    const defaultRider = getFirstGraphableRider(race.riders);
+    if (!defaultRider) return;
+
+    const nextQuery = updateRaceUrlQuery(searchParams, { rider: defaultRider.riderId });
+    if (nextQuery === queryString || defaultRiderSourceQueryRef.current === queryString) return;
+
+    defaultRiderSourceQueryRef.current = queryString;
+    isCanonicalizationRef.current = true;
+    pendingCanonicalQueryRef.current = nextQuery;
+    void router.replace(
+      nextQuery ? `${pathname}?${nextQuery}` : pathname,
+      { scroll: false },
+    );
+  }, [meet, normalizedUrlState, pathname, queryString, race, router, searchParams, urlState]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -405,7 +446,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     wasAnalyzingRef.current = isAnalyzing;
   }, [error, isLoading, race, selfRiderId]);
 
-  function pushRaceUrl(patch: UrlStatePatch, action: RaceNavigationAction) {
+  function pushRaceUrl(patch: UrlStatePatch, action: RaceNavigationAction): boolean {
     const context = getReturnContext(urlState, meet);
     const currentQuery = searchParams.toString();
     const nextQuery = updateRaceUrlQuery(searchParams, {
@@ -413,13 +454,14 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       season: context.season,
       series: context.series,
     });
-    if (nextQuery === currentQuery) return;
+    if (nextQuery === currentQuery) return false;
     setHoverState(null);
     isProgrammaticNavigationRef.current = true;
     void router.push(
       nextQuery ? `${pathname}?${nextQuery}` : pathname,
       getRaceNavigationOptions(action, selfRiderId !== null),
     );
+    return true;
   }
 
   function selectPrimaryRider(riderId: string) {
@@ -454,7 +496,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   function changeCategory(value: string) {
     const nextCategoryId = resolveCategoryId(categories, value);
     if (!nextCategoryId) return;
-    pushRaceUrl({
+    const didNavigate = pushRaceUrl({
       category: nextCategoryId === categories[0]?.raceId ? "" : nextCategoryId,
       rider: "",
       compare: 2,
@@ -462,6 +504,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       tab: "rank",
       lap: null,
     }, "category");
+    if (didNavigate) defaultRiderProvenanceRef.current = "category-reset";
   }
 
   function changeComparisonMode(mode: ComparisonMode) {
@@ -547,6 +590,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const fixedRiders = comparisonMode === "pinned"
     ? comparisonRiders.filter((rider) => rider.riderId !== selfRider?.riderId)
     : [];
+  const comparisonNames = comparisonRiders
+    .filter((rider) => rider.riderId !== selfRiderId)
+    .map((rider) => rider.name);
   const riderResult = selfRider
     ? getRiderResult(race, selfRider.riderId)
     : null;
@@ -649,7 +695,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           </>
         )
       ) : (
-        <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
+        <Alert><AlertTitle>注目選手を選択してください</AlertTitle><AlertDescription>注目選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
       )}
     </div>
   );
@@ -699,7 +745,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           {analysisLapDetail}
         </>
       ) : (
-        <Alert><AlertTitle>選手を選択してください</AlertTitle><AlertDescription>選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
+        <Alert><AlertTitle>注目選手を選択してください</AlertTitle><AlertDescription>注目選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
       )}
     </div>
   );
@@ -787,6 +833,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
                 riderStatus={getAnalysisRiderStatus(selfRider, riderResult)}
                 comparisonMode={getAnalysisComparisonLabel(comparisonMode)}
                 displayedCount={comparisonRiders.length}
+                comparisonNames={comparisonNames}
                 activeMetric={getAnalysisMetricLabel(currentViewState.activeTab)}
                 presentation={resultsPresentation === "mobile-disclosure" ? "mobile" : "desktop"}
               />

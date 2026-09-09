@@ -37,8 +37,8 @@ test("mobile comparison uses a native closed disclosure with visible mode and co
   const html = renderDisclosure();
 
   assert.match(html, /<details[^>]*data-mobile-comparison-disclosure/);
-  assert.match(html, /<summary[^>]*>.*比較対象.*±2・現在5名.*<\/summary>/);
-  assert.doesNotMatch(html, /固定する選手を検索/);
+  assert.match(html, /<summary[^>]*>.*比較する選手.*±2・現在5名.*<\/summary>/);
+  assert.doesNotMatch(html, /比較する選手を追加/);
 });
 
 test("mobile comparison renders the pinned picker in its bounded panel", () => {
@@ -50,5 +50,5 @@ test("mobile comparison renders the pinned picker in its bounded panel", () => {
 
   assert.match(html, /overscroll-contain/);
   assert.match(html, /max-h-\[min\(70dvh,32rem\)\]/);
-  assert.match(html, /固定する選手を検索/);
+  assert.match(html, /比較する選手を追加/);
 });

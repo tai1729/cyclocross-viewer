@@ -166,7 +166,7 @@ export function ChartDetailPanel({
               role="status"
               className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground"
             >
-              比較対象なし
+              比較する選手なし
             </p>
           ) : (
             <div

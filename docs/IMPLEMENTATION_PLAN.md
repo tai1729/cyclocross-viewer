@@ -940,3 +940,62 @@ an assertion.
 ```text
 UX2-1 -> UX2-2 -> UX2-3 -> UX2-4 -> UX2-5
 ```
+
+## UX3-7 — Consolidated pre-release remediation
+
+Status: IN PROGRESS. This plan supersedes the historical UX3-6 recommendation
+to wait for External Human evidence. Participants remain zero and the fact is
+recorded, but it is not a release blocker.
+
+### Task graph
+
+1. **UX3-7-S — specification audit and resolution** — DONE. Read the
+   P-A-01 source, Astra/Sol/Terra source records, UX3-4/5/6 reports, and the
+   current UI. Two independent `spec_auditor` agents must identify only
+   implementation-significant ambiguity. Resolve all legitimate questions in
+   `docs/DESIGN.md`, this plan, and `docs/SPEC_AUDIT.md`.
+2. **UX3-7-A — analysis entry and control affordance** — DONE. Own
+   `components/RaceViewer.tsx`, `components/AnalysisContextBar.tsx`,
+   `components/RiderSelector.tsx`, `components/ComparisonAdjuster.tsx`,
+   `components/ComparisonRiderPicker.tsx`, and their focused tests. Add the
+   first graphable rider URL-replace default only when the raw URL lacks a
+   `rider` key; sort by displayed final position and require valid graph data.
+   Preserve explicit stale/non-graphable rider behavior, unknown query keys,
+   history, focus, comparison limits, and metric semantics. Add named controls
+   and compact comparison names without duplicating controls.
+3. **UX3-7-B — chart identity and visibility** — DONE. Own
+   `components/ChartTabs.tsx`, `RankBumpChart.tsx`, `GapChart.tsx`,
+   `PaceChart.tsx`, `LapTimeChart.tsx`, `ChartDetailPanel.tsx`, and chart
+   tests. Replace duplicate built-in legends with the shared accessible key,
+   clarify selected-lap action/result copy, remove duplicate built-in legends,
+   and set chart frames to `h-72 sm:h-[22rem] lg:h-[30rem]`. Do not alter
+   chart data, metrics, tooltip semantics, or transforms.
+   The shared series-style contract must also provide four distinct fixed and
+   ten distinct numeric-context dash/marker assignments, and all four chart
+   components must render the assigned marker shape in their dots. The primary
+   rider keeps its dedicated solid circle style and does not consume fixed or
+   context assignment capacity; fixed styles follow active-ID order and context
+   styles follow displayed rider order after role classification.
+4. **UX3-7-C — integration tests and report** — DONE. Own new or
+   updated focused tests and `docs/user-testing/ux3-7-consolidated-pre-release-remediation.md`.
+   Include the full decision matrix, source traceability, validation evidence,
+   remaining severity counts, production smoke, and post-release human plan.
+5. **UX3-7-V — required validation and browser verification** — IN PROGRESS.
+   Run tests, typecheck, lint, build, diff check, local browser flow,
+   responsive approximations/exact viewports where available, and
+   accessibility checks. Start the independent `reviewer` only after all pass.
+6. **UX3-7-R — bounded revision** — BLOCKED by reviewer. Convert each valid
+   reviewer finding into a bounded implementer task, revalidate, and review
+   again, with at most three cycles.
+7. **UX3-7-P — commit, push, and production smoke** — BLOCKED by PASS. Stage
+   only intended UX3-7 changes, commit normal history, push the configured
+   upstream, verify the production deployment and smoke test, then mark the
+   loop `DONE`.
+
+### Boundaries and commands
+
+No task may edit data contracts, collector behavior, production credentials,
+deployment configuration, unrelated user changes, or historical UX3 source
+files. The required commands are `npm test`, `npx tsc --noEmit`,
+`npm run lint`, `npm run build`, and `git diff --check`; browser verification
+uses the local dev server and the production alias when reachable.

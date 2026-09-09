@@ -70,6 +70,79 @@ coverage, and browser pass conditions. The Commander resolves them as follows:
 
 Audit status: RESOLVED
 
+## UX3-7 consolidated remediation audit (2026-09-09)
+
+The current phase is authorized to change product code. The authoritative
+evidence files are:
+
+- `docs/user-testing/ux3-2-participant-post-test-qa-P-A-01.md`
+- `docs/user-testing/ux3-2-synthetic-astra-profile-c-01.md`
+- `docs/user-testing/ux3-2-synthetic-sol-profile-c-01.md`
+- `docs/user-testing/ux3-2-synthetic-terra-profile-c-01.md`
+- `docs/user-testing/ux3-4-multi-reviewer-synthesis.md`
+- `docs/user-testing/ux3-5-limited-scope-implementation.md`
+- `docs/user-testing/ux3-6-post-implementation-regression-review.md`
+
+Two independent specification auditors must check the following before code
+implementation starts:
+
+1. Whether auto-selecting the first graphable result rider on a race URL with
+   no rider query is compatible with the existing URL/history contract and
+   category reset behavior.
+2. Whether the chart key, context summary, rider controls, and selected-lap
+   copy solve the corroborated identity/discoverability findings without
+   duplicating information or reducing 320px/390px usability.
+3. Whether chart height and order changes preserve the chart-first acceptance
+   targets, disclosure semantics, keyboard focus, sparse data, DNF/lapped
+   meaning, and POS/MR regression protections.
+4. Whether each MR-04–MR-12 decision is based on evidence or a concrete
+   technical/UX reason, with no “wait for External Human” reason used as the
+   sole implementation blocker.
+5. Whether the report can truthfully distinguish Owner Human evidence,
+   synthetic evidence, automated/browser evidence, and post-release human
+   validation without claiming Human validation complete.
+
+### Resolved decisions
+
+- The default rider is selected only after race data and normalized category
+  state load when the raw query has no `rider` key. The first candidate is the
+  existing displayed result order (numeric `finalPosition`, stable ties), with
+  `dataQuality === "ok"` and at least one valid checkpoint. DNF/lapped riders
+  are eligible when graphable. `updateRaceUrlQuery` and
+  `router.replace({ scroll: false })` preserve all query keys and history; no
+  focus transfer is introduced. Explicit valid, stale, and non-graphable
+  rider queries remain under existing normalization/unavailable behavior.
+- The shared chart key is rendered once for every active metric and replaces
+  duplicate Recharts legends. It contains role/name text and deterministic
+  per-rider line-style/weight markers, so color is supplementary. The chart
+  series dots consume the same marker contract as the key. “Distinct” means
+  independently unique dash patterns and marker shapes within each role, not
+  merely unique pairs. Fixed styles provide four assignments in first-seen
+  active fixed-rider order; numeric context styles provide ten assignments in
+  displayed rider order after primary/fixed classification. These cover the
+  existing comparison limits without cycling; the current all-mode limit remains
+  unchanged. Normal and active dots, including crowded mode, render the
+  assigned marker, with a smaller context marker in crowded mode. The key uses
+  the same mapping and dash values and an SVG marker glyph. The primary rider
+  keeps its dedicated solid circle style and does not consume fixed or context
+  assignment capacity.
+- The context summary shows “注目選手”, comparison mode/count, and comparison
+  names (all pinned names, or up to four names plus `ほかN名`). Existing
+  selection, fixed-rider, all-mode, and 44px target mechanics remain.
+- The selected-lap copy is placed immediately before the existing detail panel:
+  `グラフの点をクリックするか、周回セレクターで周回を固定すると、各選手の値を確認できます。ホバーは一時表示です。`
+  Measured rows, URL state, hover behavior, and difference semantics are not
+  changed.
+- The bounded chart frame is `h-72 sm:h-[22rem] lg:h-[30rem]` for all four
+  charts and the no-comparison frame. It improves P-A-01 visibility without
+  fixed widths, sticky layers, or a broad layout rewrite.
+- MR-08, MR-09, MR-11, and MR-12 remain deferred for respectively conflicting
+  history evidence/contract risk, uncorroborated feature scope, non-defect
+  evidence gap, and sticky/navigation regression risk. MR-10 is merged into
+  the existing MR-02 explanation and does not change definitions.
+- External Human pre-release validation is recorded as not executed and is not
+  a release gate. Post-release human observation is required.
+
 STATUS: CLEAR
 
 Current Change: None (last closed change: Phase 2 Slice 8 — data provenance and freshness metadata)

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   AnalysisContextBar,
   getAnalysisComparisonLabel,
+  getAnalysisComparisonNamesLabel,
   getAnalysisMetricLabel,
   getAnalysisRiderStatus,
 } from "@/components/AnalysisContextBar";
@@ -25,8 +26,19 @@ test("analysis context labels preserve the visible metric and comparison vocabul
   assert.equal(getAnalysisMetricLabel("pace"), "周回差");
   assert.equal(getAnalysisMetricLabel("lap"), "ラップ");
   assert.equal(getAnalysisComparisonLabel(2), "±2");
-  assert.equal(getAnalysisComparisonLabel("pinned"), "固定");
+  assert.equal(getAnalysisComparisonLabel("pinned"), "固定比較");
   assert.equal(getAnalysisComparisonLabel("all"), "全員");
+});
+
+test("analysis context summarizes comparison names without hiding pinned riders", () => {
+  assert.equal(
+    getAnalysisComparisonNamesLabel(["A", "B", "C", "D", "E"], "±5"),
+    "A、B、C、D、ほか1名",
+  );
+  assert.equal(
+    getAnalysisComparisonNamesLabel(["A", "B", "C", "D"], "固定比較"),
+    "A、B、C、D",
+  );
 });
 
 test("mobile context is compact while keeping the active metric visible", () => {
@@ -38,6 +50,7 @@ test("mobile context is compact while keeping the active metric visible", () => 
       riderStatus: "Finished",
       comparisonMode: "±2",
       displayedCount: 3,
+      comparisonNames: ["Other Rider"],
       activeMetric: "Lap time",
       presentation: "mobile",
     }),
@@ -47,6 +60,8 @@ test("mobile context is compact while keeping the active metric visible", () => 
   assert.match(html, /grid-cols-2/);
   assert.match(html, /col-span-2/);
   assert.match(html, /Lap time/);
+  assert.match(html, /比較する選手/);
+  assert.match(html, /Other Rider/);
 });
 
 test("analysis context gives status text for finish, lap-down, DNF, and unavailable riders", () => {

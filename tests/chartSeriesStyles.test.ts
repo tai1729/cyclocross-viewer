@@ -5,8 +5,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   buildRiderSeriesStyles,
   CONTEXT_RIDER_COLORS,
+  CONTEXT_RIDER_DASH_PATTERNS,
+  CONTEXT_RIDER_MARKERS,
   CONTEXT_RIDER_STYLE,
   FIXED_RIDER_COLORS,
+  FIXED_RIDER_DASH_PATTERNS,
+  FIXED_RIDER_MARKERS,
   FIXED_RIDER_STYLE,
   PRIMARY_RIDER_STYLE,
 } from "../lib/chartSeriesStyles";
@@ -38,6 +42,7 @@ test("classifies primary, fixed, and context riders with their role styles", () 
   assert.deepEqual(styles.fixed, {
     ...FIXED_RIDER_STYLE,
     color: FIXED_RIDER_COLORS[0],
+    strokeDasharray: FIXED_RIDER_DASH_PATTERNS[0],
   });
   assert.deepEqual(styles.context, CONTEXT_RIDER_STYLE);
 });
@@ -111,6 +116,57 @@ test("assigns deterministic distinct context colors by displayed order and cycle
     color: CONTEXT_RIDER_COLORS[0],
   });
   assert.equal(first["context-0"].color, CONTEXT_RIDER_COLORS[0]);
+});
+
+test("covers every supported fixed and context marker and dash assignment without cycling", () => {
+  const fixedIds = Array.from({ length: 4 }, (_, index) => `fixed-${index}`);
+  const contextIds = Array.from({ length: 10 }, (_, index) => `context-${index}`);
+  const styles = buildRiderSeriesStyles(
+    [
+      rider("primary", 1),
+      ...contextIds.map((riderId, index) => rider(riderId, index + 2)),
+      ...fixedIds.map((riderId, index) => rider(riderId, index + 20)),
+    ],
+    "primary",
+    ["fixed-3", "fixed-1", "fixed-0", "fixed-2"],
+  );
+
+  assert.equal(FIXED_RIDER_DASH_PATTERNS.length, 4);
+  assert.equal(FIXED_RIDER_MARKERS.length, 4);
+  assert.equal(CONTEXT_RIDER_DASH_PATTERNS.length, 10);
+  assert.equal(CONTEXT_RIDER_MARKERS.length, 10);
+  assert.equal(new Set(FIXED_RIDER_DASH_PATTERNS).size, 4);
+  assert.equal(new Set(FIXED_RIDER_MARKERS).size, 4);
+  assert.equal(new Set(CONTEXT_RIDER_DASH_PATTERNS).size, 10);
+  assert.equal(new Set(CONTEXT_RIDER_MARKERS).size, 10);
+  assert.equal((CONTEXT_RIDER_MARKERS as readonly string[]).includes("circle"), false);
+
+  assert.deepEqual(
+    ["fixed-3", "fixed-1", "fixed-0", "fixed-2"].map(
+      (riderId) => styles[riderId].strokeDasharray,
+    ),
+    [...FIXED_RIDER_DASH_PATTERNS],
+  );
+  assert.deepEqual(
+    ["fixed-3", "fixed-1", "fixed-0", "fixed-2"].map(
+      (riderId) => styles[riderId].marker,
+    ),
+    [...FIXED_RIDER_MARKERS],
+  );
+  assert.deepEqual(
+    contextIds.map((riderId) => styles[riderId].strokeDasharray),
+    [...CONTEXT_RIDER_DASH_PATTERNS],
+  );
+  assert.deepEqual(
+    contextIds.map((riderId) => styles[riderId].marker),
+    [...CONTEXT_RIDER_MARKERS],
+  );
+  assert.equal(styles.primary.marker, "circle");
+  assert.equal(styles.primary.strokeDasharray, undefined);
+  assert.equal(
+    new Set([styles.primary.marker, ...contextIds.map((riderId) => styles[riderId].marker)]).size,
+    11,
+  );
 });
 
 test("tooltip keeps aggregate context summary by default and exposes valid details when enabled", () => {

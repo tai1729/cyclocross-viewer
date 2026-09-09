@@ -2,7 +2,6 @@
 
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ReferenceLine,
@@ -15,6 +14,7 @@ import type { MouseHandlerDataParam } from "recharts";
 import type { RaceResult, Rider } from "@/lib/types";
 import { buildGapSeries, buildLapMap, formatGapSec } from "@/lib/dataTransform";
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
+import { SeriesMarkerDot } from "@/components/SeriesMarkerDot";
 import {
   formatLapTooltipLabel,
   RoleAwareTooltip,
@@ -71,7 +71,7 @@ export function GapChart({
   };
 
   return (
-    <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
+    <div className="h-72 w-full sm:h-[22rem] lg:h-[30rem]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
@@ -129,7 +129,6 @@ export function GapChart({
             )}
             labelFormatter={(l) => `${l}周目`}
           />
-          {!isCrowded && <Legend wrapperStyle={{ fontSize: 11 }} />}
           {otherRiders.map((rider) => {
             const style = seriesStyles[rider.riderId];
             return (
@@ -142,14 +141,20 @@ export function GapChart({
                 strokeOpacity={style.opacity}
                 strokeWidth={style.strokeWidth}
                 strokeDasharray={style.strokeDasharray}
-                dot={
-                  style.role === "context" && isCrowded
-                    ? false
-                    : { r: style.role === "fixed" ? 3 : 2.5 }
-                }
-                activeDot={
-                  style.role === "context" && isCrowded ? false : { r: 4 }
-                }
+                dot={(props) => (
+                  <SeriesMarkerDot
+                    {...props}
+                    marker={style.marker}
+                    size={style.role === "fixed" ? 3 : isCrowded ? 2 : 2.5}
+                  />
+                )}
+                activeDot={(props) => (
+                  <SeriesMarkerDot
+                    {...props}
+                    marker={style.marker}
+                    size={style.role === "context" && isCrowded ? 3 : 4}
+                  />
+                )}
                 connectNulls={false}
               />
             );

@@ -75,7 +75,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-flag">AJOCC results</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">大会を選ぶ</h1>
-        <p className="mt-1 text-sm text-muted-foreground">シーズンとシリーズから大会を絞り込めます。</p>
+        <p className="mt-1 text-sm text-muted-foreground">シーズンとシリーズから大会を絞り込み、大会を選ぶと分析を始められます。</p>
       </div>
 
       <Card size="sm">

@@ -1554,3 +1554,135 @@ smoke, and a representative deep link.
 Closeout is authorized on the current `main` branch by committing the
 intended UX2-5 documentation files and pushing `main` to `origin/main` using
 normal non-force Git operations.
+
+## UX3-7 consolidated pre-release remediation design (resolved 2026-09-09)
+
+UX3-7 is an implementation and release phase. It consolidates the Owner
+Human first-use record `docs/user-testing/ux3-2-participant-post-test-qa-P-A-01.md`,
+the Astra/Sol/Terra synthetic records, and the UX3-4/5/6 reports. External
+Human pre-release participation remains an evidence limitation and is not a
+release gate. Post-release real-user feedback remains required and is not
+claimed complete by this phase.
+
+### Goal and non-goals
+
+The goal is to make the existing race-to-analysis flow self-explanatory on a
+fresh visit: race context → result/rider → primary chart → comparison →
+detailed investigation. The implementation is limited to evidence-backed,
+low-risk presentation and discoverability changes.
+
+The phase does not change upstream types, data transforms, chart metric
+semantics, step/linear rendering, URL key names, comparison limits, browser
+history rules, error boundaries, or production dependencies. It does not add
+an event-code search, change DNF/lap-down definitions, delete the selected-lap
+detail surface, or add a second sticky toolbar.
+
+### Consolidated decisions
+
+- **IMPLEMENT NOW:** P-A-01 initial-analysis discovery; MR-04 terminology
+  scent; MR-05 rider/comparison affordance; the bounded MR-06 chart-visibility
+  portion; the bounded MR-07 selected-lap explanation; and the MR-10
+  explanatory portion already represented by MR-02.
+- **MERGED:** MR-01 remains the shared comparison-identity root cause for
+  line/name/legend confusion; MR-02/MR-03 remain the shared metric semantics
+  root cause. MR-10 does not authorize a new status definition.
+- **ALREADY RESOLVED:** MR-01, MR-02, and MR-03's original UX3-5 changes are
+  retained and extended only where the P-A-01 evidence identifies a local
+  discoverability gap. POS-01–POS-05 remain regression protections.
+- **DEFER WITH SPECIFIC REASON:** MR-08 because changing history semantics
+  would conflict with the established URL contract and evidence is divided;
+  MR-09 because a search/route feature is not supported by corroborated task
+  evidence; MR-11 because it is an evidence gap, not a product defect; and
+  MR-12 because a new sticky layer or broad navigation rewrite has higher
+  regression risk than the evidence justifies.
+
+### Product behavior
+
+After race data and the normalized category state load, and only when the raw
+URL has no `rider` query parameter, the viewer selects the first graphable
+rider by the existing displayed result order: ascending numeric
+`finalPosition` with stable source order for ties, then the first rider with
+`dataQuality === "ok"` and at least one valid checkpoint. A graphable DNF or
+lapped rider is eligible because existing status semantics remain authoritative.
+The update uses `updateRaceUrlQuery` plus `router.replace(..., { scroll: false
+})`, preserves all existing and unknown query parameters, and does not create a
+history entry or transfer focus. An explicit valid, stale, or non-graphable
+`rider` query remains authoritative under the existing normalization and
+unavailable behavior; it is never overwritten by the fresh-entry default. If
+no graphable rider exists, the existing unavailable/browse-safe state remains.
+
+The active workspace makes the selected rider a named “注目選手” control and
+the comparison control a named “比較する選手” surface. The context summary
+includes the selected rider, comparison mode/count, and a compact comparison
+name summary: every pinned name, or up to four names followed by `ほかN名` for
+a larger numeric set. The chart uses exactly one accessible static line key for
+every active metric, with role/name text and deterministic per-rider
+line-style/weight markers that do not rely on color; the same dash pattern and
+marker shape are rendered by each chart series and its key entry. Fixed riders
+support the maximum four pinned riders and numeric context riders support the
+maximum ten context riders exposed by `±5` without pattern/marker collisions;
+duplicated Recharts legends are removed. For a large “全員”
+set, the key may use a bounded aggregate line-count summary while retaining
+the existing graph data. The selected-lap panel explains that clicking a chart
+point or choosing a lap fixes the per-rider values, while hover remains a
+temporary preview. Existing tooltip, detail, sparse-data, and status semantics
+remain authoritative.
+
+For this marker contract, “distinct” means that dash patterns and marker shapes
+are each independently unique within the supported role cardinality (four fixed
+and ten numeric-context riders), not merely unique as combined pairs. Fixed
+styles follow the first-seen active fixed-rider ID order; context styles follow
+the displayed rider order after primary/fixed classification. The existing
+`全員` mode remains limited by the current graphable-rider rule, so the ten-style
+contract covers every supported numeric context set and no supported series
+cycles an assignment. All normal and active chart dots render the assigned
+marker, including crowded mode; crowded context markers use the smaller dot
+size already reserved for context rather than being suppressed. The key uses
+the same marker mapping and dash values, with an SVG glyph for the marker so
+the non-color identity is visually consistent.
+The primary rider keeps its dedicated solid `circle` style and does not consume
+fixed or context assignment capacity.
+
+The four chart frames and the no-comparison frame use `h-72` on narrow
+screens, `sm:h-[22rem]`, and `lg:h-[30rem]`. This is a bounded increase for
+P-A-01 chart visibility, not a full-screen chart rewrite; controls and
+supporting details remain in the existing flow. No fixed-width element,
+page-level horizontal overflow, or additional sticky layer is introduced. All
+existing 44px mobile targets, native tabs, disclosures, dialog behavior, and
+visible focus styles remain required.
+
+### Affected components and data flow
+
+`RaceViewer` owns the default-rider selection and passes derived rider names
+to `AnalysisContextBar`. `RiderSelector`, `ComparisonAdjuster`, and
+`ComparisonRiderPicker` own only presentation labels and affordances.
+`ChartTabs` owns the static key and selected-lap explanatory copy; the four
+chart components keep their existing data and tooltip inputs while dropping
+the duplicated built-in legend. `lib/urlState`, `lib/dataTransform`, and
+`lib/types` are not changed.
+
+### Edge cases and error behavior
+
+Malformed, stale, unavailable, DNF, lapped, duplicate, missing, and no-lap
+records retain existing handling. Auto-selection is skipped when loading,
+error, empty, or no graphable riders apply, and it never overwrites an
+explicit valid URL rider. Category changes continue to clear rider,
+comparison, tab, and lap state before the next category loads.
+
+### Acceptance criteria
+
+1. Fresh race entry reaches a visible, labeled primary analysis chart for the
+   first graphable result rider without adding browser history.
+2. The selected rider, comparison mode/count, and comparison identity are
+   readable without relying on color alone; changing rider, comparison mode,
+   fixed riders, metrics, and laps still works.
+3. Every chart tab exposes one non-duplicated accessible line key; role/name
+   mapping remains available for crowded and non-crowded views.
+4. Selected-lap detail explains its action/result relationship and retains
+   measured-only semantics.
+5. Chart visibility improves at 1440×900, 1280×720, 1024×768 where available,
+   and at 390×844/320px class without clipping or horizontal overflow.
+6. POS-01–POS-05 and MR-01–MR-03 semantics do not regress; deep link, reload,
+   back/forward, disclosure, keyboard, and error/retry behavior remain valid.
+7. `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
+   `git diff --check` pass before review.

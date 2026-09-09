@@ -10,6 +10,7 @@ interface AnalysisContextBarProps {
   riderStatus: string;
   comparisonMode: string;
   displayedCount: number;
+  comparisonNames?: readonly string[];
   activeMetric: string;
   presentation?: "desktop" | "mobile";
 }
@@ -29,9 +30,22 @@ export function getAnalysisMetricLabel(tab: ChartTab): string {
 }
 
 export function getAnalysisComparisonLabel(mode: ComparisonMode): string {
-  if (mode === "pinned") return "固定";
+  if (mode === "pinned") return "固定比較";
   if (mode === "all") return "全員";
   return `±${mode}`;
+}
+
+export function getAnalysisComparisonNamesLabel(
+  names: readonly string[],
+  comparisonMode: string,
+): string {
+  if (names.length === 0) return comparisonMode === "固定比較" ? "選択なし" : "なし";
+
+  const visibleNames = comparisonMode === "固定比較" ? names : names.slice(0, 4);
+  const remainingCount = names.length - visibleNames.length;
+  return remainingCount > 0
+    ? `${visibleNames.join("、")}、ほか${remainingCount}名`
+    : visibleNames.join("、");
 }
 
 export function getAnalysisRiderStatus(
@@ -68,6 +82,7 @@ export function AnalysisContextBar({
   riderStatus,
   comparisonMode,
   displayedCount,
+  comparisonNames = [],
   activeMetric,
   presentation = "desktop",
 }: AnalysisContextBarProps) {
@@ -95,7 +110,11 @@ export function AnalysisContextBar({
         />
         <ContextItem label="カテゴリー" value={categoryName} />
         <ContextItem label="注目選手" value={`${riderName}・${riderStatus}`} />
-        <ContextItem label="比較" value={`${comparisonMode}・${displayedCount}名表示`} />
+        <ContextItem label="比較する選手" value={`${comparisonMode}・${displayedCount}名表示`} />
+        <ContextItem
+          label="比較中の名前"
+          value={getAnalysisComparisonNamesLabel(comparisonNames, comparisonMode)}
+        />
         <ContextItem label="表示中の指標" value={activeMetric} />
       </dl>
     </div>

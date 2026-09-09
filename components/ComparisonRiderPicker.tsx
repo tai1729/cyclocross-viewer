@@ -64,7 +64,7 @@ export function ComparisonRiderPicker({
   return (
     <div className="w-full min-w-0 rounded-lg border border-border bg-background p-3">
       <Field className="items-start gap-2">
-        <FieldLabel htmlFor={SEARCH_INPUT_ID}>固定する選手を検索</FieldLabel>
+        <FieldLabel htmlFor={SEARCH_INPUT_ID}>比較する選手を追加</FieldLabel>
         <Input
           id={SEARCH_INPUT_ID}
           type="search"
@@ -75,13 +75,13 @@ export function ComparisonRiderPicker({
           className="min-h-11 w-full lg:min-h-8"
         />
         <FieldDescription id={SEARCH_DESCRIPTION_ID}>
-          グラフに固定する選手を検索して追加できます（最大{MAX_PINNED_FIXED_RIDERS}名）。
+          比較する選手を検索して追加できます。追加した選手は比較に残ります（最大{MAX_PINNED_FIXED_RIDERS}名）。
         </FieldDescription>
       </Field>
 
       {fixedRiders.length > 0 && (
-        <div className="mt-3 flex min-w-0 flex-col gap-2" aria-label="固定中の選手">
-          <p className="text-sm font-medium">固定中</p>
+        <div className="mt-3 flex min-w-0 flex-col gap-2" aria-label="固定比較中の選手">
+          <p className="text-sm font-medium">固定比較中</p>
           <div className="flex min-w-0 flex-col gap-1">
             {fixedRiders.map((rider) => (
               <div
@@ -96,7 +96,7 @@ export function ComparisonRiderPicker({
                   variant="outline"
                   size="sm"
                   onClick={() => onRemove(rider.riderId)}
-                  aria-label={`${rider.name}を固定から外す`}
+                  aria-label={`${rider.name}を比較から外す`}
                   className="min-h-11 shrink-0 lg:min-h-8"
                 >
                   外す
@@ -107,10 +107,10 @@ export function ComparisonRiderPicker({
         </div>
       )}
 
-      <div className="mt-3 flex min-w-0 flex-col gap-1" role="list" aria-label="固定候補">
+      <div className="mt-3 flex min-w-0 flex-col gap-1" role="list" aria-label="比較候補">
         {atPinnedLimit ? (
           <p className="text-sm text-muted-foreground" role="status">
-            固定選手は最大{MAX_PINNED_FIXED_RIDERS}名です。追加するには固定中の選手を外してください。
+            比較する選手は最大{MAX_PINNED_FIXED_RIDERS}名です。追加するには固定比較中の選手を外してください。
           </p>
         ) : filteredRiders.length === 0 ? (
           <p className="text-sm text-muted-foreground" role="status">
@@ -134,7 +134,7 @@ export function ComparisonRiderPicker({
                 size="sm"
                 onClick={() => onAdd(rider.riderId)}
                 disabled={atPinnedLimit}
-                aria-label={`${rider.name}を固定する`}
+                aria-label={`${rider.name}を比較に追加する`}
                 className="min-h-11 shrink-0 lg:min-h-8"
               >
                 追加

@@ -114,31 +114,34 @@ export function RiderSelector({
         >
           ▲
         </Button>
-        <Button
-          ref={selectedControlRef}
-          data-race-rider-trigger
-          onClick={openSelector}
-          variant="outline"
-          aria-label={`選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
-          className={cn(
-            "min-h-11 min-w-0 flex-1 justify-between",
-            presentation === "inline" && "sm:min-h-8",
-          )}
-        >
-          <span className="flex items-baseline gap-2 truncate">
-            <span
-              className={`font-mono text-xs ${
-                selectedRider.status === "dnf" ? "text-flag" : "text-muted-foreground"
-              }`}
-            >
-              {positionLabel(selectedRider)}
+        <div className="min-w-0 flex-1">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">注目選手</p>
+          <Button
+            ref={selectedControlRef}
+            data-race-rider-trigger
+            onClick={openSelector}
+            variant="outline"
+            aria-label={`注目選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
+            className={cn(
+              "min-h-11 w-full min-w-0 justify-between",
+              presentation === "inline" && "sm:min-h-8",
+            )}
+          >
+            <span className="flex items-baseline gap-2 truncate">
+              <span
+                className={`font-mono text-xs ${
+                  selectedRider.status === "dnf" ? "text-flag" : "text-muted-foreground"
+                }`}
+              >
+                {positionLabel(selectedRider)}
+              </span>
+              <span className="truncate font-medium text-ink">
+                {selectedRider.name}
+              </span>
             </span>
-            <span className="truncate font-medium text-ink">
-              {selectedRider.name}
-            </span>
-          </span>
-          <span className="shrink-0 text-xs font-medium text-flag">変更</span>
-        </Button>
+            <span className="shrink-0 text-xs font-medium text-flag">変更</span>
+          </Button>
+        </div>
         <Button
           onClick={() => nextRider && handleSelect(nextRider.riderId)}
           disabled={!nextRider}
@@ -173,7 +176,7 @@ export function RiderSelector({
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle>選手を選ぶ</CardTitle>
+        <CardTitle>注目選手を選ぶ</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
       <Field>

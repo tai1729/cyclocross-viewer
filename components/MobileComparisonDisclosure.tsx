@@ -77,7 +77,7 @@ export function MobileComparisonDisclosure({
         ref={summaryRef}
         className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2"
       >
-        <span className="shrink-0">比較対象</span>
+        <span className="shrink-0">比較する選手</span>
         <span className="min-w-0 break-words text-right text-sm font-normal">
           {getAnalysisComparisonLabel(mode)}・現在{displayedCount}名
         </span>
