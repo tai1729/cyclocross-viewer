@@ -317,15 +317,35 @@ remain the delivery steps below.
 
 ## 20. Production Deployment
 
-Pending commit, push, and Vercel Production deployment.
+PASS. Commit `8bbe8afcd83dae4f66b0e7404c913db1b3a15312` was pushed to
+`origin/main`. Vercel project `ajocc-laptime-viewer` created deployment
+`dpl_5kWHgycCNRxfpeMmBURrNGSmukPD`, which is `READY` / `PROMOTED` and aliases
+`https://ajocc-laptime-viewer.vercel.app/`. Vercel deployment metadata reports
+the same Git SHA and commit message.
+
+Production evidence is in `docs/user-testing/evidence/ux3-7r2/production/`.
 
 ## 21. Production Smoke Test
 
-Pending Production deployment. The smoke test will cover visual state, rider
-discovery, sticky navigation, feedback, step explanation, and the core analysis
-flow at `https://ajocc-laptime-viewer.vercel.app/`.
+PASS at `https://ajocc-laptime-viewer.vercel.app/`.
+
+- Home loaded at 390px; feedback entry was visible.
+- `和田` rider-first search returned multiple named riders with direct links
+  across meets and categories without a preselected event/category.
+- A result opened the expected deep-linked race/rider URL.
+- Race analysis loaded at 1440x900, 1280x720, 390x844, and 320x568.
+- The compact sticky list/category context remained visible while scrolling.
+- At 320px, the sticky bar measured 0–107px and the revealed Results disclosure
+  began at y=112.25px, so its heading was not covered.
+- The rank step explanation was present in the Production figure caption.
+- `/feedback` loaded with category, message, optional contact, submit, and
+  return controls.
+- Browser error scan was empty during the Production checks.
+
+Production screenshots: `home-mobile-390.png`, `race-desktop-1440.png`,
+`race-desktop-1280.png`, `race-mobile-390.png`, `race-mobile-320.png`, and
+`results-reveal-mobile-320.png`.
 
 ## 22. Final Verdict
 
-Local final verdict: `PASS — OWNER ACCEPTANCE FINDINGS CLOSED`; Production
-release and smoke are the remaining delivery gates.
+`UX3-7R2: PASS — OWNER ACCEPTANCE FINDINGS CLOSED AND RELEASED`.
