@@ -317,11 +317,14 @@ remain the delivery steps below.
 
 ## 20. Production Deployment
 
-PASS. Commit `8bbe8afcd83dae4f66b0e7404c913db1b3a15312` was pushed to
-`origin/main`. Vercel project `ajocc-laptime-viewer` created deployment
-`dpl_5kWHgycCNRxfpeMmBURrNGSmukPD`, which is `READY` / `PROMOTED` and aliases
-`https://ajocc-laptime-viewer.vercel.app/`. Vercel deployment metadata reports
-the same Git SHA and commit message.
+PASS. Implementation commit `8bbe8afcd83dae4f66b0e7404c913db1b3a15312`
+and report/evidence commit `46f106c928c97f55336227e6f6febbbf2dc7f319` were
+pushed to `origin/main`. The current Vercel Production deployment is
+`dpl_EEFNwyWH68o4obDMbzXgkzgrf4L6`, `READY` / `PROMOTED`, and aliases
+`https://ajocc-laptime-viewer.vercel.app/`. Its Git metadata references
+`46f106c928c97f55336227e6f6febbbf2dc7f319`; the deployed product code is the
+same tested implementation from the first commit and the second commit adds
+the acceptance report/evidence.
 
 Production evidence is in `docs/user-testing/evidence/ux3-7r2/production/`.
 
