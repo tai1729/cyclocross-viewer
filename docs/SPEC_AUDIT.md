@@ -70,6 +70,54 @@ coverage, and browser pass conditions. The Commander resolves them as follows:
 
 Audit status: RESOLVED
 
+## UX3-5 re-audit resolutions (2026-09-10)
+
+Two independent `spec_auditor` reviews completed. Both identified the same
+implementation-significant boundaries: the existing UX3-7R dirty worktree
+overlaps UX3-5 components, all-mode has an intentional aggregate safety rule,
+the 320px guide must remain visibly available, and the current disclosure/layout
+changes belong to UX3-7R rather than this task.
+
+Resolutions:
+
+1. UX3-5 attribution is anchored to committed `eee5570`; `79cf29f` is the
+   UX3-4 synthesis baseline and `475485f` is the current HEAD. Existing dirty
+   UX3-7R changes remain user-owned, are not reverted or staged, and are
+   reported separately. Only a direct MR-01–03 regression in an overlapping
+   file may receive a minimal hunk in this task.
+2. The static series key is complete for unique displayed riders in ordinary
+   and bounded crowded views. The pre-existing `all`/large aggregate context
+   item is permitted by the UX3-4 safety boundary; it must show an explicit
+   context count, while primary/fixed entries retain individual names. Tooltip
+   detail is individual only for non-`all` crowded views with at most twelve
+   raw displayed riders; `all`/larger views retain aggregate summaries.
+3. Crowded and tooltip thresholds use raw `comparisonRiders.length`. The key
+   deduplicates rider IDs in supplied order and the style helper keeps its
+   first-entry behavior. No primary rider is synthesized for stale inconsistent
+   state; existing URL normalization/comparison-state contracts are relied on.
+4. The active tab's reading guide must be visible at the point of use, including
+   320px-class regression checks. It may wrap and its text remains the
+   accessible description. Inactive tab content may be unmounted; switching to
+   each tab must expose that tab's guide. This does not require four guides to
+   remain mounted together.
+5. UX3-7R's dirty `<details>` chart-detail and macro layout changes are not
+   UX3-5 implementation work. They must not be attributed to the UX3-5 commit,
+   and no UX3-5 report may claim that the external-human or Mobile evidence gap
+   was closed. Disclosure behavior is still included in the regression flow;
+   any failure caused solely by the dirty UX3-7R change is recorded as a
+   separate blocker rather than silently repaired here.
+6. POS-01–POS-05 use observable regression checks: readable result names/
+   statuses and top gap; chart-first rank/lap availability; unchanged
+   meet/category/result navigation; four-tab operation; and preserved
+   comparison count, fixed selection, and selected-rider emphasis. URL/state,
+   numeric formulas, chart line semantics, lap/disclosure state, and error
+   branches remain compatibility checks.
+7. Mobile viewport checks are technical regression evidence only. Lack of exact
+   viewport control is recorded as unavailable and never converted into a
+   Mobile human/synthetic triangulation or External Human completion claim.
+
+Status: CLEAR
+
 ## UX3-7 consolidated remediation audit (2026-09-09)
 
 The current phase is authorized to change product code. The authoritative
@@ -142,6 +190,148 @@ implementation starts:
   the existing MR-02 explanation and does not change definitions.
 - External Human pre-release validation is recorded as not executed and is not
   a release gate. Post-release human observation is required.
+
+## UX3-7R Specification Audit Resolutions
+
+1. Owner Human P-A-01 is the primary acceptance source. Synthetic reviews may
+   corroborate or identify additional low-risk issues, but they cannot cancel
+   an Owner finding that remains visible in the screen.
+2. The old UX3-7 report and verdict are immutable history. UX3-7R records the
+   effectiveness rejection and audits the old implementation rather than
+   rewriting it.
+3. A P-A-01 negative/improvement answer is tracked as an individual detailed
+   record even when several records share one root cause. The acceptance words
+   are exactly `CLEARLY CHANGED`, `PARTIALLY CHANGED`, and `NO MATERIAL CHANGE`;
+   only `CLEARLY CHANGED` can pass.
+4. The approved redesign is a targeted analysis-page restructuring: compact
+   race context, an identity/control deck, a full-width primary chart, and
+   supporting summary/detail/results below. It is not an application-wide
+   rewrite and does not change data or URL contracts.
+5. Results remain the authoritative rider-selection table. A prominent
+   Results action may be repositioned or restyled, but result rows, selection,
+   disclosure semantics, history, deep links, and reload behavior remain.
+6. Exact viewport evidence is required at 1440x900, 1280x720, 390x844, and
+   320x568. Playwright or an equivalent Chromium context is an approved
+   temporary verification tool; it must not become a production dependency.
+7. Production-before screenshots may use the current released alias at the
+   same race/category/rider/metric/comparison state. After screenshots must
+   use the resulting implementation and the same state. All images are
+   visually inspected, not accepted by DOM inspection alone.
+8. No External Human participant is required for the implementation gate.
+   P-A-01 is existing Owner Human evidence; external validation remains a
+   post-release continuation and is never claimed complete.
+
+STATUS: CLEAR
+
+## UX3-7R2 Final Owner Acceptance Closure — resolved audit (2026-09-10)
+
+Two independent `spec_auditor` reviews returned questions. The Commander
+resolved them as follows; these resolutions are authoritative for
+implementation and supersede the earlier UX3-7R2 draft wording while leaving
+all historical sections intact.
+
+1. The eight individually tracked units are Q12 return context, Q69 return
+   path, Q22 unknown-meet discovery, Q45 result-table search burden, Q68
+   unknown-category discovery, Q27-A category affordance, Q27-B feedback
+   affordance, and Q03 residual `stepAfter` meaning. Q03's initial chart clause
+   and Q27-A remain matrix rows and require final evidence even though the
+   existing redesign may already satisfy them.
+2. `RaceHeader` is the only sticky layer. The existing list action and category
+   selector move into its compact context rows. The list target preserves only
+   valid season/series filters; a direct race link targets `/`; browser-back is
+   not substituted for the explicit action; analysis query state is not copied.
+   Existing category URL/history reset behavior is preserved. At 320px/390px,
+   long labels wrap, metadata keeps its current narrow-screen hiding, controls
+   are at least 44px, and focus/chart content cannot be covered.
+3. Rider discovery is in scope without changing the collector contract. The
+   home surface calls `GET /api/riders/search?q=...`. The route scans unique
+   race IDs from `meets.json` through a pure injectable index builder, groups
+   structurally valid rider records by `riderId`, and links only sources whose
+   race ID/category match the meet metadata. It includes both data-quality
+   states because the race route already owns the analysis-unavailable state.
+4. The discovery contract is exact: normalized query length <2 is HTTP 400 with
+   `query-too-short`; all-source failure is HTTP 503 with `source-unavailable`;
+   a full scan is HTTP 200 `status: complete`; mixed failures or a 20-second
+   budget stop are HTTP 200 `status: partial` with
+   `warning: source-scan-incomplete`. The response is `Cache-Control: no-store`.
+   Concurrency is 24, completed-index TTL is 10 minutes, result limit is 20,
+   and appearance limit is six newest per rider. Partial indexes are not
+   retained as complete entries. The client exposes idle, loading, complete,
+   partial, empty, retryable, and fatal states.
+5. Names and IDs use existing NFKC/whitespace/lowercase normalization; the
+   threshold counts normalized Unicode code points. Grouping is strict by
+   rider ID, with distinct IDs kept separate. Source order is meet date
+   descending then category order. Race links include meet/category/rider and
+   the existing season/series return context; the race route revalidates stale
+   links.
+6. Feedback is one labeled, non-sticky leading page utility action on both
+   Desktop and Mobile. The fixed desktop corner and mobile-only footer variants
+   are removed. The existing anonymous payload, context snapshot, privacy
+   boundary, and return path remain; search text is not added to the payload.
+7. `stepAfter`, sparse measured points, and `connectNulls={false}` remain
+   authoritative. The visible and accessible rank explanation is exactly:
+   `各周回終了時点の実測順位を階段状で示します。線の途中の順位を推定していません。`
+   It is required on the rank tab when a chart is rendered.
+8. The pre-existing dirty worktree is not reset. Only intended UX3-7 hunks,
+   UX3-7R2 code/tests/docs/report/evidence are eligible for staging. The
+   feedback activation history, `test-results`, and unrelated UX3-2 inputs are
+   explicitly excluded unless a later diff proves direct necessity.
+9. Release requires all automated checks, exact viewport evidence, full flow,
+   MR/POS regressions, three fresh independent reviewer PASS results, a
+   pushed commit, a READY Production deployment referencing that commit, and a
+   Production smoke. External Human absence is not a release blocker.
+10. The public `RiderDiscoveryMatch` shape is fixed as `riderId`, `name`,
+    `dataQuality`, `totalAppearances`, and at most six newest `appearances`.
+    Each appearance contains `meetId`, `meetName`, `meetDate`, `season`,
+    `series`, `raceId`, `categoryId`, and `categoryName`. URLs are not returned
+    by the API; the client constructs them with existing URL encoding rules.
+
+STATUS: CLEAR
+
+## UX3-7R2 Final Owner Acceptance Closure audit (2026-09-10)
+
+The current task uses the following authoritative inputs and does not treat
+the prior UX3-7R report as mutable: `docs/PRODUCT.md`, the active UX3-7R2
+section of `docs/DESIGN.md`, the active UX3-7R2 section of
+`docs/IMPLEMENTATION_PLAN.md`, `docs/user-testing/ux3-2-participant-post-test-qa-P-A-01.md`,
+and `docs/user-testing/ux3-7r-owner-review-remediation-redo.md`.
+
+The baseline identifies eight individual complaint units rather than guessing
+new IDs: Q12 return context, Q69 return path, Q22 cross-event discovery, Q45
+result-table search burden, Q68 category-unknown discovery, Q27's category
+affordance complaint, Q27's feedback affordance complaint, and Q03's residual
+step-chart meaning complaint. Q03's separate initial-graph complaint and Q27's
+category affordance may remain already clearly changed only if final evidence
+confirms the source dissatisfaction no longer materially applies; they must
+still appear in the 38-unit matrix.
+
+The sticky return solution is constrained to the existing `RaceHeader` layer,
+so a second sticky toolbar, viewport-covering mobile header, or scroll-position
+contract change is out of scope. The rider solution is a lazy home entry point
+and a server Route Handler that scans the existing raw race files into a
+warm-runtime TTL index; it does not invent an upstream rider index, add a
+database, or fetch all race files on initial home load. Partial source coverage
+must be visible to the user and never be reported as a definitive empty result.
+
+Feedback remains the existing anonymous `/feedback` flow with the same context
+privacy boundary. Only its entry placement changes. `stepAfter` remains the
+authoritative rank rendering because ranks are measured per completed lap;
+copy may explain the step, but no interpolation, smoothing, or semantic change
+is allowed.
+
+The Q45 result-table search burden is resolved with a local accessible filter
+matching normalized rider name or ID. It does not change official rank order,
+row selection, or the existing analysis URL contract. Rider discovery collects
+all successfully loaded appearances before applying its six-item cap, then
+sorts by meet date descending, category order, and stable IDs so concurrent
+network completion order cannot omit a newer appearance.
+
+The final review must be fresh and independent for Astra, Sol, and Terra. The
+previous NEEDS_REVISION verdict and the prior 30/8/0 conclusion are context for
+the Commander and report history only; they must not be supplied as conclusions
+to final reviewers. All four exact viewports, tests, typecheck, lint, build,
+diff check, protected MR/POS checks, functional flow, and Production smoke are
+release gates. External Human availability is not used as a blocker.
 
 STATUS: CLEAR
 
@@ -992,5 +1182,35 @@ resolutions are authoritative for this review:
     level, and complete friction logs are measurement limitations, not gates
     that block the field test. The one-question-at-a-time capture approach is
     a future protocol improvement candidate only.
+
+## UX3-7R Specification Audit Resolutions
+
+1. Owner Human P-A-01 is the primary acceptance source. Synthetic reviews may
+   corroborate or identify additional low-risk issues, but they cannot cancel
+   an Owner finding that remains visible in the screen.
+2. The old UX3-7 report and verdict are immutable history. UX3-7R records the
+   effectiveness rejection and audits the old implementation rather than
+   rewriting it.
+3. A P-A-01 negative/improvement answer is tracked as an individual detailed
+   record even when several records share one root cause. The acceptance words
+   are exactly `CLEARLY CHANGED`, `PARTIALLY CHANGED`, and `NO MATERIAL CHANGE`;
+   only `CLEARLY CHANGED` can pass.
+4. The approved redesign is a targeted analysis-page restructuring: compact
+   race context, an identity/control deck, a full-width primary chart, and
+   supporting summary/detail/results below. It is not an application-wide
+   rewrite and does not change data or URL contracts.
+5. Results remain the authoritative rider-selection table. A prominent
+   Results action may be repositioned or restyled, but result rows, selection,
+   disclosure semantics, history, deep links, and reload behavior remain.
+6. Exact viewport evidence is required at 1440x900, 1280x720, 390x844, and
+   320x568. Playwright or an equivalent Chromium context is an approved
+   temporary verification tool; it must not become a production dependency.
+7. Production-before screenshots may use the current released alias at the
+   same race/category/rider/metric/comparison state. After screenshots must
+   use the resulting implementation and the same state. All images are
+   visually inspected, not accepted by DOM inspection alone.
+8. No External Human participant is required for the implementation gate.
+   P-A-01 is existing Owner Human evidence; external validation remains a
+   post-release continuation and is never claimed complete.
 
 STATUS: CLEAR

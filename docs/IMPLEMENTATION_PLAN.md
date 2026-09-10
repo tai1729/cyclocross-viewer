@@ -1,12 +1,12 @@
 # UX3-5 active implementation plan
 
-Status: COMPLETE — bounded MR-01 / MR-02 / MR-03 implementation recorded
+Status: ACTIVE — re-audit and bounded MR-01 / MR-02 / MR-03 remediation
 
 ## Task graph
 
 ### UX3-5-SPEC — Evidence-backed design and specification audit
 
-- Status: DONE
+- Status: DONE — re-audited by two independent spec auditors
 - Objective: record the UX3-4 source-of-truth findings, exact boundaries,
   acceptance criteria, and verification plan before code changes.
 - Files: `docs/DESIGN.md`, `docs/IMPLEMENTATION_PLAN.md`,
@@ -16,6 +16,21 @@ Status: COMPLETE — bounded MR-01 / MR-02 / MR-03 implementation recorded
   ambiguity is resolved in the project documents; `docs/SPEC_AUDIT.md` ends
   exactly with `STATUS: CLEAR`.
 - Verification: document review and `git diff --check`.
+
+### UX3-5-RECHECK — Current-tree overlap and direct regression fixes
+
+- Status: READY
+- Objective: compare the committed UX3-5 implementation with the current
+  tree, preserve unrelated UX3-7R edits, and correct only direct MR-01–03
+  regressions found during the audit.
+- Files: only directly affected UX3-5 component/test/report hunks.
+- Dependencies: UX3-5-SPEC.
+- Do-not-change: UX3-7R-only layout, results, disclosure, or feedback changes;
+  UX3-4 evidence; URL/state/data contracts.
+- Acceptance: the active guide remains visible at 320px-class widths; all-mode
+  aggregation and bounded tooltip rules match the resolved design; no unrelated
+  dirty hunk is staged.
+- Verification: targeted tests, browser checks, and `git diff --check`.
 
 ### UX3-5-CHART-STYLES — MR-01 series identification
 
@@ -62,7 +77,7 @@ Status: COMPLETE — bounded MR-01 / MR-02 / MR-03 implementation recorded
 
 ### UX3-5-VERIFY — Full validation, browser review, commit, and push
 
-- Status: DONE — automated validation, browser review, and independent review passed
+- Status: IN_PROGRESS — automated validation and independent review pending
 - Objective: run all repository checks, browser verification at requested
   sizes/flows, independent reviewer, then commit and push only UX3-5 changes.
 - Dependencies: UX3-5-REPORT.
@@ -75,6 +90,7 @@ Status: COMPLETE — bounded MR-01 / MR-02 / MR-03 implementation recorded
 
 ```text
 UX3-5-SPEC
+  -> UX3-5-RECHECK
   -> UX3-5-CHART-STYLES + UX3-5-READING-GUIDE
   -> UX3-5-REPORT
   -> UX3-5-VERIFY -> reviewer -> commit/push
@@ -999,3 +1015,189 @@ deployment configuration, unrelated user changes, or historical UX3 source
 files. The required commands are `npm test`, `npx tsc --noEmit`,
 `npm run lint`, `npm run build`, and `git diff --check`; browser verification
 uses the local dev server and the production alias when reachable.
+
+## UX3-7R Owner Review Remediation REDO
+
+The previous UX3-7 verdict remains historical. This plan treats the original
+P-A-01 record as the primary acceptance source and requires visible screen
+change, not implementation counts.
+
+### Task graph
+
+1. **UX3-7R-A — source and false-positive audit — READY**
+   - Read the complete P-A-01 record and extract every negative or improvement
+     answer with its exact question ID and answer.
+   - Audit `28683845d05a43db5b61366dff5cfcc3a6959b31..30ee798a2dbc82f828fc0f28837c9663ee9bbd39`.
+   - Reconcile Astra, Sol, Terra, UX3-4, UX3-5, UX3-6, and the old UX3-7
+     report without overwriting historical docs.
+   - Output: detailed finding inventory and design decisions in the UX3-7R
+     report and current design/audit docs.
+
+2. **UX3-7R-B — macro analysis layout — READY after A**
+   - Restructure active analysis so the compact control/identity deck precedes
+     a full-width primary chart, with summary/detail/results below.
+   - Keep all state transitions, URL serialization, disclosures, and semantic
+     data unchanged.
+
+3. **UX3-7R-C — interaction and visual hierarchy polish — READY after A**
+   - Make `MAIN RIDER`, change action, comparison identity, metric, series key,
+     and Results action visually scannable in the new structure.
+   - Preserve keyboard semantics and minimum target sizing.
+
+4. **UX3-7R-D — behavior tests and exact viewport evidence — READY after B/C**
+   - Add/update tests for observable structure and preserve regression tests.
+   - Capture same-state Production-before and local/Production-after screenshots
+     at all four exact viewport sizes using a temporary Playwright script or
+     existing E2E tooling; visually inspect every pair.
+
+5. **UX3-7R-E — fresh independent review — BLOCKED until D passes**
+   - Run three independent fresh reviewer passes framed as Astra, Sol, and
+     Terra perspectives. Review current screens, not prior verdicts.
+   - Review P-A-01 acceptance matrix, regression protection, accessibility,
+     and release risk.
+
+6. **UX3-7R-F — validation, report, commit/push, Production — BLOCKED until E**
+   - Run all required commands, write the new report, commit only intended
+     UX3-7R changes, push normally, verify deployment and repeat smoke/visual
+     checks against the production URL.
+
+### Boundaries
+
+Do not change the old UX3-7 report, unrelated user files, external data
+contracts, deployment configuration, dependencies, or the product's URL and
+metric semantics. A P-A-01 issue may not be deferred for lack of External
+Human evidence. It may only remain unresolved with a concrete technical or
+product-direction reason documented in the new report.
+
+### Resolved implementation decisions
+
+- Remove the active-analysis desktop two-column rail from the primary layout.
+  Use a compact, full-width control/identity deck followed by the chart stage,
+  then supporting detail and Results disclosure/table.
+- Keep current rider and comparison summaries visible at all breakpoints;
+  detailed pickers may remain in existing dialog/disclosure surfaces.
+- Keep Results closed by default in analysis, but expose its action in the
+  initial race/analysis context. The existing table remains the only result
+  selection authority and no disclosure state is serialized in the URL.
+- Use the explicit Before state: released Production alias, `MMJ-256-005`,
+  `rider=KNS-000-4368`, rank tab, default `±2`, and no lap pin. Capture the
+  same state at all required exact viewport sizes.
+- Treat any P-A-01 complaint that remains materially visible as a failure;
+  functional PASS, code change, or fresh synthetic PASS cannot override it.
+
+## UX3-7R2 Final Owner Acceptance Closure
+
+This is the active bounded implementation plan. Existing UX3-7R changes and
+the old UX3-7R report/evidence are preserved as user-owned history. The plan
+uses the source and decisions in the active UX3-7R2 section of `docs/DESIGN.md`.
+
+### Task graph
+
+1. **UX3-7R2-S — specification audit and resolution — IN_PROGRESS**
+   - Spawn two independent `spec_auditor` agents.
+   - Audit PRODUCT, DESIGN, this plan, SPEC_AUDIT, P-A-01, the UX3-7R report,
+     and the current navigation/data/feedback/chart sources.
+   - Resolve every implementation-significant question in the documents and
+     finish SPEC_AUDIT with exactly `STATUS: CLEAR`.
+
+2. **UX3-7R2-N — single sticky context navigation — BLOCKED until S**
+   - Scope: `RaceHeader`, `RaceViewer`, navigation tests/docs.
+   - Move the existing list link and category selector into the existing
+     sticky header; preserve URL/history and mobile height constraints.
+   - Do not alter chart/control-deck layout or add another sticky layer.
+
+3. **UX3-7R2-D — rider-first discovery — BLOCKED until S**
+   - Scope: `app/page.tsx`, new discovery component/route/helper/tests, and
+     data-source-compatible docs.
+   - Add opt-in cross-meet/category name/ID search backed by the existing raw
+     race JSONs, bounded concurrency, warm-runtime TTL cache, explicit loading,
+     empty, incomplete, and retryable error states, and direct deep links.
+   - Do not change collector contracts, add a database, or fetch on initial
+     page load.
+
+4. **UX3-7R2-F — feedback placement and step explanation — BLOCKED until S**
+   - Scope: feedback entry/layout, chart reading guide, focused tests/docs.
+   - Make feedback discoverable on both Desktop and Mobile without a sticky
+     obstruction; explain rank step semantics concisely without changing data.
+
+5. **UX3-7R2-V — integration, exact viewport evidence, and functional flow —
+   BLOCKED until N/D/F
+   - Run test, typecheck, lint, build, diff check, and browser verification at
+     1440×900, 1280×720, 390×844, and 320×568.
+   - Save only new final evidence under `docs/user-testing/evidence/ux3-7r2/`.
+   - Recheck the 30 protected CLEARLY CHANGED units, MR-01–03, POS-01–05, and
+     all requested navigation, analysis, discovery, feedback, and URL flows.
+
+6. **UX3-7R2-R — fresh independent final review — BLOCKED until V**
+   - Spawn independent `reviewer` agents named Astra, Sol, and Terra without
+     giving them the prior classification or verdict.
+   - Each returns only `PASS` or `NEEDS_REVISION`, plus required findings and
+     severity. S0/S1 and release-blocking S2 findings require bounded fixes.
+
+7. **UX3-7R2-P — commit, push, Production, smoke — BLOCKED until R PASS**
+   - Stage only intended UX3-7/UX3-7R2 code, tests, docs, and evidence.
+   - Commit, push normal history, confirm the Vercel Production deployment
+     points to the pushed SHA, and run Production smoke including discovery,
+     sticky navigation, feedback, step explanation, and core analysis.
+
+### UX3-7R2 revision 1 resolution
+
+- The Q45 result-table search burden is closed with a local normalized
+  name/ID filter in `RaceResultsTable`; rank order and row selection remain
+  unchanged.
+- Rider discovery appearances are collected without an early cap, then sorted
+  by meet date descending, category order, and stable IDs before the six-item
+  public cap. Network completion order cannot hide a newer appearance.
+- Sticky navigation keeps only the compact return/category context rows fixed;
+  race title, results, and provenance remain in normal flow to protect the
+  narrow viewport.
+- Series options are ordered by a local deterministic north-to-south sequence
+  after season filtering, with `全日本` first and `もみじ` grouped in the
+  中国 region. Raw series values and URL state remain unchanged; unknown
+  values remain visible after the known sequence in code-point order.
+
+### Verification commands
+
+`npm test`; `npx tsc --noEmit`; `npm run lint`; `npm run build`; and
+`git diff --check`. Browser verification must also cover the exact viewport
+set and the complete flow from the UX3-7R2 request.
+
+### Resolved specification details
+
+- The eight units are Q12, Q69, Q22, Q45, Q68, Q27-A category affordance,
+  Q27-B feedback affordance, and Q03 step meaning. Q03's initial-chart clause
+  and Q27-A can be marked already `CLEARLY CHANGED` only with final evidence;
+  they remain in the 38-unit matrix.
+- Sticky navigation is a replacement inside the existing `RaceHeader`, not a
+  second layer. It exposes `listHref` with only season/series context and the
+  existing category selector; direct race links return to `/` and race query
+  state is not copied to the list.
+- Rider discovery uses a pure index-builder seam plus a Route Handler. The
+  normalized query threshold is two Unicode code points; IDs and names use the
+  existing NFKC/whitespace/lowercase normalization. The index is grouped by
+  rider ID, scans unique race IDs with concurrency 24 and a 20-second budget,
+  caches only a completed index for 10 minutes, returns 20 riders and six
+  newest appearances per rider, and exposes complete/partial/503 contracts as
+  written in DESIGN.md. Both data-quality states are searchable; the existing
+  race page remains authoritative for analysis availability.
+- The feedback action is rendered once as a non-sticky leading page utility;
+  fixed desktop and mobile-footer variants are removed. Existing privacy,
+  context snapshot, and return-path behavior remains.
+- `stepAfter` and sparse measured values remain unchanged. The exact rank guide
+  sentence is visible on the rank tab and present in its figure description.
+- Existing dirty files are handled by patch-level staging. Unrelated feedback
+  history, `test-results`, and unrelated UX3-2 input records are excluded.
+- `RiderDiscoveryMatch` is public and exact: `riderId`, `name`, `dataQuality`,
+  `totalAppearances`, and up to six newest `appearances` containing `meetId`,
+  `meetName`, `meetDate`, `season`, `series`, `raceId`, `categoryId`, and
+   `categoryName`. The response contains fields, not URLs; the client builds
+   encoded links with the existing URL utilities.
+
+### UX3-7R2 current closure status
+
+The implementation, report, evidence, and automated validation tasks are
+complete. The first independent final review round found and closed three
+bounded issues: the Q45 current-results filter, deterministic newest
+appearance ordering, and deterministic newest-appearance rider metadata. A
+fresh final review round and the Production release gate remain the only open
+tasks.

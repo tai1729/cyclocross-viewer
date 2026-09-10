@@ -16,7 +16,6 @@ import {
 import {
   getRaceLapNumbers,
   getRiderById,
-  getRiderResult,
   getRiderSummary,
   getValidCheckpoints,
 } from "@/lib/dataTransform";
@@ -43,7 +42,6 @@ import {
 } from "@/lib/raceNavigation";
 import {
   classifyResultsPresentation,
-  getAnalysisPresentationOrder,
   getResultsDisclosureOpen,
 } from "@/lib/resultsPresentation";
 import {
@@ -54,21 +52,13 @@ import {
 } from "@/lib/resultsInteraction";
 import { RaceHeader } from "@/components/RaceHeader";
 import { RaceResultsTable } from "@/components/RaceResultsTable";
+import { AnalysisControlDeck } from "@/components/AnalysisControlDeck";
 import { RiderSelector } from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { LapSummaryCard } from "@/components/LapSummaryCard";
 import { LapDetailDisclosure } from "@/components/LapDetailDisclosure";
-import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
-import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
-import { MobileComparisonDisclosure } from "@/components/MobileComparisonDisclosure";
 import { ChartTabs } from "@/components/ChartTabs";
 import { getResultsDisclosureLabel } from "@/lib/supportingPresentation";
-import {
-  AnalysisContextBar,
-  getAnalysisComparisonLabel,
-  getAnalysisMetricLabel,
-  getAnalysisRiderStatus,
-} from "@/components/AnalysisContextBar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -197,6 +187,15 @@ function getReturnContext(
   return { season: "", series: "" };
 }
 
+export function getRaceListHref(
+  urlState: ReturnType<typeof parseRaceUrlState>,
+  meet: MeetEntry,
+): string {
+  const returnContext = getReturnContext(urlState, meet);
+  const returnContextQuery = serializeHomeUrlState({ ...returnContext, unknownParams: [] });
+  return returnContextQuery ? `/?${returnContextQuery}` : "/";
+}
+
 export function RaceViewer({ meet }: RaceViewerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -231,6 +230,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const resultsSelectionNavigationRef = useRef<string | null>(null);
   const [desktopResultsOpen, setDesktopResultsOpen] = useState(false);
   const [mobileResultsOpen, setMobileResultsOpen] = useState(false);
+  const desktopResultsRef = useRef<HTMLDetailsElement | null>(null);
+  const mobileResultsRef = useRef<HTMLDetailsElement | null>(null);
+  const shouldRevealResultsRef = useRef(false);
   const [lapDetailOpen, setLapDetailOpen] = useState(false);
   const wasAnalyzingRef = useRef(urlViewState.selfRiderId !== null);
 
@@ -478,6 +480,24 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     selectPrimaryRider(riderId);
   }
 
+  function openResultsDisclosure() {
+    shouldRevealResultsRef.current = true;
+    setDesktopResultsOpen(true);
+    setMobileResultsOpen(true);
+  }
+
+  useEffect(() => {
+    if (!shouldRevealResultsRef.current) return;
+    const resultsElement = isDesktop
+      ? desktopResultsRef.current
+      : mobileResultsRef.current;
+    if (!resultsElement) return;
+    shouldRevealResultsRef.current = false;
+    requestAnimationFrame(() => {
+      resultsElement.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }, [desktopResultsOpen, mobileResultsOpen, isDesktop]);
+
   function addPinnedRider(riderId: string) {
     if (
       riderId === selfRiderId ||
@@ -531,9 +551,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     pushRaceUrl({ lap: null }, "lap");
   }
 
-  const returnContext = getReturnContext(urlState, meet);
-  const returnContextQuery = serializeHomeUrlState({ ...returnContext, unknownParams: [] });
-  const listHref = returnContextQuery ? `/?${returnContextQuery}` : "/";
+  const listHref = getRaceListHref(urlState, meet);
 
   if (!selectedCategory) {
     return <Alert variant="destructive"><AlertTitle>カテゴリーがありません</AlertTitle><AlertDescription>この大会にはカテゴリー情報がありません。</AlertDescription></Alert>;
@@ -590,14 +608,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const fixedRiders = comparisonMode === "pinned"
     ? comparisonRiders.filter((rider) => rider.riderId !== selfRider?.riderId)
     : [];
-  const comparisonNames = comparisonRiders
-    .filter((rider) => rider.riderId !== selfRiderId)
-    .map((rider) => rider.name);
-  const riderResult = selfRider
-    ? getRiderResult(race, selfRider.riderId)
-    : null;
   const isAnalysisState = selfRiderId !== null;
-  const analysisPresentationOrder = getAnalysisPresentationOrder(isDesktop);
   const resultsPresentation = classifyResultsPresentation(isDesktop, isAnalysisState);
 
   const resultsTable = (
@@ -607,44 +618,6 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       onSelect={selectRiderFromResults}
       analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
     />
-  );
-
-  const analysisRail = (
-    <div className="flex min-w-0 flex-col gap-3 lg:col-start-1 lg:row-start-3">
-      <RiderSelector
-        riders={race.riders}
-        categoryName={race.category}
-        selectedRiderId={selfRiderId}
-        onSelect={selectPrimaryRider}
-      />
-      {summary && (
-        <>
-          <SummaryCard summary={summary} />
-          {selfRider && (
-            <LapSummaryCard
-              primaryRider={selfRider}
-              fixedRiders={fixedRiders}
-            />
-          )}
-          <ComparisonAdjuster
-            mode={comparisonMode}
-            displayedCount={comparisonRiders.length}
-            totalRiderCount={graphableRiders.length}
-            pinnedCount={pinnedRiderIds.length}
-            onChange={changeComparisonMode}
-          />
-          {comparisonMode === "pinned" && (
-            <ComparisonRiderPicker
-              riders={graphableRiders}
-              primaryRiderId={selfRiderId}
-              pinnedRiderIds={pinnedRiderIds}
-              onAdd={addPinnedRider}
-              onRemove={removePinnedRider}
-            />
-          )}
-        </>
-      )}
-    </div>
   );
 
   const analysisChart = summary && selfRider ? (
@@ -677,71 +650,23 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   ) : null;
 
   const analysisMain = (
-    <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-3">
-      {selfRider && !hasValidData ? (
-        <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
-      ) : selfRider && !hasLapData ? (
-        <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
-      ) : summary && selfRider ? (
-        analysisPresentationOrder.chartTabsBeforeLapDetail ? (
-          <>
-            {analysisChart}
-            {analysisLapDetail}
-          </>
-        ) : (
-          <>
-            {analysisLapDetail}
-            {analysisChart}
-          </>
-        )
-      ) : (
-        <Alert><AlertTitle>注目選手を選択してください</AlertTitle><AlertDescription>注目選手を選ぶと周回データを比較できます。</AlertDescription></Alert>
-      )}
-    </div>
-  );
-
-  const mobileAnalysisActions = (
-    <div
-      data-mobile-analysis-actions
-      className="grid min-w-0 gap-3 sm:grid-cols-2"
-    >
-      <RiderSelector
-        riders={race.riders}
-        categoryName={race.category}
-        selectedRiderId={selfRiderId}
-        onSelect={selectPrimaryRider}
-        presentation="mobile-modal"
-        closeKey={queryString}
-      />
-      <MobileComparisonDisclosure
-        mode={comparisonMode}
-        displayedCount={comparisonRiders.length}
-        totalRiderCount={graphableRiders.length}
-        pinnedCount={pinnedRiderIds.length}
-        onChange={changeComparisonMode}
-        riders={graphableRiders}
-        primaryRiderId={selfRiderId}
-        pinnedRiderIds={pinnedRiderIds}
-        onAdd={addPinnedRider}
-        onRemove={removePinnedRider}
-      />
-    </div>
-  );
-
-  const mobileAnalysisContent = (
-    <div data-mobile-analysis-content className="flex min-w-0 flex-col gap-4">
+    <div data-analysis-content className="flex min-w-0 flex-col gap-4">
       {selfRider && !hasValidData ? (
         <Alert><AlertTitle>グラフを表示できません</AlertTitle><AlertDescription>この選手の周回データには異常があります。</AlertDescription></Alert>
       ) : selfRider && !hasLapData ? (
         <Alert><AlertTitle>周回データがありません</AlertTitle><AlertDescription>この選手にはグラフ表示に必要な周回データがありません。</AlertDescription></Alert>
       ) : summary && selfRider ? (
         <>
-          {analysisChart}
-          <SummaryCard summary={summary} />
-          <LapSummaryCard
-            primaryRider={selfRider}
-            fixedRiders={fixedRiders}
-          />
+          <div data-analysis-chart-stage className="min-w-0">
+            {analysisChart}
+          </div>
+          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+            <SummaryCard summary={summary} />
+            <LapSummaryCard
+              primaryRider={selfRider}
+              fixedRiders={fixedRiders}
+            />
+          </div>
           {analysisLapDetail}
         </>
       ) : (
@@ -750,13 +675,44 @@ export function RaceViewer({ meet }: RaceViewerProps) {
     </div>
   );
 
+  const analysisControlDeck = isAnalysisState && selfRider ? (
+    <AnalysisControlDeck
+      riders={race.riders}
+      graphableRiders={graphableRiders}
+      categoryName={race.category}
+      selectedRiderId={selfRiderId}
+      comparisonRiders={comparisonRiders}
+      comparisonMode={comparisonMode}
+      displayedCount={comparisonRiders.length}
+      pinnedCount={pinnedRiderIds.length}
+      pinnedRiderIds={pinnedRiderIds}
+      closeKey={queryString}
+      isDesktop={isDesktop}
+      onSelectRider={selectPrimaryRider}
+      onChangeComparisonMode={changeComparisonMode}
+      onAddPinnedRider={addPinnedRider}
+      onRemovePinnedRider={removePinnedRider}
+    />
+  ) : null;
+
+  const browseRiderSelector = !isAnalysisState || !selfRider ? (
+    <RiderSelector
+      riders={race.riders}
+      categoryName={race.category}
+      selectedRiderId={selfRiderId}
+      onSelect={selectPrimaryRider}
+    />
+  ) : null;
+
   const activeDesktopResultsDisclosure = isAnalysisState ? (
     <details
+      ref={desktopResultsRef}
+      id="active-results-disclosure-desktop"
       open={getResultsDisclosureOpen(resultsPresentation, desktopResultsOpen)}
       onToggle={(event) => setDesktopResultsOpen(event.currentTarget.open)}
-      className="order-1 min-w-0 lg:order-2"
+      className="min-w-0 scroll-mt-28 sm:scroll-mt-24"
     >
-      <summary className="hidden min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 lg:flex sm:min-h-8">
+      <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
         {getResultsDisclosureLabel(race.riders.length)}
       </summary>
       <div className="mt-3">{resultsTable}</div>
@@ -765,10 +721,12 @@ export function RaceViewer({ meet }: RaceViewerProps) {
 
   const activeMobileResultsDisclosure = isAnalysisState ? (
     <details
+      ref={mobileResultsRef}
       data-mobile-results-disclosure
+      id="active-results-disclosure-mobile"
       open={getResultsDisclosureOpen(resultsPresentation, mobileResultsOpen)}
       onToggle={(event) => setMobileResultsOpen(event.currentTarget.open)}
-      className="min-w-0"
+      className="min-w-0 scroll-mt-28 sm:scroll-mt-24"
     >
       <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
         {getResultsDisclosureLabel(race.riders.length)}
@@ -778,38 +736,54 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   ) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8 2xl:px-12">
-      <div className="flex items-start justify-between gap-3 text-sm">
-        <Link href={listHref} className="inline-flex min-h-11 shrink-0 items-center rounded-sm text-flag underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:min-h-8">← 大会一覧</Link>
-        <span className="min-w-0 flex-1 break-words text-right text-muted-foreground sm:truncate">{meet.meetName}</span>
-      </div>
-      <Field orientation="responsive">
-        <FieldLabel htmlFor="category-select">カテゴリー</FieldLabel>
-        <Select
-          items={categories.map((category) => ({
-            label: category.name || category.raceId,
-            value: category.raceId,
-          }))}
-          value={selectedCategory.raceId}
-          onValueChange={(value) => changeCategory(String(value))}
-        >
-          <SelectTrigger
-            id="category-select"
-            data-race-category-trigger
-            aria-describedby="category-select-description"
-            className="min-h-11 min-w-0 flex-1 sm:min-h-8"
+    <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-3 px-4 py-2 sm:px-6 sm:py-3 xl:px-8 2xl:px-12">
+      <RaceHeader
+        race={race}
+        listHref={listHref}
+        meetName={meet.meetName}
+        categorySelector={(
+          <Field className="gap-1">
+            <div className="flex min-w-0 items-center gap-3">
+              <FieldLabel htmlFor="category-select" className="shrink-0">カテゴリー</FieldLabel>
+              <Select
+                items={categories.map((category) => ({
+                  label: category.name || category.raceId,
+                  value: category.raceId,
+                }))}
+                value={selectedCategory.raceId}
+                onValueChange={(value) => changeCategory(String(value))}
+              >
+                <SelectTrigger
+                  id="category-select"
+                  data-race-category-trigger
+                  aria-describedby="category-select-description"
+                  className="min-h-11 min-w-0 flex-1 sm:min-h-8"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {categories.map((category) => <SelectItem key={category.raceId} value={category.raceId}>{category.name || category.raceId}</SelectItem>)}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <FieldDescription id="category-select-description" className="sr-only pl-0 text-xs sm:not-sr-only">この大会のカテゴリーを選択します。</FieldDescription>
+          </Field>
+        )}
+        resultsAction={isAnalysisState ? (
+          <Button
+            type="button"
+            variant="outline"
+            aria-controls={isDesktop ? "active-results-disclosure-desktop" : "active-results-disclosure-mobile"}
+            aria-expanded={isDesktop ? desktopResultsOpen : mobileResultsOpen}
+            onClick={openResultsDisclosure}
+            className="min-h-11"
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {categories.map((category) => <SelectItem key={category.raceId} value={category.raceId}>{category.name || category.raceId}</SelectItem>)}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <FieldDescription id="category-select-description">この大会のカテゴリーを選択します。</FieldDescription>
-      </Field>
-      <RaceHeader race={race} />
+            {getResultsDisclosureLabel(race.riders.length)}
+          </Button>
+        ) : undefined}
+      />
       {resultsPresentation === "full" ? resultsTable : null}
 
       {race.riders.length > 0 ? (
@@ -819,39 +793,19 @@ export function RaceViewer({ meet }: RaceViewerProps) {
           data-race-analysis-region
           tabIndex={-1}
           aria-labelledby="race-analysis-heading"
-          className={`flex flex-col gap-4 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${isAnalysisState ? "order-2 lg:order-1" : ""} lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:items-start lg:gap-6`}
+          className="scroll-mt-56 flex flex-col gap-3 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:scroll-mt-40 lg:scroll-mt-32"
         >
           <h2 id="race-analysis-heading" tabIndex={-1} className="sr-only lg:col-span-2">
             周回分析
           </h2>
           {isAnalysisState && selfRider ? (
-            <div className="min-w-0 lg:col-span-2">
-              <AnalysisContextBar
-                raceName={race.raceName}
-                categoryName={race.category}
-                riderName={selfRider.name}
-                riderStatus={getAnalysisRiderStatus(selfRider, riderResult)}
-                comparisonMode={getAnalysisComparisonLabel(comparisonMode)}
-                displayedCount={comparisonRiders.length}
-                comparisonNames={comparisonNames}
-                activeMetric={getAnalysisMetricLabel(currentViewState.activeTab)}
-                presentation={resultsPresentation === "mobile-disclosure" ? "mobile" : "desktop"}
-              />
-            </div>
-          ) : null}
-          {resultsPresentation === "mobile-disclosure" ? (
             <>
-              {mobileAnalysisActions}
-              {mobileAnalysisContent}
-            </>
-          ) : analysisPresentationOrder.mainBeforeRail ? (
-            <>
+              {analysisControlDeck}
               {analysisMain}
-              {analysisRail}
             </>
           ) : (
             <>
-              {analysisRail}
+              {browseRiderSelector}
               {analysisMain}
             </>
           )}

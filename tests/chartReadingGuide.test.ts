@@ -24,6 +24,8 @@ test("explains rank direction and visual direction", () => {
   assert.match(guide.text, /小さいほど/);
   assert.match(guide.text, /1位が最良/);
   assert.match(guide.text, /上にあるほど良い/);
+  assert.match(guide.text, /実測順位を階段状/);
+  assert.match(guide.text, /途中の順位を推定していません/);
 });
 
 test("explains cumulative gap sign relative to the selected rider", () => {

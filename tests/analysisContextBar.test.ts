@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   AnalysisContextBar,
   getAnalysisComparisonLabel,
+  getAnalysisComparisonIdentityLabel,
   getAnalysisComparisonNamesLabel,
   getAnalysisMetricLabel,
   getAnalysisRiderStatus,
@@ -41,6 +42,25 @@ test("analysis context summarizes comparison names without hiding pinned riders"
   );
 });
 
+test("analysis context exposes the primary rider and comparison identity", () => {
+  assert.equal(
+    getAnalysisComparisonIdentityLabel("Main", ["Other"], "±1"),
+    "Main vs Other",
+  );
+  assert.equal(
+    getAnalysisComparisonIdentityLabel("Main", ["Other", "Third"], "±2"),
+    "Main vs Other / Third",
+  );
+  assert.equal(
+    getAnalysisComparisonIdentityLabel("Main", ["Other", "Third", "Fourth"], "±3"),
+    "Main vs Other / Third + 1 more",
+  );
+  assert.equal(
+    getAnalysisComparisonIdentityLabel("Main", [], "all"),
+    "Main · all",
+  );
+});
+
 test("mobile context is compact while keeping the active metric visible", () => {
   const html = renderToStaticMarkup(
     createElement(AnalysisContextBar, {
@@ -58,7 +78,6 @@ test("mobile context is compact while keeping the active metric visible", () => 
 
   assert.match(html, /data-analysis-context-bar/);
   assert.match(html, /grid-cols-2/);
-  assert.match(html, /col-span-2/);
   assert.match(html, /Lap time/);
   assert.match(html, /比較する選手/);
   assert.match(html, /Other Rider/);

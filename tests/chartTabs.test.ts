@@ -73,6 +73,39 @@ test("renders one shared rider key for the active metric with role and name text
   assert.match(html, /参考選手・参考次郎/);
 });
 
+test("presents chart context and keeps plot, key, and detail adjacent", () => {
+  const html = renderChartTabs([
+    rider("primary", "Primary Rider", 1),
+    rider("fixed", "Challenger", 2),
+  ], "gap");
+
+  assert.match(html, /data-chart-stage="true"/);
+  assert.match(html, /data-chart-comparison[^>]*>[^<]*Primary Rider vs Challenger/);
+  assert.match(html, /data-chart-metric[^>]*>表示: <span[^>]*>タイム差/);
+
+  const plotIndex = html.indexOf("data-chart-plot");
+  const keyIndex = html.indexOf("data-chart-series-key");
+  const hintIndex = html.indexOf("data-chart-interaction-hint");
+  const detailIndex = html.indexOf('data-chart-detail-panel="gap"');
+  assert.ok(plotIndex >= 0 && plotIndex < keyIndex);
+  assert.ok(keyIndex < hintIndex && hintIndex < detailIndex);
+});
+
+test("keeps the chart key and interaction context safe to wrap on narrow widths", () => {
+  const html = renderChartTabs([
+    rider("primary", "Primary Rider", 1),
+    rider("fixed", "Challenger", 2),
+  ]);
+
+  assert.match(
+    html,
+    /data-chart-series-key[^>]*class="[^"]*min-w-0[^"]*flex-wrap[^"]*rounded-md/,
+  );
+  assert.match(html, /data-chart-series-role="fixed"[^>]*class="[^"]*max-w-full/);
+  assert.match(html, /data-chart-interaction-hint[^>]*class="[^"]*break-words/);
+  assert.equal((html.match(/data-chart-series-key/g) ?? []).length, 1);
+});
+
 test("exposes distinct fixed and context markers and dash patterns in the shared key", () => {
   const html = renderChartTabs(
     [
@@ -141,7 +174,7 @@ test("places the selected-lap interaction hint immediately before each detail pa
   assert.equal((html.match(new RegExp(hint, "g")) ?? []).length, 1);
   assert.match(
     html,
-    new RegExp(`data-chart-interaction-hint[^>]*>${hint}</p>.*data-chart-detail-panel="gap"`),
+    new RegExp(`data-chart-interaction-hint[^>]*>.*${hint}</p>.*data-chart-detail-panel="gap"`),
   );
 });
 

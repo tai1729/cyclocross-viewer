@@ -111,9 +111,18 @@ export function ChartTabs({
   const isCrowded = isAllMode || comparisonRiders.length > 8;
   const showContextDetails =
     isCrowded && !isAllMode && comparisonRiders.length <= 12;
+  const comparisonIdentity = getComparisonIdentity(
+    selfRider,
+    otherRiders,
+    isAllMode,
+  );
 
   return (
-    <Card>
+    <Card
+      data-chart-stage
+      aria-label={comparisonIdentity}
+      className="w-full min-w-0 border border-foreground/15 shadow-sm"
+    >
       <Tabs
         value={activeTab}
         onValueChange={(value) => {
@@ -121,10 +130,29 @@ export function ChartTabs({
         }}
         className="contents"
       >
-        <CardHeader>
+        <CardHeader className="gap-2 px-3 pt-3 pb-0 sm:px-4 sm:pt-4">
+          <div
+            data-chart-stage-context
+            className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1"
+          >
+            <p className="min-w-0 break-words text-sm font-semibold">
+              <span className="mr-1.5 text-xs font-medium tracking-wide text-muted-foreground">
+                比較チャート
+              </span>
+              <span data-chart-comparison className="max-[359px]:hidden break-words">
+                {comparisonIdentity}
+              </span>
+            </p>
+            <p
+              data-chart-metric
+              className="min-w-0 break-words text-xs text-muted-foreground"
+            >
+              表示: <span className="font-medium text-foreground">{readingGuide.label}</span>
+            </p>
+          </div>
           <TabsList
             variant="line"
-            className="w-full min-w-0"
+            className="w-full min-w-0 border-b border-border/60 pb-1"
             aria-describedby={CHART_READING_GUIDE_ID}
           >
             {TABS.map((tab) => (
@@ -142,10 +170,10 @@ export function ChartTabs({
             ))}
           </TabsList>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent className="flex min-w-0 flex-col gap-2 px-3 pt-1 pb-3 sm:px-4 sm:pb-4">
           <p
             id={CHART_READING_GUIDE_ID}
-            className="text-sm text-muted-foreground"
+            className="text-xs leading-snug text-muted-foreground sm:text-sm"
           >
             <span className="font-medium text-foreground">
               {readingGuide.label}
@@ -154,9 +182,9 @@ export function ChartTabs({
           </p>
 
           <TabsContent value="rank">
-            <figure>
+            <figure data-chart-plot className="min-w-0">
               <figcaption className="sr-only">
-                注目選手と比較する選手の、各周終了時点における順位推移。1位が上です。
+                各周回終了時点の実測順位を階段状で示します。線の途中の順位を推定していません。注目選手と比較する選手の順位推移で、1位が上です。
               </figcaption>
               <RankBumpChart
                 riders={comparisonRiders}
@@ -170,12 +198,16 @@ export function ChartTabs({
                 onLapSelect={handleLapSelect}
               />
             </figure>
-            <ChartSeriesKey
-              riders={comparisonRiders}
-              seriesStyles={seriesStyles}
-              isAllMode={isAllMode}
-            />
-            <ChartInteractionHint />
+            {activeTab === "rank" ? (
+              <>
+                <ChartSeriesKey
+                  riders={comparisonRiders}
+                  seriesStyles={seriesStyles}
+                  isAllMode={isAllMode}
+                />
+                <ChartInteractionHint />
+              </>
+            ) : null}
             <ChartDetailPanel
               metricKind="rank"
               primaryRider={selfRider}
@@ -190,7 +222,7 @@ export function ChartTabs({
           </TabsContent>
           <TabsContent value="gap">
             {otherRiders.length > 0 ? (
-              <figure>
+              <figure data-chart-plot className="min-w-0">
                 <figcaption className="sr-only">
                   {selfRider.name}
                   を基準にした、比較選手との周回終了時点の累積タイム差。
@@ -212,12 +244,16 @@ export function ChartTabs({
             ) : (
               <NoComparisonRiders />
             )}
-            <ChartSeriesKey
-              riders={comparisonRiders}
-              seriesStyles={seriesStyles}
-              isAllMode={isAllMode}
-            />
-            <ChartInteractionHint />
+            {activeTab === "gap" ? (
+              <>
+                <ChartSeriesKey
+                  riders={comparisonRiders}
+                  seriesStyles={seriesStyles}
+                  isAllMode={isAllMode}
+                />
+                <ChartInteractionHint />
+              </>
+            ) : null}
             <ChartDetailPanel
               metricKind="gap"
               primaryRider={selfRider}
@@ -232,7 +268,7 @@ export function ChartTabs({
           </TabsContent>
           <TabsContent value="pace">
             {otherRiders.length > 0 ? (
-              <figure>
+              <figure data-chart-plot className="min-w-0">
                 <figcaption className="sr-only">
                   {selfRider.name}
                   と比較選手の、同じ周回における単周タイム差。
@@ -254,12 +290,16 @@ export function ChartTabs({
             ) : (
               <NoComparisonRiders />
             )}
-            <ChartSeriesKey
-              riders={comparisonRiders}
-              seriesStyles={seriesStyles}
-              isAllMode={isAllMode}
-            />
-            <ChartInteractionHint />
+            {activeTab === "pace" ? (
+              <>
+                <ChartSeriesKey
+                  riders={comparisonRiders}
+                  seriesStyles={seriesStyles}
+                  isAllMode={isAllMode}
+                />
+                <ChartInteractionHint />
+              </>
+            ) : null}
             <ChartDetailPanel
               metricKind="pace"
               primaryRider={selfRider}
@@ -273,7 +313,7 @@ export function ChartTabs({
             />
           </TabsContent>
           <TabsContent value="lap">
-            <figure>
+            <figure data-chart-plot className="min-w-0">
               <figcaption className="sr-only">
                 注目選手と比較する選手の、周回ごとの実測ラップタイム推移。下ほど速いです。
               </figcaption>
@@ -289,12 +329,16 @@ export function ChartTabs({
                 onLapSelect={handleLapSelect}
               />
             </figure>
-            <ChartSeriesKey
-              riders={comparisonRiders}
-              seriesStyles={seriesStyles}
-              isAllMode={isAllMode}
-            />
-            <ChartInteractionHint />
+            {activeTab === "lap" ? (
+              <>
+                <ChartSeriesKey
+                  riders={comparisonRiders}
+                  seriesStyles={seriesStyles}
+                  isAllMode={isAllMode}
+                />
+                <ChartInteractionHint />
+              </>
+            ) : null}
             <ChartDetailPanel
               metricKind="lap"
               primaryRider={selfRider}
@@ -342,7 +386,7 @@ function ChartSeriesKey({
     <ul
       data-chart-series-key
       aria-label="比較チャートの線"
-      className="flex min-w-0 flex-wrap gap-x-3 gap-y-1 border-t border-border/60 pt-2 text-xs"
+      className="mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-2 rounded-md border border-border/60 bg-muted/25 px-3 py-2 text-xs"
     >
       {visibleRiders.map((rider) => {
         const style = seriesStyles[rider.riderId];
@@ -446,10 +490,33 @@ function ChartSeriesKey({
 
 function ChartInteractionHint() {
   return (
-    <p data-chart-interaction-hint className="text-xs text-muted-foreground">
+    <p
+      data-chart-interaction-hint
+      className="min-w-0 break-words text-xs text-muted-foreground"
+    >
+      <span className="font-medium text-foreground">操作:</span>{" "}
       {CHART_INTERACTION_HINT}
     </p>
   );
+}
+
+function getComparisonIdentity(
+  primaryRider: Rider,
+  otherRiders: Rider[],
+  isAllMode: boolean,
+): string {
+  const primaryLabel = `注目選手 ${primaryRider.name}`;
+  if (isAllMode) return `${primaryLabel} vs 全員（${otherRiders.length}名）`;
+  if (otherRiders.length === 0) return `${primaryLabel} vs 比較対象なし`;
+  if (otherRiders.length === 1) {
+    return `${primaryLabel} vs ${otherRiders[0].name}`;
+  }
+
+  const namedRiders = otherRiders.slice(0, 2).map((rider) => rider.name);
+  const remainingCount = otherRiders.length - namedRiders.length;
+  return `${primaryLabel} vs ${namedRiders.join("・")}${
+    remainingCount > 0 ? `・ほか${remainingCount}名` : ""
+  }`;
 }
 
 function NoComparisonRiders() {

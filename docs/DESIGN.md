@@ -2,7 +2,7 @@
 
 ## Current design - UX3-5 Limited Scope Implementation
 
-Status: COMPLETE — UX3-5 implementation recorded; external human field test remains blocked
+Status: ACTIVE — UX3-5 re-audit/remediation; external human field test remains blocked
 Active Change: UX3-5 MR-01 / MR-02 / MR-03 only
 
 ### Goal
@@ -39,9 +39,11 @@ value, the meet/category/result path, metric switching, and comparison value.
   Context lines receive deterministic categorical colors from the displayed
   rider order while retaining a dashed, lower-emphasis style. For a bounded
   crowded non-`all` view of at most twelve displayed riders, tooltips expose
-  individual context rider names and values; `all` mode and larger datasets
+  individual context rider names and values. `all` mode and larger datasets
   retain the existing aggregate context summary to avoid large-tooltip
-  overflow. The key remains the complete name-to-line reference.
+  overflow; in those cases the key names primary/fixed riders individually and
+  gives an explicit count for the aggregated context. The key remains the
+  authoritative name-to-line reference for the entries it lists.
 - The visible active-tab chart-reading guide states that `周回差` is
   single-lap time difference and is not the result-table `-1周` status. It
   also states that differences are relative to the selected rider and gives
@@ -72,7 +74,9 @@ active metric -> reading guide -> visible chart explanation + accessible descrip
 - Empty rider lists, missing lap data, unavailable comparison data, loading,
   error, and not-found states keep their existing branches and copy.
 - A series key wraps within its card at 390px and 320px-class widths; it must
-  not create page-level horizontal overflow. Long rider names may break.
+  not create page-level horizontal overflow. Long rider names may break. The
+  active-tab reading guide remains visually available at both widths and may
+  wrap; it is not hidden to make room for the chart.
 - Color remains supplemental: every key contains text role/name labels and the
   tooltip contains text names. Keyboard focus, target size, and all existing
   disclosure controls remain unchanged.
@@ -93,9 +97,11 @@ UX3-4 and review evidence files are preserved byte-for-byte.
 ### Acceptance criteria
 
 1. MR-01: crowded comparison shows every unique displayed rider name and role
-   in a wrapping series key; context line colors are deterministic and distinct
-   until palette cycling; bounded non-`all` crowded tooltip entries include
-   rider names while large/`all` views retain the aggregate safety behavior.
+   in a wrapping series key, except that `all` mode and datasets above the
+   bounded tooltip threshold may use the explicit aggregate context item;
+   context line colors are deterministic and distinct until palette cycling;
+   bounded non-`all` crowded tooltip entries include rider names while
+   large/`all` views retain the aggregate safety behavior.
 2. MR-02: visible guide and lap-detail label identify `周回差` as single-lap
    time difference and explicitly distinguish result-table `-1周`; formulas
    and displayed numeric values are unchanged.
@@ -104,8 +110,9 @@ UX3-4 and review evidence files are preserved byte-for-byte.
    rider where applicable.
 4. POS-01–POS-05 are preserved, and no URL, state, disclosure, or error branch
    regresses.
-5. Unit tests cover style assignment and the four guide strings. Full test,
-   typecheck, lint, build, `git diff --check`, and browser checks pass.
+5. Unit tests cover style assignment, aggregate behavior, and the four guide
+   strings. Full test, typecheck, lint, build, `git diff --check`, and browser
+   checks pass.
 
 ### Validation commands
 
@@ -152,6 +159,44 @@ UX3-4 and review evidence files are preserved byte-for-byte.
   metric tabs remain operable; comparison count/fixed selection remain
   operable. Step/linear types, `connectNulls={false}`, sparse values, and
   missing-lap behavior remain unchanged.
+
+### UX3-5 re-audit resolutions (2026-09-10)
+
+- The implementation attribution baseline is committed UX3-5 change `eee5570`,
+  which follows the UX3-4 evidence baseline `79cf29f`. The current HEAD is
+  `475485f`; existing dirty UX3-7R files are user-owned, remain uncommitted,
+  and are not included in the UX3-5 change set. Verification may observe the
+  current tree, but the report separates those pre-existing changes from
+  UX3-5 and does not stage or discard them.
+- UX3-5 remains the contract for MR-01–03 even where the dirty UX3-7R tree
+  overlaps a component. A direct regression of an MR-01–03 criterion may be
+  corrected in the overlapping file only at the smallest possible hunk; other
+  UX3-7R layout, results, or disclosure behavior is outside this task.
+- The static key is complete for the displayed unique riders in ordinary and
+  bounded crowded modes. The existing all-mode/large-data aggregate context
+  item is explicitly permitted by the UX3-4 safety boundary; tooltip
+  completeness is separate and is individual only for non-`all` crowded views
+  with at most twelve raw displayed riders.
+- Crowded and tooltip thresholds use raw `comparisonRiders.length`, as the
+  existing composition contract does. The key deduplicates rider IDs in input
+  order; the style helper keeps its first-entry behavior. No synthetic primary
+  entry is created for inconsistent stale state, because URL normalization and
+  `useComparisonRiders` already supply the selected rider in the comparison
+  list; such inconsistent state is not a new UX3-5 behavior.
+- The active-tab guide is the required visible guide. Inactive tab content may
+  be unmounted by the existing Tabs primitive, but switching to each tab must
+  expose its own guide and accessible description. This is not a requirement to
+  keep four guides simultaneously visible in the DOM.
+- 320px/390px checks are technical regression checks, not human evidence and
+  not a claim that Mobile triangulation is complete. If exact viewport control
+  is unavailable, the report must mark that evidence unavailable rather than
+  claim a mobile PASS. External Human Field Test remains
+  `BLOCKED — PARTICIPANTS UNAVAILABLE`.
+- POS-01–POS-05 are accepted through observable checks: result table/name/
+  status readability; chart-first rank/lap availability; unchanged route
+  navigation; four-tab operation; and preserved comparison count, fixed
+  selection, and selected-rider emphasis. Numeric semantics, disclosures,
+  URL state, and error branches are regression contracts, not redesign targets.
 
 Status: ACTIVE — UX3-1C specification resolved; implementation in progress
 Active Change: UX3-1C Feedback Intake
@@ -1686,3 +1731,335 @@ comparison, tab, and lap state before the next category loads.
    back/forward, disclosure, keyboard, and error/retry behavior remain valid.
 7. `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
    `git diff --check` pass before review.
+
+## UX3-7R Owner Review Remediation REDO
+
+Status: DESIGN — Owner Human remediation effectiveness is the acceptance gate
+
+### Goal
+
+Rework the analysis page around the original P-A-01 Owner Human evidence so
+that the released screen visibly communicates the sequence `race context ->
+result/rider -> primary chart -> comparison -> detail`. The remediation is
+successful only when same-state Before/After screenshots and an independent
+fresh visual review show that the original complaints no longer materially
+apply.
+
+The prior UX3-7 implementation is historical evidence, not an acceptance
+shortcut. It changed labels, chart keys, markers, chart height, and initial
+rider selection, but retained the macro page structure that placed a large
+header/context stack and a desktop side rail before/alongside the chart. The
+redo therefore targets information architecture and visual priority rather
+than adding another explanatory label.
+
+### Non-goals
+
+- No data contract, collector, metric formula, URL key, browser history,
+  DNF/lap-down semantics, or result status meaning changes.
+- No unrelated feature, event-search product expansion, dependency addition,
+  or full application rewrite.
+- No deletion or modification of the prior UX3-7 report or its historical
+  verdict.
+- No claim that External Human validation is complete.
+
+### Approved redesign
+
+1. Keep the race/category context compact and visually distinct at the top.
+2. When analysis is active, place a compact analysis identity/control deck
+   before the chart. It must show the current rider, an explicit change
+   action, comparison mode, and visible `X vs Y` identity when comparisons
+   exist. Existing rider selection and comparison mechanics remain the
+   source of truth.
+3. Make the chart the primary full-width surface on desktop and mobile. Put
+   metric tabs and the role/name series key adjacent to the chart surface;
+   keep the chart's measured plot area large enough to be the dominant visual
+   element at 1440x900 and 1280x720.
+4. Move summary/supporting information below the primary chart on desktop as
+   well as mobile. Keep lap detail and results disclosures reachable below the
+   chart, but expose a prominent, plain-language Results action in the race
+   context/analysis flow so the result table is discoverable without scanning
+   to the page bottom.
+5. Keep the existing result table as the authoritative selection surface and
+   preserve the existing disclosure, URL, focus, and back/forward behavior.
+6. Reduce decorative/container whitespace and repeated labels, but retain
+   enough grouping, focus rings, and 44px-class mobile targets for access.
+
+### Visual direction
+
+Use the existing timing-board palette and type system. The distinctive visual
+device is a compact race-analysis header with an explicit `MAIN RIDER` /
+`COMPARISON` relationship, followed by one large chart stage. Supporting cards
+are quieter and lower on the page. This is intentionally a hierarchy change,
+not a cosmetic theme change.
+
+### Affected components
+
+- `components/RaceViewer.tsx`: restructure active-analysis order and results
+  placement without changing state transitions.
+- `components/AnalysisContextBar.tsx`: make the current rider/comparison
+  relationship a concise analysis identity surface.
+- `components/RiderSelector.tsx`, `components/ComparisonAdjuster.tsx`, and
+  `components/ComparisonRiderPicker.tsx`: preserve mechanics while fitting
+  them into the new control deck and improving action/result grouping.
+- `components/ChartTabs.tsx`: ensure chart stage, tabs, key, and interaction
+  guidance are visually adjacent and not pushed below the viewport.
+- `components/RaceHeader.tsx` and results disclosure markup: compact race
+  context and make Results discoverable in the primary flow.
+- Focused tests and the UX3-7R report/evidence only.
+
+### Acceptance criteria
+
+1. On a fresh race entry, the primary chart is visible without an opaque
+   empty-analysis step; deep links with an explicit rider remain authoritative.
+2. At the top of active analysis, a first-use reviewer can answer without
+   exploration: which race, which rider, where to change rider, who is being
+   compared, which metric, and which surface is the main chart.
+3. The chart is a full-width primary surface with visibly reduced preceding
+   whitespace and supporting content below it. The chart key/line identity is
+   adjacent and readable, not separated below the viewport.
+4. Results are discoverable from the primary flow; selecting a result still
+   changes the analysis rider and retains the existing URL/history contract.
+5. Comparison add/change/remove controls visibly connect to the `who vs who`
+   state. The line key remains text-based and marker/dash-compatible with all
+   chart series.
+6. P-A-01 negative/improvement records are assessed individually as
+   `CLEARLY CHANGED`, `PARTIALLY CHANGED`, or `NO MATERIAL CHANGE`; only the
+   first category can pass.
+7. Same-state screenshots exist and are visually inspected at 1440x900,
+   1280x720, 390x844, and 320x568. No horizontal overflow, clipping, hidden
+   fixed content, or broken focus semantics is accepted.
+8. MR-01–MR-03, POS-01–POS-05, all functional flows, and current automated
+   behavior remain green.
+
+### Validation commands
+
+- `npm test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- `git diff --check`
+- Exact viewport browser capture/review using Playwright or an equivalent
+  Chromium context plus Production smoke after deployment.
+
+### UX3-7R resolved layout and evidence decisions
+
+- Active desktop DOM order is: compact race context (back/category/race
+  metadata plus a visible `リザルトを表示` action) → analysis identity/control
+  deck → full-width chart stage → lap detail/summary support → Results
+  disclosure/table. There is no persistent desktop control rail beside the
+  chart. The existing rider and comparison controls move into the deck; their
+  callbacks and state ownership do not move out of `RaceViewer`.
+- Active mobile DOM order is the same conceptual order. The primary rider
+  summary and comparison summary remain visible; detailed rider picker,
+  comparison mode options, and pinned-rider search may remain disclosures or
+  dialogs. Metric tabs stay attached to the chart. The chart is the first
+  large content surface after the deck. No fixed control layer may cover it.
+- The Results action is visible in the initial active-analysis flow and opens
+  the existing closed disclosure/table. It is not a second results table and
+  does not add a URL key. Results selection remains authoritative; selecting a
+  row closes the disclosure as today, preserves the existing navigation method,
+  and focuses/scrolls the analysis region according to the current
+  `RaceViewer` behavior.
+- `X vs Y` is implemented as a mode-aware identity sentence: the primary
+  rider is always named first; one comparison is named directly; multiple
+  comparisons use the first two names plus a bounded count; `全員` and no
+  comparison use explicit mode wording. The full role/name series key remains
+  the authoritative mapping for every line.
+- The series key is adjacent to the chart inside the chart stage, immediately
+  after the plot and before interaction/detail content. It may wrap, but must
+  not be clipped or create page overflow. The key is included in the visual
+  inspection boundary; it is not counted as plot height.
+- For Before/After evidence, all four viewports use the same Production URL,
+  race/category/rider/metric/comparison/lap state. Before is the released
+  UX3-7 alias/deployment and After is the resulting implementation. The
+  required state is an explicit rider deep link with default `±2` comparison,
+  rank tab, and no pinned lap; a second crowded comparison capture may be
+  added for line identity.
+- Exact screenshot evidence is a hard UX3-7R acceptance gate. Each viewport
+  is reviewed for chart bounds/prominence, preceding whitespace, Results
+  action, rider/comparison identity, key wrapping, overflow/clipping, and
+  visible focus where interacted. DOM/test evidence alone cannot mark an
+  Owner finding CLEARLY CHANGED.
+- P-A-01 `NR`, `N/A`, and positive-only answers are documented for traceability
+  but are not negative-finding pass/fail records. Negative/improvement answers
+  with a concrete complaint are individually tracked; grouped root causes
+  may share one implementation only when every source QA remains listed.
+- `PARTIALLY CHANGED` and `NO MATERIAL CHANGE` are unresolved Owner findings.
+  If either remains for a major complaint, the final verdict is NEEDS
+  REVISION even when automated tests and synthetic reviewers pass.
+
+## UX3-7R2 Final Owner Acceptance Closure (active, 2026-09-10)
+
+This section is the current design entry for closing the remaining UX3-7R
+Owner findings. The historical UX3-7R report remains immutable. The primary
+source is `docs/user-testing/ux3-2-participant-post-test-qa-P-A-01.md`; the
+starting classification and prior evidence are recorded in
+`docs/user-testing/ux3-7r-owner-review-remediation-redo.md`.
+
+### Goal and non-goals
+
+Close the eight individually tracked remaining complaint units: Q12, Q69,
+Q22, Q45, Q68, the two distinct Q27 complaints, and the residual Q03
+`stepAfter` meaning complaint. Preserve the UX3-7R macro layout and MR/POS
+contracts. Do not rewrite the collector, add a database/account system, add a
+production dependency, change URL meanings, or replace measured step charts
+with linear interpolation.
+
+### Series option order (UX3-7R2 revision 1)
+
+The Home `MeetSelector` keeps season filtering and the raw series values used
+by URL state, but renders the unique series options in a deterministic
+north-to-south order. `全日本` is first; the known order is `東北`, `関東`,
+`宇都宮`, `前橋`, `野田`, `千葉`, `東京`, `湘南`, `富山`, `信州`, `東海`,
+`関西`, `中国`, `もみじ`, `山口`, `四国`, `九州`. `もみじ` is grouped with
+the 中国 region. Any future or otherwise unknown series remains selectable and
+is placed after the known values using deterministic code-point ordering.
+Changing the season still rebuilds the options from that season's meets, and
+URL values are not renamed or rewritten.
+
+### Navigation closure
+
+`RaceHeader` remains the only sticky layer. The existing return-to-list action
+and category selector move into that header's compact context rows. The link
+keeps the existing season/series return query and the selector keeps the
+existing category URL/history reset behavior. Race title, category, results
+action, and provenance remain visible with the existing narrow-screen
+omission/wrapping rules. No second fixed toolbar is introduced.
+
+### Rider-first discovery closure
+
+The home page gains a labeled `選手から探す` surface. A new
+`/api/riders/search?q=...` Route Handler uses only the existing `meets.json`
+and `data/race-{raceId}.json` source. The server builds a bounded in-memory
+TTL index per warm runtime, fetching unique category files with bounded
+concurrency and the existing race validation boundary. Search is opt-in after
+at least two normalized characters and matches name or rider ID. Matches are
+grouped by rider and expose direct meet/category/rider links, limited to a
+readable result count. An incomplete scan or source failure is returned as an
+explicit warning; an empty result never claims that the rider does not exist.
+No new upstream contract or persistent search infrastructure is required.
+
+### Feedback and chart meaning closure
+
+The feedback action remains anonymous and context-preserving, but its entry is
+made a visible, labeled page-level utility action at the start of the current
+page rather than relying on a desktop corner control or mobile footer alone.
+It is not sticky and does not cover analysis content. The rank reading guide
+adds one concise sentence explaining that `stepAfter` shows measured rank at
+each completed lap as a step, without estimating values between checkpoints.
+All existing chart data semantics stay unchanged.
+
+### Acceptance and validation
+
+The final report is `docs/user-testing/ux3-7r2-final-owner-acceptance-closure.md`
+and new evidence is stored under `docs/user-testing/evidence/ux3-7r2/`.
+Acceptance requires all 38 P-A-01 finding units to be `CLEARLY CHANGED` or a
+genuinely architecture-erased `NOT APPLICABLE`, with no `NO MATERIAL CHANGE`,
+no release-blocking S2, MR-01–03/POS-01–05 PASS, four exact viewports PASS,
+automated checks PASS, the full functional flow PASS, and independent fresh
+Astra/Sol/Terra PASS before commit, push, Production deployment, and smoke.
+
+### Audit resolutions and concrete contracts
+
+The eight remaining units are tracked individually even where one design
+closes several of them: (1) Q12 list/category context while scrolling, (2) Q69
+return-to-list visibility while scrolling, (3) Q22 unknown-meet rider
+discovery, (4) Q45 result-table search burden, (5) Q68 unknown-category rider
+discovery, (6) Q27-A category control affordance, (7) Q27-B feedback entry
+discoverability, and (8) Q03 residual rank-step meaning. Q03's initial-chart
+sub-complaint and Q27-A may be recorded as already clearly changed only when
+the final matrix and screenshots show the source dissatisfaction is gone.
+
+The sticky context is the existing `RaceHeader` only. It contains one compact
+navigation row with the normal link to `listHref` and one category selector row.
+The race title/count/results/provenance content remains in the normal flow
+immediately below that compact sticky bar so Mobile is not dominated by a
+large sticky header. `listHref` is
+`/` with only valid `season` and `series` return filters; a direct race link
+without context returns to `/`. It does not use browser-back semantics and does
+not preserve transient race analysis parameters. The category selector keeps
+the current `router.push` reset of rider/comparison/tab/lap. At 320px and
+390px, long text wraps, metadata already hidden by the current breakpoint stays
+hidden, all actions keep a 44px target, and the header remains the only sticky
+layer. Evidence must show the header does not cover the chart or focused
+controls after scrolling.
+
+The rider discovery response is a JSON contract:
+
+```ts
+type RiderDiscoveryResponse = {
+  status: "complete" | "partial";
+  query: string;
+  results: RiderDiscoveryMatch[];
+  scannedSources: number;
+  failedSources: number;
+  totalSources: number;
+  warning?: "source-scan-incomplete";
+};
+
+type RiderDiscoveryMatch = {
+  riderId: string;
+  name: string;
+  dataQuality: "ok" | "error";
+  totalAppearances: number;
+  appearances: Array<{
+    meetId: string;
+    meetName: string;
+    meetDate: string;
+    season: string;
+    series: string;
+    raceId: string;
+    categoryId: string;
+    categoryName: string;
+  }>;
+};
+
+The response never embeds a prebuilt URL. The client builds a link from these
+validated fields using the existing URL encoding/serialization rules, including
+`category`, `rider`, and the season/series return context.
+```
+
+`GET /api/riders/search?q=...` returns 400 with
+`{ error: "query-too-short", retryable: false }` when the normalized query
+has fewer than two Unicode code points, 200 with `status: "complete"` for a
+full scan, 200 with `status: "partial"` and a visible warning for mixed source
+success/failure or the 20-second scan budget, and 503 with
+`{ error: "source-unavailable", retryable: true }` only when no source can be
+loaded. Responses send `Cache-Control: no-store`; successful race data is
+reused only by the warm-runtime index cache. The index TTL is 10 minutes, the
+race loader concurrency is 24, the scan budget is 20 seconds, the result limit
+is 20 riders, and each rider returns at most six newest appearances. Partial
+indexes are not retained as complete cache entries. A retry starts a new scan.
+
+The index deduplicates source files by `raceId`, orders source metadata by
+`meetDate` descending then category order, groups strictly by `riderId`, and
+keeps different IDs separate even when normalized names match. It indexes both
+`dataQuality: "ok"` and `"error"` riders because the existing race route is
+authoritative and already explains analysis-unavailable data. A direct result
+link is allowed only for a source whose `raceId` and category match the
+corresponding `meets.json` entry and whose race payload passes the existing
+shape validation. The destination uses `/race/{meetId}?category={raceId}&rider={riderId}`
+plus the existing season/series return context. The race route revalidates
+everything; stale links use its existing not-found/error states.
+
+The search UI is idle until submit, requires at least two normalized characters,
+uses one labeled input and one 44px button, shows loading/complete/partial/
+empty/error states, wraps names and locations without horizontal overflow, and
+does not fetch discovery data on initial home load. The user can retry a
+partial or 503 response. The feedback action has exactly one rendered entry per
+page: a non-sticky labeled utility action at the beginning of the page content;
+the old fixed desktop corner and mobile-only footer variants are removed. It
+uses the existing snapshot/context and returns to the current path/query after
+cancel or successful submission; search text is not added to the feedback
+payload. The rank reading guide uses this canonical wording: `各周回終了時点の実測
+順位を階段状で示します。線の途中の順位を推定していません。` It is visible
+on the rank tab and included in its figure description; no loading/empty chart
+is required to show it.
+
+For the dirty worktree, the baseline is the status captured before UX3-7R2
+implementation. Existing UX3-7 files that this task must extend may be staged
+only as their intended hunks, together with new UX3-7R2 code/tests/report/
+evidence. `docs/feedback/feedback-production-activation-report.md`,
+`test-results/`, and unrelated UX3-2 input records remain unstaged unless a
+new diff proves they are required by this task. No existing user change is
+discarded or reverted.

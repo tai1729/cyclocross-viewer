@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import type { RaceResult, Rider } from "@/lib/types";
 import {
@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { normalizeSearchText } from "@/lib/search";
 
 interface RaceResultsTableProps {
   race: RaceResult;
@@ -62,12 +63,20 @@ function statusLabel(rider: Rider, result: RiderResult | null): string {
   return rider.status === "finished" ? "完走" : "DNF";
 }
 
+export function matchesRiderSearch(rider: Rider, query: string): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+  return normalizedQuery.length === 0 ||
+    normalizeSearchText(rider.name).includes(normalizedQuery) ||
+    normalizeSearchText(rider.riderId).includes(normalizedQuery);
+}
+
 export function RaceResultsTable({
   race,
   selectedRiderId,
   onSelect,
   analysisRegionId,
 }: RaceResultsTableProps) {
+  const [filterText, setFilterText] = useState("");
   const resultRows = useMemo(
     () =>
       [...race.riders]
@@ -77,6 +86,10 @@ export function RaceResultsTable({
           result: getRiderResult(race, rider.riderId),
         })),
     [race],
+  );
+  const visibleRows = useMemo(
+    () => resultRows.filter(({ rider }) => matchesRiderSearch(rider, filterText)),
+    [filterText, resultRows],
   );
 
   return (
@@ -94,9 +107,28 @@ export function RaceResultsTable({
             </a>
           ) : null}
         </CardDescription>
+        <div className="mt-2 flex min-w-0 flex-col gap-1.5">
+          <label htmlFor={`results-rider-filter-${race.raceId}`} className="text-sm font-medium text-foreground">
+            結果表を名前・IDで絞り込む
+          </label>
+          <input
+            id={`results-rider-filter-${race.raceId}`}
+            data-results-rider-filter
+            type="search"
+            value={filterText}
+            onChange={(event) => setFilterText(event.target.value)}
+            placeholder="選手名または選手ID"
+            className="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+          {filterText.trim() ? (
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {visibleRows.length}名を表示中 / 全{resultRows.length}名
+            </p>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="px-0">
-        {resultRows.length > 0 ? (
+        {resultRows.length > 0 && visibleRows.length > 0 ? (
           <div className="max-h-[32rem] overflow-x-hidden overflow-y-auto border-y border-border">
             <table className="w-full table-fixed border-collapse text-left text-sm">
               <caption className="sr-only">
@@ -125,7 +157,7 @@ export function RaceResultsTable({
                 </tr>
               </thead>
               <tbody>
-                {resultRows.map(({ rider, result }) => {
+                {visibleRows.map(({ rider, result }) => {
                   const isSelected = rider.riderId === selectedRiderId;
 
                   return (
@@ -180,6 +212,10 @@ export function RaceResultsTable({
               </tbody>
             </table>
           </div>
+        ) : resultRows.length > 0 ? (
+          <p className="border-y border-border px-4 py-8 text-center text-sm text-muted-foreground">
+            条件に一致する選手が見つかりません。
+          </p>
         ) : (
           <p className="border-y border-border px-4 py-8 text-center text-sm text-muted-foreground">
             このカテゴリーには選手データがありません。

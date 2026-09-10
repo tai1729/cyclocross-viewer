@@ -8,7 +8,7 @@ export interface ChartReadingGuide {
 export const CHART_READING_GUIDES: Readonly<Record<ChartTab, ChartReadingGuide>> = {
   rank: {
     label: "順位",
-    text: "数字が小さいほど上位（1位が最良）で、グラフでは上にあるほど良い状態です。",
+    text: "各周回終了時点の実測順位を階段状で示します。線の途中の順位を推定していません。数字が小さいほど上位（1位が最良）で、グラフでは上にあるほど良い状態です。",
   },
   gap: {
     label: "タイム差",

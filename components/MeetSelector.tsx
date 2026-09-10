@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
+import { sortSeriesOptions } from "@/lib/seriesOrder";
 import type { MeetEntry } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -41,7 +42,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
 
   const filteredBySeason = season ? meets.filter((meet) => meet.season === season) : meets;
   const seriesOptions = useMemo(
-    () => [...new Set(filteredBySeason.map((meet) => meet.series).filter(Boolean))].sort(),
+    () => sortSeriesOptions([...new Set(filteredBySeason.map((meet) => meet.series).filter(Boolean))]),
     [filteredBySeason],
   );
   const filtered = filteredBySeason

@@ -35,11 +35,12 @@ test("feedback UI source preserves responsive placement and route contract", () 
   const form = read("components/feedback/FeedbackForm.tsx");
   const layout = read("app/layout.tsx");
 
-  assert.match(entry, /fixed right-4 bottom-\[calc\(1rem\+env\(safe-area-inset-bottom\)\)\]/);
-  assert.match(entry, /hidden min-h-10 .*lg:inline-flex/);
-  assert.match(entry, /<footer className="mt-auto .*pb-\[calc\(1rem\+env\(safe-area-inset-bottom\)\)\] lg:hidden/);
+  assert.match(entry, /data-feedback-entry/);
+  assert.match(entry, /inline-flex min-h-11/);
+  assert.doesNotMatch(entry, /fixed right-4 bottom-/);
+  assert.doesNotMatch(entry, /<footer/);
   assert.doesNotMatch(entry, /sticky/);
-  assert.match(layout, /pb-16/);
+  assert.doesNotMatch(layout, /pb-16/);
   assert.match(entry, /FEEDBACK_SNAPSHOT_STORAGE_KEY/);
   assert.match(entry, /snapshotFeedbackContext\(buildFeedbackContext\(\)\)/);
   assert.match(entry, /getFeedbackReturnPath\(window\.location\)/);

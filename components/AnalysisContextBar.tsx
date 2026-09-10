@@ -48,6 +48,19 @@ export function getAnalysisComparisonNamesLabel(
     : visibleNames.join("、");
 }
 
+export function getAnalysisComparisonIdentityLabel(
+  riderName: string,
+  comparisonNames: readonly string[],
+  comparisonMode: string,
+): string {
+  if (comparisonNames.length === 0) return `${riderName} · ${comparisonMode}`;
+  if (comparisonNames.length === 1) return `${riderName} vs ${comparisonNames[0]}`;
+
+  const visibleNames = comparisonNames.slice(0, 2);
+  const remainingCount = comparisonNames.length - visibleNames.length;
+  return `${riderName} vs ${visibleNames.join(" / ")}${remainingCount > 0 ? ` + ${remainingCount} more` : ""}`;
+}
+
 export function getAnalysisRiderStatus(
   rider: Rider,
   result: RiderResult | null,
@@ -92,30 +105,31 @@ export function AnalysisContextBar({
     <div
       data-analysis-context-bar
       className={cn(
-        "min-w-0 rounded-lg border border-border bg-muted/20 px-3 py-3 sm:px-4",
-        isMobilePresentation && "py-2",
+        "min-w-0 rounded-lg border border-border bg-muted/20 px-3 py-2 sm:px-4",
+        isMobilePresentation && "px-3 py-2",
       )}
-      aria-label="分析コンテキスト"
+      aria-label={`分析コンテキスト: ${raceName} / ${categoryName}`}
     >
-      <dl
-        className={cn(
-          "grid min-w-0 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4",
-          isMobilePresentation && "grid-cols-2 gap-x-3",
-        )}
-      >
+      <div className="grid min-w-0 grid-cols-2 gap-2 border-b border-border/70 pb-2">
         <ContextItem
-          label="大会"
-          value={raceName}
-          className={cn("lg:col-span-2", isMobilePresentation && "col-span-2")}
+          label="注目選手"
+          value={`${riderName} · ${riderStatus}`}
         />
-        <ContextItem label="カテゴリー" value={categoryName} />
-        <ContextItem label="注目選手" value={`${riderName}・${riderStatus}`} />
-        <ContextItem label="比較する選手" value={`${comparisonMode}・${displayedCount}名表示`} />
         <ContextItem
-          label="比較中の名前"
-          value={getAnalysisComparisonNamesLabel(comparisonNames, comparisonMode)}
+          label="比較する選手"
+          value={getAnalysisComparisonIdentityLabel(
+            riderName,
+            comparisonNames,
+            comparisonMode,
+          )}
         />
-        <ContextItem label="表示中の指標" value={activeMetric} />
+      </div>
+      <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <ContextItem label="比較モード" value={`${comparisonMode}・${displayedCount}名表示`} />
+        <ContextItem
+          label="表示中の指標"
+          value={activeMetric}
+        />
       </dl>
     </div>
   );
