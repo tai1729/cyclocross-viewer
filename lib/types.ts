@@ -24,6 +24,8 @@ export interface RaceResult {
   raceName: string;
   category: string;
   updatedAt: string;
+  /** Official numbered lap sequence from the collector's lap-table header. */
+  raceLapNumbers?: number[];
   /**
    * design.md 2.4 のスキーマ案には無いMVP-0独自の拡張フィールド。
    * SummaryCardの「昇格圏差」計算に使う昇格ライン（例: 3位以内が昇格）。
@@ -31,6 +33,25 @@ export interface RaceResult {
    */
   promotionZoneRank?: number;
   riders: Rider[];
+}
+
+/**
+ * Validate the optional official lap axis without sorting, deduplicating, or
+ * partially accepting malformed metadata.
+ */
+export function isValidRaceLapNumbers(value: unknown): value is number[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (lapNumber, index) =>
+        typeof lapNumber === "number" &&
+        Number.isFinite(lapNumber) &&
+        Number.isSafeInteger(lapNumber) &&
+        lapNumber > 0 &&
+        (index === 0 || value[index - 1] < lapNumber),
+    )
+  );
 }
 
 export interface MeetCategory {

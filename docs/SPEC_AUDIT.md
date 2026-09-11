@@ -223,6 +223,109 @@ implementation starts:
 
 STATUS: CLEAR
 
+## UX3-7R3 final audit closure
+
+The earlier UX3-7R3 draft and the two auditor reports are superseded by the
+resolutions recorded in the active UX3-7R3 section of `docs/DESIGN.md`. The
+16-row traceability matrix, exact lap metadata validation, collector ownership,
+official sequences, zero-gap visibility rule, shared Disclosure ownership,
+functional-flow definition, S-level definitions, and final-Production evidence
+sequence are now explicit. Implementation is authorized and must keep all
+unrelated dirty changes unstaged.
+
+STATUS: CLEAR
+
+## UX3-7R3 final audit closure
+
+The earlier UX3-7R3 draft and the two auditor reports are superseded by the
+resolutions recorded in the active UX3-7R3 section of `docs/DESIGN.md`. The
+16-row traceability matrix, exact lap metadata validation, collector ownership,
+official sequences, zero-gap visibility rule, shared Disclosure ownership,
+functional-flow definition, S-level definitions, and final-Production evidence
+sequence are now explicit. Implementation is authorized and must keep all
+unrelated dirty changes unstaged.
+
+STATUS: CLEAR
+
+## UX3-7R3 resolved audit (implementation authorized)
+
+The two independent auditors returned overlapping questions. The following
+resolutions are authoritative for UX3-7R3:
+
+1. The user-provided request is the complete 16-item Owner issue list. The
+   traceability matrix and per-ID observable acceptance criteria now live in
+   the active UX3-7R3 section of `docs/DESIGN.md`; grouped fixes still require
+   individual checks and report rows.
+2. Season changes preserve the current series query. Canonicalization removes
+   it only when the new season has no matching series. This intentionally
+   supersedes the old clear-on-season behavior for B-01 and has a valid and an
+   invalid-combination regression test.
+3. `raceLapNumbers` is valid only when non-empty, finite, safe positive
+   integers are strictly increasing in source order. Gaps and a start at lap 2
+   are valid for backward-compatible upstream payloads. The current collector
+   emits the complete 1..N sequence from official `距離・周回数` metadata;
+   `StartLoop` is not an additional lap. Any malformed field falls back to the
+   sorted union of valid measured checkpoints. An official lap with no measured
+   rider checkpoint stays on the axis but remains missing in values/details.
+4. The collector is the data producer and may be changed in its parser/types,
+   parser tests, and only `race-27834.json`, `race-27770.json`, and
+   `race-27160.json` for this task. Existing dirty collector workflow and
+   collection-script changes are unrelated and must not be staged. The common
+   B-02/B-03 root cause includes unsupported `H:MM:SS` result/lap times; the
+   fix is generalized clock parsing plus official race-lap metadata (not raw
+   table-column count), never a race-ID branch. The official cross-check axes
+   are 27834 -> 1..11, 27770 -> 1..11, and 27160 -> 1..8.
+5. Zero gap is both a data and visual requirement: the transform must retain a
+   finite numeric `0`, and GapChart must give a zero-baseline series an explicit
+   readable style (opacity/stroke/marker) so it is not hidden by the reference
+   line. The regression test asserts the exact zero point for B-04.
+6. UI acceptance is per the 16-row matrix in DESIGN.md. Named screenshots may
+   cover related rows, but each row also has a source, browser, or automated
+   assertion. Data rows require live official pages when reachable and record
+   the expected sequences 27834 -> 1..11, 27770 -> 1..11, and 27160 -> 1..8.
+7. The shared Disclosure component owns markup, IDs, aria state, chevron,
+   border, and summary interaction. Each caller owns only its content and any
+   externally required open state; content remains mounted while collapsed.
+   `useId` supplies unique panel IDs. Native summary keyboard behavior is
+   preserved and the summary is at least 44px high.
+8. S0--S4 use the existing UX3-2 definitions; this release records counts and
+   requires S0/S1 zero. The complete functional flow is the exact flow listed
+   in the Owner request, including filters, race/category/results/rider/search/
+   comparison/metrics/laps/disclosures/reload/deep link/back/forward/error
+   recovery. Production After evidence must use the final deployed pushed
+   commit; current Production may be used only as contextual Before evidence.
+
+The audit is clear: implementation may start. Any later reviewer finding is a
+revision task, not an unresolved design ambiguity.
+
+STATUS: CLEAR
+
+## UX3-7R3 specification audit draft
+
+The Owner Human's UX3-7R3 issue list is the primary source of truth and
+requires all 16 IDs to finish PASS. `docs/inputs/` was checked recursively;
+there are no eligible input documents to resolve against the standard docs.
+This active audit is not clear until two independent auditors inspect the
+new design/plan and relevant source, and any implementation-significant
+questions are recorded and resolved below.
+
+Current investigation points requiring auditor confirmation:
+
+- D-01 is the home `RiderDiscovery` form whose current input/button layout uses
+  `sm:items-end`; confirm the reported baseline issue and the exact desktop
+  control row.
+- D-04 applies to both the selected-lap ranking detail's `max-h-24` and the
+  results table's internal max-height if either can clip owner-visible rows.
+- B-02/B-03 require a collector contract update because the viewer currently
+  receives no official total-lap metadata and the two raw target payloads end
+  at lap 10 while official pages show 11; the viewer must remain backward
+  compatible and must not add synthetic rider laps.
+- B-04's current pure gap transform retains numeric zero, so review must
+  confirm whether the failure is visual overlap/opacity or an upstream point
+  omission and require a test at the exact target race semantics.
+
+STATUS: IN_PROGRESS
+
 ## UX3-7R2 Final Owner Acceptance Closure — resolved audit (2026-09-10)
 
 Two independent `spec_auditor` reviews returned questions. The Commander

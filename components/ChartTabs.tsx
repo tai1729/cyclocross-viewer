@@ -120,6 +120,7 @@ export function ChartTabs({
   return (
     <Card
       data-chart-stage
+      role="region"
       aria-label={comparisonIdentity}
       className="w-full min-w-0 border border-foreground/15 shadow-sm"
     >
@@ -135,13 +136,8 @@ export function ChartTabs({
             data-chart-stage-context
             className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1"
           >
-            <p className="min-w-0 break-words text-sm font-semibold">
-              <span className="mr-1.5 text-xs font-medium tracking-wide text-muted-foreground">
-                比較チャート
-              </span>
-              <span data-chart-comparison className="max-[359px]:hidden break-words">
-                {comparisonIdentity}
-              </span>
+            <p data-chart-comparison className="sr-only">
+              {comparisonIdentity}
             </p>
             <p
               data-chart-metric

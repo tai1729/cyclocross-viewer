@@ -9,6 +9,7 @@ import {
 } from "@/lib/dataTransform";
 import type { RiderSeriesStyle } from "@/lib/chartSeriesStyles";
 import type { Rider } from "@/lib/types";
+import { Disclosure } from "@/components/Disclosure";
 
 interface ChartDetailPanelProps {
   metricKind: ChartDetailMetricKind;
@@ -68,21 +69,26 @@ export function ChartDetailPanel({
     !hasRaceAxis || selectedLapIndex === raceLapNumbers.length - 1;
 
   return (
-    <details
+    <Disclosure
       aria-labelledby={headingId}
       data-chart-detail-panel={metricKind}
       data-detail-lap={selectedLapNumber === null ? "unavailable" : selectedLapNumber}
-      className="flex min-w-0 flex-col gap-2 overflow-hidden rounded-lg border border-border/80 bg-card/70 p-2.5 text-card-foreground sm:p-3"
+      className="flex min-w-0 flex-col overflow-hidden bg-card/70"
+      summary={(
+        <>
+          <span className="break-words text-sm font-semibold">
+            {selectedLapNumber === null
+              ? "選択中の周回: 利用できません"
+              : `選択中の周回: ${selectedLapNumber}周目の値`}
+          </span>
+          <span className="ml-auto shrink-0 text-xs font-normal text-muted-foreground">
+            クリックで詳細
+          </span>
+        </>
+      )}
+      contentClassName="flex min-w-0 flex-col gap-2 p-2.5 sm:p-3"
     >
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <span className="break-words text-sm font-semibold">
-          {selectedLapNumber === null
-            ? "選択中の周回: 利用できません"
-            : `選択中の周回: ${selectedLapNumber}周目の値`}
-        </span>
-        <span className="shrink-0 text-xs text-muted-foreground">クリックで詳細</span>
-      </summary>
-      <div className="mt-2 flex min-w-0 flex-col gap-2 border-t border-border/70 pt-2">
+      <div className="flex min-w-0 flex-col gap-2">
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3
@@ -180,7 +186,7 @@ export function ChartDetailPanel({
           ) : (
             <div
               aria-label={`${METRIC_LABELS[metricKind]}の周回詳細`}
-              className="max-h-24 min-w-0 overflow-x-hidden overflow-y-auto rounded-md border border-border"
+              className="min-w-0"
             >
               {detailRows.length === 0 ? (
                 <p className="px-3 py-4 text-sm text-muted-foreground">
@@ -229,7 +235,7 @@ export function ChartDetailPanel({
         </div>
       )}
       </div>
-    </details>
+    </Disclosure>
   );
 }
 

@@ -1,4 +1,8 @@
-import type { MeetEntry, RaceResult } from "@/lib/types";
+import {
+  isValidRaceLapNumbers,
+  type MeetEntry,
+  type RaceResult,
+} from "@/lib/types";
 
 export const DATA_BASE_URL =
   "https://raw.githubusercontent.com/tai1729/cyclocross-data-collector/main";
@@ -66,6 +70,19 @@ function isRaceResult(value: unknown): value is RaceResult {
   );
 }
 
+function normalizeRaceResult(race: RaceResult): RaceResult {
+  if (!Object.prototype.hasOwnProperty.call(race, "raceLapNumbers")) {
+    return race;
+  }
+  if (isValidRaceLapNumbers(race.raceLapNumbers)) {
+    return race;
+  }
+
+  const withoutLapMetadata = { ...race };
+  delete withoutLapMetadata.raceLapNumbers;
+  return withoutLapMetadata;
+}
+
 async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
   let response: Response;
   try {
@@ -118,7 +135,7 @@ export async function fetchRaceResult(
       "レースデータの形式が正しくありません。",
     );
   }
-  return data;
+  return normalizeRaceResult(data);
 }
 
 export function describeDataLoadError(

@@ -131,6 +131,15 @@ export function GapChart({
           />
           {otherRiders.map((rider) => {
             const style = seriesStyles[rider.riderId];
+            const hasZeroGap = data.some(
+              (point) => point[rider.riderId] === 0,
+            );
+            const lineOpacity = hasZeroGap
+              ? Math.max(style.opacity, 0.9)
+              : style.opacity;
+            const lineWidth = hasZeroGap
+              ? Math.max(style.strokeWidth, 2)
+              : style.strokeWidth;
             return (
               <Line
                 key={rider.riderId}
@@ -138,14 +147,22 @@ export function GapChart({
                 dataKey={rider.riderId}
                 name={`${style.roleLabel}・${rider.name}`}
                 stroke={style.color}
-                strokeOpacity={style.opacity}
-                strokeWidth={style.strokeWidth}
+                strokeOpacity={lineOpacity}
+                strokeWidth={lineWidth}
                 strokeDasharray={style.strokeDasharray}
                 dot={(props) => (
                   <SeriesMarkerDot
                     {...props}
                     marker={style.marker}
-                    size={style.role === "fixed" ? 3 : isCrowded ? 2 : 2.5}
+                    size={
+                      hasZeroGap
+                        ? 3.5
+                        : style.role === "fixed"
+                          ? 3
+                          : isCrowded
+                            ? 2
+                            : 2.5
+                    }
                   />
                 )}
                 activeDot={(props) => (

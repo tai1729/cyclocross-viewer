@@ -1,4 +1,9 @@
-import type { LapRecord, RaceResult, Rider } from "@/lib/types";
+import {
+  isValidRaceLapNumbers,
+  type LapRecord,
+  type RaceResult,
+  type Rider,
+} from "@/lib/types";
 
 export function getRiderById(
   race: RaceResult,
@@ -423,6 +428,10 @@ export function getRiderSummary(
 
 /** レース内の有効チェックポイントにある周回番号を和集合で返す。 */
 export function getRaceLapNumbers(race: RaceResult): number[] {
+  if (isValidRaceLapNumbers(race.raceLapNumbers)) {
+    return [...race.raceLapNumbers];
+  }
+
   const lapNumbers = new Set<number>();
   for (const rider of race.riders) {
     for (const lap of getValidCheckpoints(rider)) {
@@ -430,6 +439,10 @@ export function getRaceLapNumbers(race: RaceResult): number[] {
     }
   }
   return [...lapNumbers].sort((a, b) => a - b);
+}
+
+export function getRaceLapCount(race: RaceResult): number {
+  return getRaceLapNumbers(race).length;
 }
 
 /** 基準選手(baseRiderId)を±0とした、各対象選手の周回ごとのギャップ推移。 */
@@ -466,7 +479,10 @@ export function buildGapSeries(
     for (const riderId of targetRiderIds) {
       const lap = targetMaps.get(riderId)?.get(lapNumber);
       if (lap) {
-        point[riderId] = lap.cumulativeTimeSec - baseLap.cumulativeTimeSec;
+        const gapSec = lap.cumulativeTimeSec - baseLap.cumulativeTimeSec;
+        if (Number.isFinite(gapSec)) {
+          point[riderId] = gapSec;
+        }
       }
     }
     points.push(point);

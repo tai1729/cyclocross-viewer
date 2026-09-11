@@ -58,6 +58,7 @@ import { SummaryCard } from "@/components/SummaryCard";
 import { LapSummaryCard } from "@/components/LapSummaryCard";
 import { LapDetailDisclosure } from "@/components/LapDetailDisclosure";
 import { ChartTabs } from "@/components/ChartTabs";
+import { Disclosure } from "@/components/Disclosure";
 import { getResultsDisclosureLabel } from "@/lib/supportingPresentation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -616,7 +617,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
       race={race}
       selectedRiderId={selfRiderId}
       onSelect={selectRiderFromResults}
-      analysisRegionId={race.riders.length > 0 ? ANALYSIS_REGION_ID : undefined}
+      embedded={isAnalysisState}
     />
   );
 
@@ -705,38 +706,36 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   ) : null;
 
   const activeDesktopResultsDisclosure = isAnalysisState ? (
-    <details
+    <Disclosure
       ref={desktopResultsRef}
       id="active-results-disclosure-desktop"
       open={getResultsDisclosureOpen(resultsPresentation, desktopResultsOpen)}
-      onToggle={(event) => setDesktopResultsOpen(event.currentTarget.open)}
       className="min-w-0 scroll-mt-28 sm:scroll-mt-24"
+      onOpenChange={setDesktopResultsOpen}
+      summary={getResultsDisclosureLabel(race.riders.length)}
+      contentClassName="min-w-0 p-3"
     >
-      <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
-        {getResultsDisclosureLabel(race.riders.length)}
-      </summary>
-      <div className="mt-3">{resultsTable}</div>
-    </details>
+      {resultsTable}
+    </Disclosure>
   ) : null;
 
   const activeMobileResultsDisclosure = isAnalysisState ? (
-    <details
+    <Disclosure
       ref={mobileResultsRef}
       data-mobile-results-disclosure
       id="active-results-disclosure-mobile"
       open={getResultsDisclosureOpen(resultsPresentation, mobileResultsOpen)}
-      onToggle={(event) => setMobileResultsOpen(event.currentTarget.open)}
       className="min-w-0 scroll-mt-28 sm:scroll-mt-24"
+      onOpenChange={setMobileResultsOpen}
+      summary={getResultsDisclosureLabel(race.riders.length)}
+      contentClassName="min-w-0 p-3"
     >
-      <summary className="flex min-h-11 cursor-pointer items-center rounded-lg border border-border bg-card px-4 py-3 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
-        {getResultsDisclosureLabel(race.riders.length)}
-      </summary>
-      <div className="mt-3">{resultsTable}</div>
-    </details>
+      {resultsTable}
+    </Disclosure>
   ) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-3 px-4 py-2 sm:px-6 sm:py-3 xl:px-8 2xl:px-12">
+    <main className="mx-auto flex w-full max-w-[1920px] flex-col gap-3 px-4 py-2 sm:px-6 sm:py-3 xl:px-8 2xl:px-12">
       <RaceHeader
         race={race}
         listHref={listHref}
@@ -814,6 +813,6 @@ export function RaceViewer({ meet }: RaceViewerProps) {
         {resultsPresentation === "mobile-disclosure" ? activeMobileResultsDisclosure : null}
       </div>
       ) : null}
-    </div>
+    </main>
   );
 }

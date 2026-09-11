@@ -3,6 +3,7 @@
 import type { Rider } from "@/lib/types";
 import { LapDetailTable } from "@/components/LapDetailTable";
 import { getLapDetailDisclosureLabel } from "@/lib/supportingPresentation";
+import { Disclosure } from "@/components/Disclosure";
 
 export interface LapDetailDisclosureProps {
   primaryRider: Rider;
@@ -18,24 +19,18 @@ export function LapDetailDisclosure({
   onOpenChange,
 }: LapDetailDisclosureProps) {
   return (
-    <details
+    <Disclosure
       data-lap-detail-disclosure
       open={open}
-      onToggle={(event) => onOpenChange(event.currentTarget.open)}
       className="min-w-0"
+      onOpenChange={onOpenChange}
+      summary={getLapDetailDisclosureLabel(primaryRider)}
+      contentClassName="min-w-0 p-3 sm:p-4"
     >
-      <summary className="flex min-h-11 w-full min-w-0 cursor-pointer items-center rounded-lg border border-border bg-card px-3 py-2 font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2">
-        <span className="min-w-0 break-words">
-          {getLapDetailDisclosureLabel(primaryRider)}
-        </span>
-      </summary>
-
-      <div className="mt-3 min-w-0">
-        <LapDetailTable
-          primaryRider={primaryRider}
-          fixedRiders={fixedRiders}
-        />
-      </div>
-    </details>
+      <LapDetailTable
+        primaryRider={primaryRider}
+        fixedRiders={fixedRiders}
+      />
+    </Disclosure>
   );
 }

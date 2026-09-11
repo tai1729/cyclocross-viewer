@@ -103,14 +103,14 @@ export function RiderSelector({
 
   if (!isOpen && selectedRider) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-end gap-2">
         <Button
           onClick={() => prevRider && handleSelect(prevRider.riderId)}
           disabled={!prevRider}
           aria-label="一つ上の順位の選手へ"
           variant="outline"
           size="icon"
-          className={cn("size-11", presentation === "inline" && "sm:size-8")}
+          className="size-11 shrink-0"
         >
           ▲
         </Button>
@@ -124,7 +124,6 @@ export function RiderSelector({
             aria-label={`注目選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
             className={cn(
               "min-h-11 w-full min-w-0 justify-between",
-              presentation === "inline" && "sm:min-h-8",
             )}
           >
             <span className="flex items-baseline gap-2 truncate">
@@ -148,7 +147,7 @@ export function RiderSelector({
           aria-label="一つ下の順位の選手へ"
           variant="outline"
           size="icon"
-          className={cn("size-11", presentation === "inline" && "sm:size-8")}
+          className="size-11 shrink-0"
         >
           ▼
         </Button>

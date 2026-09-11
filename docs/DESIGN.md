@@ -2062,4 +2062,168 @@ only as their intended hunks, together with new UX3-7R2 code/tests/report/
 evidence. `docs/feedback/feedback-production-activation-report.md`,
 `test-results/`, and unrelated UX3-2 input records remain unstaged unless a
 new diff proves they are required by this task. No existing user change is
-discarded or reverted.
+ discarded or reverted.
+
+## UX3-7R3 mandatory owner remediation (active change)
+
+### Goal and source of truth
+
+UX3-7R3 fixes all 16 issues reported by Owner Human after Production
+inspection. The Owner issue list is the primary acceptance source for this
+change; earlier synthetic reviews cannot downgrade an Owner finding. UX3-8 is
+not part of this change and must remain `NOT STARTED`.
+
+The initial design audit confirmed that `docs/inputs/` contains no eligible
+`.md`/`.txt` input documents. The active specification is therefore this
+section, the user-provided UX3-7R3 issue list, the existing product contract,
+and the source files named in `docs/IMPLEMENTATION_PLAN.md`.
+
+### Non-goals and compatibility
+
+- Do not redesign the application outside the 16 tracked issues.
+- Keep `/`, `/race/[meetId]`, query-state keys, upstream rider/race contracts,
+  existing error states, DNF/lap-down semantics, and keyboard/focus behavior.
+- Do not add a production dependency, scrape from the viewer, or add a race-ID
+  exception for B-02/B-03.
+- Preserve unrelated dirty worktree changes; only intended UX3-7R3 hunks may
+  be staged.
+
+### Interaction and layout design
+
+The four relevant disclosures (selected lap, lap detail, results, and
+comparison riders) use one shared `Disclosure` component. It is a native
+`details`/`summary` control with a 44px-class summary target, a visible
+ChevronDown/ChevronUp state, synchronized `aria-expanded` and `aria-controls`,
+keyboard activation, visible focus, and one continuous bordered container.
+When open, the summary receives the separator border and the content remains
+inside the same container; closed and open states do not create nested or
+double boxes. Mobile comparison uses the same component and interaction
+language. Selected fixed comparison riders use a stronger background, border,
+and an explicit selected/check label; hover and focus remain distinct.
+
+The home rider search uses a flex row at desktop breakpoints with equal-height
+controls, `items-end` alignment, and no negative or compensating margins.
+The analysis rider selector puts the up/down controls in the same row as the
+selected rider control and aligns their control bottoms/centers without
+shrinking the arrow hit areas. The obsolete results-skip action and chart
+identity title are removed while accessible chart labels remain. Lap detail
+and results tables have no internal max-height/vertical scrolling; the page
+document flow owns scrolling.
+
+### URL state and mobile scroll design
+
+Season and series are independent query filters. A season update preserves the
+current series patch and lets canonicalization remove it only when it is not a
+valid option for the new season. A series update never clears season. All home
+query `push` and canonicalization `replace` calls use the App Router
+`scroll: false` contract, preserving the current scroll position while keeping
+browser history, reload, and back/forward URL state intact. This is one shared
+route behavior, not a mobile-only branch.
+
+### Race lap source of truth
+
+The collector (`C:\Users\tai\projects\02_ajocc-data-collector`) adds the
+optional `raceLapNumbers` field from the official race's `距離・周回数` metadata
+and numbered lap-table header. The viewer validates and prefers this official
+complete sequence; old payloads without the field retain a safe fallback that
+unions valid measured checkpoint numbers.
+The viewer never appends a synthetic rider checkpoint and never maps a race by
+ID. This preserves a race's full official lap sequence when a DNF or lap-down
+rider has fewer records, including sequences that start at lap 2. The specific
+official cross-checks are `data.cyclocross.jp/race/27834` (11 laps),
+`data.cyclocross.jp/race/27770` (11 laps), and
+`data.cyclocross.jp/race/27160` (8 laps).
+
+Gap-series construction treats a finite zero gap as a measured value and only
+omits absent/invalid checkpoints. A zero-baseline series receives enough
+visual emphasis to remain inspectable when it overlaps the reference line;
+this does not alter the underlying gap value or sign. For B-04, the
+source-backed KNS-256-011 P2 values at measured laps are the nonzero sequence
+`+0.9, +16, +20.6, +24.1, +27.5, +23.9, +4.9`; this target sequence is
+distinct from the generalized exact finite-gap `0` retention requirement.
+
+### Error behavior and edge cases
+
+Malformed optional lap metadata is ignored in favor of the existing measured
+checkpoint fallback. Duplicate/invalid rider checkpoints remain excluded by
+the existing transform rules. Missing leader checkpoints do not create values
+for other riders. A finished rider with fewer laps than the leader remains
+lap-down, and DNF time-gap rules remain unchanged. Filter canonicalization
+removes only invalid combinations, never a valid independent filter. Disclosure
+content remains mounted while collapsed so comparison selections persist.
+
+### Acceptance and validation
+
+All D-01 through D-10, M-01 through M-02, and B-01 through B-04 must be
+individually `VERIFIED` and `PASS`. The release gate requires the complete
+functional flow, MR-01--03, POS-01--05, S0/S1/S2/S3/S4 checks, exact viewports
+1440x900, 1280x720, 390x844, and 320x568, and the following commands:
+
+`npm test`; `npx tsc --noEmit`; `npm run lint`; `npm run build`;
+`git diff --check`.
+
+Before/after and Production evidence is saved under
+`docs/user-testing/evidence/ux3-7r3/`, and the required report is
+`docs/user-testing/ux3-7r3-mandatory-layout-and-data-bug-remediation.md`.
+
+### UX3-7R3 audit resolutions and traceability
+
+The Owner-provided issue list in the task request is authoritative even though
+the repository did not previously contain a copy. The following matrix is the
+active traceability contract; grouped implementation is allowed, but every row
+still requires its own observable check and final report row.
+
+| ID | Observable acceptance | Owning area | Evidence/check |
+|---|---|---|---|
+| D-01 | Home rider search input and submit control share one aligned desktop row and equal height at 1440x900/1280x720. | RiderDiscovery | desktop-1440-search-alignment.png + source test |
+| D-02 | Analysis rider selector and ▲/▼ controls share one aligned horizontal group with 44px-class arrow targets. | RiderSelector | desktop-1440-rider-controls.png + source test |
+| D-03 | The `注目選手 ... vs ...` chart heading text is absent; accessible chart/card labels remain. | ChartTabs | source test + desktop chart evidence |
+| D-04 | Selected-lap ranking detail and results table have no internal max-height/vertical scroll or clipping; all rows use page flow. | ChartDetailPanel/RaceResultsTable | desktop-1440-lap-detail.png + DOM/source check |
+| D-05 | Selected-lap disclosure has a clickable header, changing chevron, synchronized aria-expanded, keyboard toggle, and clear open/closed styling. | Disclosure/ChartDetailPanel | desktop-1440-lap-detail.png + accessibility test |
+| D-06 | Lap-detail trigger and content form one continuous bordered disclosure with no double border. | Disclosure/LapDetailDisclosure | desktop-1440-lap-detail.png + accessibility test |
+| D-07 | Results trigger and content use the exact D-06 disclosure pattern. | Disclosure/RaceViewer | desktop-1440-results-disclosure.png + accessibility test |
+| D-08 | Obsolete result-skip UI, handler, and anchor are absent without leaving a gap or breaking navigation. | RaceResultsTable/RaceViewer | source test + functional flow |
+| D-09 | Desktop comparison rider picker opens and collapses from an obvious header, keeps selected riders, and reduces chart return distance. | AnalysisControlDeck | desktop-1440-comparison-collapsed.png and -expanded.png |
+| D-10 | Fixed comparison riders have stronger selected background/border and explicit check/selected label, distinct from hover/focus. | ComparisonRiderPicker | source test + expanded evidence |
+| M-01 | Season/series changes preserve nonzero scroll position, keep URL state/history, and work at 390x844 and 320x568. | MeetSelector | mobile-390-filter-scroll-before-after.png + measured browser test |
+| M-02 | Mobile comparison disclosure has clear chevron, visual state, aria-expanded, keyboard/tap target of at least 44px. | Disclosure/MobileComparisonDisclosure | mobile-390-comparison-closed.png and -open.png |
+| B-01 | Season-only, series-only, combined intersection, clear, reload, back, and forward all preserve intended independent query state. | MeetSelector/urlState | regression test + Production flow |
+| B-02 | Official sequence for race 27834 is 1..11; selected rider data contains the final valid lap after parser fix; no race-ID branch. | collector/parser + viewer transform | bug-b02-lap-count.png + official URL |
+| B-03 | Official sequence for race 27770 is 1..11 (the table's measured columns begin at 2); selected rider data contains the final valid lap after parser fix; no race-ID branch. | collector/parser + viewer transform | bug-b03-lap-count.png + official URL |
+| B-04 | Race 27160 / KNS-256-011 gap series contains P2's source-backed nonzero measured values `+0.9, +16, +20.6, +24.1, +27.5, +23.9, +4.9` at matching laps and renders the series inspectably; the generalized exact finite-gap `0` retention contract remains separately covered. | dataTransform/GapChart | bug-b04-gap-chart.png + regression test |
+
+For `raceLapNumbers`, a valid value is a non-empty array of finite,
+safe, positive integers in strictly increasing source order. Non-contiguous
+sequences and sequences beginning at 2 are valid for backward-compatible
+upstream payloads, but the current collector emits the complete official
+sequence beginning at 1 from `距離・周回数` (for example 1..11). `StartLoop` is
+a parser control column, not an additional numbered lap. If the optional field
+is absent or fails any validation, the viewer falls back to the sorted union of
+valid measured checkpoints. It never sorts, deduplicates, or partially accepts
+a malformed metadata array, and it never creates a rider checkpoint for an
+official lap with no measured value. Such a lap remains on the chart axis and
+is shown as missing in detail/tooltip surfaces.
+
+The collector parser and three cross-check payloads (`data/race-27834.json`,
+`data/race-27770.json`, and `data/race-27160.json`) are owned by the separate
+collector repository and are regenerated only for this shared parser/data
+contract. The 27834 and 27770 payloads must gain valid lap 11 records after
+the `H:MM:SS` clock-parser correction. Their official axis is 1..11 even when
+the table begins its measured columns at 2; 27160 remains an 8-lap axis and is
+used to guard against a universal `+1` patch. Unmeasured axis positions remain
+null/missing; no rider lap is fabricated. A collector commit is reported
+separately from the viewer commit when both repositories are changed.
+
+S-level reporting follows the existing UX3-2 definitions: S0 blocker, S1
+serious, S2 moderate, S3 minor, S4 preference. UX3-7R3 is a deterministic
+Owner acceptance/release gate, not a new participant study; the report records
+S0 through S4 counts for newly observed regressions and requires S0=S1=0.
+MR-01--03 and POS-01--05 are protected by observable regression checks, not
+reclassified by the 16 Owner rows.
+
+Evidence is accepted per matrix row: UI rows use the named local exact-viewport
+screenshots plus browser assertions; data rows use the named regression test,
+live official URL cross-check (when network is available), and final
+Production screenshot/value. “Before” means the current released alias and is
+only contextual; all final After evidence and smoke checks must use the new
+Production deployment for the pushed UX3-7R3 commit.

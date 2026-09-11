@@ -36,7 +36,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
   useEffect(() => {
     const currentQuery = searchParams.toString();
     if (currentQuery !== canonicalQuery) {
-      void router.replace(canonicalQuery ? `/?${canonicalQuery}` : "/");
+      void router.replace(canonicalQuery ? `/?${canonicalQuery}` : "/", { scroll: false });
     }
   }, [canonicalQuery, router, searchParams]);
 
@@ -64,11 +64,11 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
       series: patch.series ?? series,
     });
     if (nextQuery === currentQuery) return;
-    void router.push(nextQuery ? `/?${nextQuery}` : "/");
+    void router.push(nextQuery ? `/?${nextQuery}` : "/", { scroll: false });
   }
 
   function changeSeason(value: string) {
-    pushUrl({ season: value, series: "" });
+    pushUrl({ season: value });
   }
 
   return (

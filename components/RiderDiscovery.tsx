@@ -87,13 +87,15 @@ export function RiderDiscovery() {
         <CardDescription>大会やカテゴリーをまたいで、選手名または選手IDから探します。</CardDescription>
       </CardHeader>
       <CardContent className="min-w-0">
-        <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
+        <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-3 sm:items-start">
           <Field className="min-w-0 flex-1">
             <FieldLabel htmlFor="rider-discovery-query">選手名または選手ID</FieldLabel>
-            <input id="rider-discovery-query" name="q" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="2文字以上" className="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50" disabled={state === "loading"} />
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+              <input id="rider-discovery-query" name="q" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="2文字以上" className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50" disabled={state === "loading"} />
+              <Button type="submit" className="min-h-11 w-full sm:w-auto" disabled={state === "loading"}>{state === "loading" ? "検索中…" : "検索"}</Button>
+            </div>
             <FieldDescription>空白や大文字小文字を整えて検索します。</FieldDescription>
           </Field>
-          <Button type="submit" className="min-h-11 w-full sm:w-auto" disabled={state === "loading"}>{state === "loading" ? "検索中…" : "検索"}</Button>
         </form>
         <div aria-live="polite" className="mt-4 min-w-0">
           {state === "idle" && <p data-discovery-status="idle" className="text-sm text-muted-foreground">検索語を入力して検索してください。</p>}

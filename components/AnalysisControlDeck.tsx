@@ -6,6 +6,7 @@ import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { MobileComparisonDisclosure } from "@/components/MobileComparisonDisclosure";
 import { RiderSelector } from "@/components/RiderSelector";
+import { Disclosure } from "@/components/Disclosure";
 import {
   getAnalysisComparisonIdentityLabel,
   getAnalysisComparisonLabel,
@@ -89,7 +90,18 @@ export function AnalysisControlDeck({
 
         <div className="min-w-0">
           {isDesktop ? (
-            <div className="min-w-0">
+            <Disclosure
+              data-desktop-comparison-disclosure
+              summary={(
+                <>
+                  <span>比較する選手</span>
+                  <span className="min-w-0 break-words text-right text-sm font-normal">
+                    {getAnalysisComparisonLabel(comparisonMode)}・現在{displayedCount}名
+                  </span>
+                </>
+              )}
+              contentClassName="flex min-w-0 flex-col gap-3 p-3"
+            >
               <ComparisonAdjuster
                 mode={comparisonMode}
                 displayedCount={displayedCount}
@@ -98,7 +110,7 @@ export function AnalysisControlDeck({
                 onChange={onChangeComparisonMode}
               />
               {comparisonMode === "pinned" ? (
-                <div className="mt-3">
+                <div className="min-w-0">
                   <ComparisonRiderPicker
                     riders={graphableRiders}
                     primaryRiderId={selectedRiderId}
@@ -108,7 +120,7 @@ export function AnalysisControlDeck({
                   />
                 </div>
               ) : null}
-            </div>
+            </Disclosure>
           ) : (
             <MobileComparisonDisclosure
               mode={comparisonMode}

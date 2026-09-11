@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import { MAX_PINNED_FIXED_RIDERS } from "@/hooks/useComparisonRiders";
 import type { Rider } from "@/lib/types";
 import { normalizeSearchText } from "@/lib/search";
@@ -86,10 +87,15 @@ export function ComparisonRiderPicker({
             {fixedRiders.map((rider) => (
               <div
                 key={rider.riderId}
-                className="flex min-h-11 min-w-0 items-center gap-2 rounded-md bg-muted/50 px-2.5 py-1.5"
+                data-comparison-rider-selected
+                className="flex min-h-11 min-w-0 items-center gap-2 rounded-md border border-primary/60 bg-primary/10 px-2.5 py-1.5"
               >
+                <Check aria-hidden="true" className="size-4 shrink-0 text-primary" />
                 <span className="min-w-0 flex-1 break-words text-sm text-foreground">
                   {rider.name}
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-primary">
+                  選択中
                 </span>
                 <Button
                   type="button"

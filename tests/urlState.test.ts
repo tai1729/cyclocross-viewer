@@ -6,6 +6,7 @@ import {
   parseHomeUrlState,
   parseRaceUrlState,
   serializeRaceUrlState,
+  updateHomeUrlQuery,
   updateRaceCategoryQuery,
   updateUrlQuery,
 } from "../lib/urlState";
@@ -81,13 +82,22 @@ test("lap normalization uses only the supplied race axis", () => {
   assert.equal(empty.lap, null);
 });
 
-test("Home normalization validates season and series together", () => {
+test("Home filters remain independent while canonicalization removes invalid combinations", () => {
   const meets = [
     { season: "2024", series: "A" },
+    { season: "2024", series: "B" },
     { season: "2025", series: "B" },
   ] as const;
+  assert.equal(updateHomeUrlQuery("season=2024&series=A", { season: "2025" }), "season=2025&series=A");
+  assert.equal(updateHomeUrlQuery("season=2024&series=A", { series: "B" }), "season=2024&series=B");
+  assert.equal(updateHomeUrlQuery("season=2024&series=A", { season: "" }), "series=A");
+  assert.equal(updateHomeUrlQuery("season=2024&series=A", { series: "" }), "season=2024");
+
   assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=2024&series=B"), meets), {
-    season: "2024", series: "", unknownParams: [],
+    season: "2024", series: "B", unknownParams: [],
+  });
+  assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=2025&series=A"), meets), {
+    season: "2025", series: "", unknownParams: [],
   });
   assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=nope&series=B"), meets), {
     season: "", series: "B", unknownParams: [],

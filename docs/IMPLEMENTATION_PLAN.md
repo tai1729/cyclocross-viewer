@@ -1201,3 +1201,70 @@ bounded issues: the Q45 current-results filter, deterministic newest
 appearance ordering, and deterministic newest-appearance rider metadata. A
 fresh final review round and the Production release gate remain the only open
 tasks.
+
+## UX3-7R3 bounded implementation plan
+
+This plan is active for the Owner Human's 16 mandatory issues. Each issue is
+tracked in the final report as `TODO` -> `IMPLEMENTED` -> `VERIFIED` and must
+finish `PASS`. No UX3-8 work is allowed in this plan.
+
+### Task graph
+
+1. **UX3-7R3-S — specification audit — READY**
+   - Two independent `spec_auditor` agents inspect PRODUCT.md, the active
+     UX3-7R3 design section, this plan, SPEC_AUDIT.md, and relevant source.
+   - They report only implementation-significant ambiguities or missed
+     existing contracts; they do not edit code.
+
+2. **UX3-7R3-DATA — official lap metadata and gap regression — BLOCKED until S**
+   - Owner: viewer `lib/types.ts`, `lib/dataSource.ts`, `lib/dataTransform.ts`,
+     `components/GapChart.tsx`, data tests; collector `lib/types.ts`,
+     `lib/parseRaceHtml.ts`, parser tests, and only the two regenerated target
+     JSON payloads if required.
+   - Add optional validated `raceLapNumbers` from the official lap-table
+     header, prefer it in the viewer without fabricating rider laps, preserve
+     exact finite zero gap values, and add B-02/B-03/B-04 plus generalized
+     DNF/lap-down and zero-value tests. For B-04, the source-backed
+     KNS-256-011 P2 measured-lap gaps are the nonzero sequence `+0.9, +16,
+     +20.6, +24.1, +27.5, +23.9, +4.9`; this target sequence is distinct from
+     the generalized exact-zero regression.
+   - Do not edit UI disclosure files, home routing, unrelated collector dirty
+     files, or use race-ID conditionals.
+
+3. **UX3-7R3-HOME — filters, scroll, and search alignment — BLOCKED until S**
+   - Owner: `components/MeetSelector.tsx`, `components/RiderDiscovery.tsx`,
+     and focused URL/UI regression tests.
+   - Preserve season and series together, add `{ scroll: false }` to home
+     query navigation, and align the rider-search form at desktop widths.
+   - Do not edit race analysis/disclosure components or data transforms.
+
+4. **UX3-7R3-DISCLOSURE — shared disclosure and analysis UI — BLOCKED until S**
+   - Owner: new `components/Disclosure.tsx` plus
+     `ChartDetailPanel.tsx`, `LapDetailDisclosure.tsx`,
+     `RaceResultsTable.tsx`, `MobileComparisonDisclosure.tsx`,
+     `AnalysisControlDeck.tsx`, `ComparisonRiderPicker.tsx`,
+     `RiderSelector.tsx`, and `ChartTabs.tsx`.
+   - Implement D-02 through D-10 and M-02 using the approved shared disclosure
+     language, remove internal table scroll and obsolete skip/title UI, and
+     preserve chart/result semantics and selected comparison state.
+   - Do not edit home routing or data-source/transform files.
+
+5. **UX3-7R3-INTEGRATION — report/evidence/verification — BLOCKED until
+   DATA, HOME, and DISCLOSURE**
+   - Reconcile code and tests, create the mandatory report and exact-viewport
+     evidence, run the complete functional flow and data regressions, and
+     record all 16 individual results plus MR/POS/S0--S4.
+
+6. **UX3-7R3-REVIEW — independent release review — BLOCKED until
+   INTEGRATION**
+   - Spawn a fresh named `reviewer` and require a line-by-line review of all
+     16 Owner IDs against DESIGN.md, actual implementation, automated tests,
+     and evidence. `NEEDS_REVISION` creates bounded revision tasks and repeats
+     validation/review within the protocol limit.
+
+7. **UX3-7R3-RELEASE — commit, push, deploy, Production verification —
+   BLOCKED until REVIEW PASS**
+   - Inspect status/diff and stage only intended changes; commit and push normal
+     history. Confirm Vercel deployment, run Production smoke including the
+     required URLs/viewports, update the report/evidence, then commit/push the
+     release evidence update if needed. Only then set the loop phase to DONE.
