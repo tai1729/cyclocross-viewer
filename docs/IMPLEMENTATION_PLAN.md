@@ -1051,8 +1051,9 @@ change, not implementation counts.
      existing E2E tooling; visually inspect every pair.
 
 5. **UX3-7R-E — fresh independent review — BLOCKED until D passes**
-   - Run three independent fresh reviewer passes framed as Astra, Sol, and
-     Terra perspectives. Review current screens, not prior verdicts.
+   - Run one fresh independent reviewer pass against the current screens and
+     implementation, not prior verdicts. Multiple reviewer personas are not a
+     UX3-7R3 release requirement.
    - Review P-A-01 acceptance matrix, regression protection, accessibility,
      and release risk.
 
@@ -1227,7 +1228,9 @@ finish `PASS`. No UX3-8 work is allowed in this plan.
      DNF/lap-down and zero-value tests. For B-04, the source-backed
      KNS-256-011 P2 measured-lap gaps are the nonzero sequence `+0.9, +16,
      +20.6, +24.1, +27.5, +23.9, +4.9`; this target sequence is distinct from
-     the generalized exact-zero regression.
+     the generalized exact-zero regression. The viewer regression must also
+     inspect the actual `GapChart`-generated Recharts `LineChart.props.data`
+     payload, including P2 at lap 2.
    - Do not edit UI disclosure files, home routing, unrelated collector dirty
      files, or use race-ID conditionals.
 

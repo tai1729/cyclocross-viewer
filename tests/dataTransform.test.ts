@@ -34,6 +34,19 @@ function rider(
   return { riderId, name: riderId, finalPosition, status, laps, dataQuality };
 }
 
+function gapSeries(
+  raceResult: RaceResult,
+  baseRiderId: string,
+  targetRiderIds: string[],
+) {
+  return buildGapSeries(
+    raceResult,
+    baseRiderId,
+    targetRiderIds,
+    getRaceLapNumbers(raceResult),
+  );
+}
+
 function race(riders: Rider[]): RaceResult {
   return {
     raceId: "test",
@@ -162,7 +175,7 @@ test("gapとpaceは配列位置ではなく同じlapNumberだけを比較する"
   const target = rider("target", 2, [lap(2, 65, 130), lap(3, 66, 196)]);
   const data = race([base, target]);
 
-  assert.deepEqual(buildGapSeries(data, "base", ["target"]), [
+  assert.deepEqual(gapSeries(data, "base", ["target"]), [
     { lapNumber: 1 },
     { lapNumber: 2, target: 8 },
     { lapNumber: 3, target: 10 },
@@ -182,7 +195,7 @@ test("中間欠損は補完せず、前後の有効な値だけを残す", () =>
   ]);
   const target = rider("target", 2, [lap(1, 61, 61), lap(3, 63, 184)]);
 
-  assert.deepEqual(buildGapSeries(race([base, target]), "base", ["target"]), [
+  assert.deepEqual(gapSeries(race([base, target]), "base", ["target"]), [
     { lapNumber: 1, target: 1 },
     { lapNumber: 2 },
     { lapNumber: 3, target: 4 },
@@ -195,7 +208,7 @@ test("2周目から始まる最初の記録はcheckpointには使い、lap/pace�
   const data = race([base, target]);
 
   assert.deepEqual(getValidTimedLaps(base).map((item) => item.lapNumber), [3]);
-  assert.deepEqual(buildGapSeries(data, "base", ["target"]), [
+  assert.deepEqual(gapSeries(data, "base", ["target"]), [
     { lapNumber: 2, target: 5 },
     { lapNumber: 3, target: 7 },
   ]);
@@ -288,7 +301,7 @@ test("difference series preserve sign direction and the union lap axis", () => {
     lap(4, 65, 185),
   ]);
 
-  assert.deepEqual(buildGapSeries(race([base, target]), "base", ["target"]), [
+  assert.deepEqual(gapSeries(race([base, target]), "base", ["target"]), [
     { lapNumber: 1, target: -5 },
     { lapNumber: 2 },
     { lapNumber: 3, target: -70 },
@@ -318,7 +331,7 @@ test("a missing primary checkpoint suppresses all difference values at that lap"
     lap(4, 65, 260),
   ]);
 
-  assert.deepEqual(buildGapSeries(race([base, target]), "base", ["target"]), [
+  assert.deepEqual(gapSeries(race([base, target]), "base", ["target"]), [
     { lapNumber: 1, target: 5 },
     { lapNumber: 2 },
     { lapNumber: 3, target: 75 },
@@ -350,7 +363,7 @@ test("duplicate checkpoints invalidate only that rider and lap", () => {
   const peer = rider("peer", 3, [lap(2, 62, 122)]);
 
   assert.deepEqual(
-    buildGapSeries(race([base, duplicate, peer]), "base", ["duplicate", "peer"]),
+    gapSeries(race([base, duplicate, peer]), "base", ["duplicate", "peer"]),
     [
       { lapNumber: 1, duplicate: 5 },
       { lapNumber: 2, peer: 2 },
@@ -383,7 +396,7 @@ test("DNF and lapped riders contribute measured values only", () => {
   ]);
 
   assert.deepEqual(
-    buildGapSeries(race([base, dnf, lapped]), "base", ["dnf", "lapped"]),
+    gapSeries(race([base, dnf, lapped]), "base", ["dnf", "lapped"]),
     [
       { lapNumber: 1, dnf: 5, lapped: 10 },
       { lapNumber: 2, lapped: 20 },

@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { isValidElement, type ReactElement } from "react";
+import { LineChart } from "recharts";
+import { GapChart } from "../components/GapChart";
+import { buildRiderSeriesStyles } from "../lib/chartSeriesStyles";
 import { fetchRaceResult } from "../lib/dataSource";
 import {
   buildGapSeries,
@@ -8,6 +12,23 @@ import {
   getRiderResult,
 } from "../lib/dataTransform";
 import type { LapRecord, RaceResult, Rider } from "../lib/types";
+
+type ChartDataElement = ReactElement<{
+  data?: Array<{ lapNumber: number; [riderId: string]: number | undefined }>;
+}>;
+
+function findNestedElement(node: unknown, targetType: unknown): ChartDataElement | undefined {
+  if (!isValidElement(node)) return undefined;
+  if (node.type === targetType) return node as ChartDataElement;
+
+  const children = (node.props as { children?: unknown }).children;
+  for (const child of Array.isArray(children) ? children : [children]) {
+    const match = findNestedElement(child, targetType);
+    if (match) return match;
+  }
+
+  return undefined;
+}
 
 function lap(lapNumber: number, cumulativeTimeSec: number, rankAtLap = 1): LapRecord {
   return {
@@ -67,7 +88,7 @@ test("B-03 KNS-256-010 preserves the official 1..11 axis when measured columns b
   assert.deepEqual(measuredLaps.map((item) => item.lapNumber), [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 });
 
-test("B-04 KNS-256-011 keeps P2 gap points across the official lap sequence", () => {
+test("B-04 KNS-256-011 passes the reconciled XAxis to the P2 gap series", () => {
   const leader = rider("KNS-000-1252", 1, [
     lap(2, 872.2), lap(3, 1293.2), lap(4, 1713.7), lap(5, 2140.1),
     lap(6, 2569.5), lap(7, 3008.4), lap(8, 3455.4),
@@ -77,21 +98,71 @@ test("B-04 KNS-256-011 keeps P2 gap points across the official lap sequence", ()
     lap(6, 2597), lap(7, 3032.3), lap(8, 3460.3),
   ]);
   const result = race("27160", [leader, second], [1, 2, 3, 4, 5, 6, 7, 8]);
-  const gapPoints = buildGapSeries(result, leader.riderId, [second.riderId]);
+  const reconciledXAxisLapNumbers = getRaceLapNumbers(result);
+  const gapPoints = buildGapSeries(
+    result,
+    leader.riderId,
+    [second.riderId],
+    reconciledXAxisLapNumbers,
+  );
 
-  assert.deepEqual(gapPoints.map((point) => point.lapNumber), [1, 2, 3, 4, 5, 6, 7, 8]);
-  const measuredGaps = gapPoints
-    .filter((point) => second.riderId in point)
-    .map((point) => point[second.riderId]);
-  assert.equal(measuredGaps.length, 7);
-  assert.ok(Math.abs(measuredGaps[0] - 0.9) < 1e-9);
-  assert.ok(Math.abs(measuredGaps.at(-1)! - 4.9) < 1e-9);
+  assert.deepEqual(reconciledXAxisLapNumbers, [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(gapPoints.map((point) => point.lapNumber), reconciledXAxisLapNumbers);
+  const p2Gaps = gapPoints.map((point) => point[second.riderId] ?? null);
+  assert.deepEqual(
+    p2Gaps.map((gap) => (gap === null ? null : Number(gap.toFixed(1)))),
+    [null, 0.9, 16, 20.6, 24.1, 27.5, 23.9, 4.9],
+  );
+});
+
+test("B-04 render payload keeps the official P2 lap-2 gap", () => {
+  const baseRider = rider("KNS-000-1252", 1, [
+    lap(2, 872.2), lap(3, 1293.2), lap(4, 1713.7), lap(5, 2140.1),
+    lap(6, 2569.5), lap(7, 3008.4), lap(8, 3455.4),
+  ]);
+  const targetRider = rider("KNS-000-2145", 2, [
+    lap(2, 873.1), lap(3, 1309.2), lap(4, 1734.3), lap(5, 2164.2),
+    lap(6, 2597), lap(7, 3032.3), lap(8, 3460.3),
+  ]);
+  const result = race("27160", [baseRider, targetRider], [1, 2, 3, 4, 5, 6, 7, 8]);
+  const raceLapNumbers = getRaceLapNumbers(result);
+  const rendered = GapChart({
+    race: result,
+    baseRider,
+    otherRiders: [targetRider],
+    seriesStyles: buildRiderSeriesStyles(result.riders, baseRider.riderId, []),
+    riderNames: {
+      [baseRider.riderId]: baseRider.name,
+      [targetRider.riderId]: targetRider.name,
+    },
+    isCrowded: false,
+    raceLapNumbers,
+  });
+  const chart = findNestedElement(rendered, LineChart);
+  assert.ok(chart, "GapChart should render a nested Recharts LineChart");
+  const data = chart.props.data;
+  assert.ok(data, "LineChart should receive rendered chart data");
+
+  assert.deepEqual(data.map((point) => point.lapNumber), [1, 2, 3, 4, 5, 6, 7, 8]);
+  const targetId = targetRider.riderId;
+  assert.ok(targetId in data[1], "rendered lap 2 must include the P2 field");
+  const expectedGaps: Array<number | null> = [null, 0.9, 16, 20.6, 24.1, 27.5, 23.9, 4.9];
+  for (const [index, expected] of expectedGaps.entries()) {
+    const actual: number | null = data[index][targetId] ?? null;
+    if (expected === null) {
+      assert.equal(actual, null);
+    } else {
+      if (actual === null) assert.fail(`lap ${index + 1} gap is missing`);
+      assert.ok(Math.abs(actual - expected) < 1e-9, `lap ${index + 1} gap ${actual} differs from ${expected}`);
+    }
+  }
 });
 
 test("a finite zero gap remains a measured value instead of a missing point", () => {
   const leader = rider("leader", 1, [lap(1, 60), lap(2, 120)]);
   const peer = rider("peer", 2, [lap(1, 60), lap(2, 120)]);
-  const points = buildGapSeries(race("zero-gap", [leader, peer]), "leader", ["peer"]);
+  const zeroGapRace = race("zero-gap", [leader, peer], [1, 2]);
+  const points = buildGapSeries(zeroGapRace, "leader", ["peer"], [1, 2]);
 
   assert.deepEqual(points, [
     { lapNumber: 1, peer: 0 },

@@ -275,10 +275,14 @@ resolutions are authoritative for UX3-7R3:
    fix is generalized clock parsing plus official race-lap metadata (not raw
    table-column count), never a race-ID branch. The official cross-check axes
    are 27834 -> 1..11, 27770 -> 1..11, and 27160 -> 1..8.
-5. Zero gap is both a data and visual requirement: the transform must retain a
-   finite numeric `0`, and GapChart must give a zero-baseline series an explicit
-   readable style (opacity/stroke/marker) so it is not hidden by the reference
-   line. The regression test asserts the exact zero point for B-04.
+5. B-04 requires the chart to receive the same authoritative lap axis used by
+   its X axis. `buildGapSeries` therefore requires `lapNumbers` from its caller;
+   `GapChart` passes the reconciled `raceLapNumbers` explicitly. This prevents
+   the rendered Recharts payload from dropping the first measured P2 point
+   even when the pure transform test passes. Separately, the transform must
+   retain a finite numeric `0`, and GapChart must give a zero-baseline series
+   an explicit readable style (opacity/stroke/marker) so it is not hidden by
+   the reference line. The regression tests assert both contracts.
 6. UI acceptance is per the 16-row matrix in DESIGN.md. Named screenshots may
    cover related rows, but each row also has a source, browser, or automated
    assertion. Data rows require live official pages when reachable and record
@@ -294,9 +298,20 @@ resolutions are authoritative for UX3-7R3:
    comparison/metrics/laps/disclosures/reload/deep link/back/forward/error
    recovery. Production After evidence must use the final deployed pushed
    commit; current Production may be used only as contextual Before evidence.
+9. The resumed audit uses one fresh independent reviewer pass for the
+   implementation gate; three reviewer personas are not required by the
+   active plan or Owner request. Exact local viewport and rendered-payload
+   evidence is sufficient for that pre-release review, while final After
+   screenshots and behavior must be repeated against the pushed Production
+   deployment. B-04's explicit required `lapNumbers` contract plus the
+   rendered local payload check is the implementation regression gate; its
+   Production value remains a release-gate verification.
 
-The audit is clear: implementation may start. Any later reviewer finding is a
-revision task, not an unresolved design ambiguity.
+The audit is clear: implementation may start. The later B-04 render finding
+was resolved as a bounded implementation revision: the authoritative axis is
+now an explicit required input, and the local browser payload includes P2
+lap 2. Any remaining Production verification is a release-gate result, not a
+design ambiguity.
 
 STATUS: CLEAR
 

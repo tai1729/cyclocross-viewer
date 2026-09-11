@@ -52,6 +52,7 @@ export function GapChart({
     race,
     baseRider.riderId,
     otherRiders.map((r) => r.riderId),
+    raceLapNumbers,
   );
   const riderLapMaps = new Map(
     otherRiders.map((rider) => [rider.riderId, buildLapMap(rider)]),

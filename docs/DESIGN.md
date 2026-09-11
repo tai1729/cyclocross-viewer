@@ -2135,12 +2135,16 @@ official cross-checks are `data.cyclocross.jp/race/27834` (11 laps),
 `data.cyclocross.jp/race/27160` (8 laps).
 
 Gap-series construction treats a finite zero gap as a measured value and only
-omits absent/invalid checkpoints. A zero-baseline series receives enough
-visual emphasis to remain inspectable when it overlaps the reference line;
-this does not alter the underlying gap value or sign. For B-04, the
-source-backed KNS-256-011 P2 values at measured laps are the nonzero sequence
-`+0.9, +16, +20.6, +24.1, +27.5, +23.9, +4.9`; this target sequence is
-distinct from the generalized exact finite-gap `0` retention requirement.
+omits absent/invalid checkpoints. The chart receives the same authoritative
+`raceLapNumbers` array used by its X axis instead of independently deriving a
+second axis through a default parameter. This keeps the first measured P2
+point in the rendered Recharts payload as well as in the pure transform. A
+zero-baseline series receives enough visual emphasis to remain inspectable
+when it overlaps the reference line; this does not alter the underlying gap
+value or sign. For B-04, the source-backed KNS-256-011 P2 values at measured
+laps are the nonzero sequence `+0.9, +16, +20.6, +24.1, +27.5, +23.9, +4.9`;
+this target sequence is distinct from the generalized exact finite-gap `0`
+retention requirement.
 
 ### Error behavior and edge cases
 

@@ -455,6 +455,7 @@ export function buildGapSeries(
   race: RaceResult,
   baseRiderId: string,
   targetRiderIds: string[],
+  lapNumbers: readonly number[],
 ): GapSeriesPoint[] {
   const baseRider = getRiderById(race, baseRiderId);
   if (!baseRider) return [];
@@ -468,7 +469,7 @@ export function buildGapSeries(
   );
   const points: GapSeriesPoint[] = [];
 
-  for (const lapNumber of getRaceLapNumbers(race)) {
+  for (const lapNumber of lapNumbers) {
     const point: GapSeriesPoint = { lapNumber };
     const baseLap = baseMap.get(lapNumber);
     if (!baseLap) {
