@@ -59,7 +59,7 @@ The production collector baseline was:
 
 The generated `inventory.json` contains the following final inventory:
 
-| season | events | races | result rows | lap-enabled | result-only | unavailable |
+| season | events | indexed race/category records | result rows | lap-enabled | result-only | unavailable |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 2023-24 | 69 | 1,124 | 18,925 | 1,057 | 37 | 30 |
 | 2024-25 | 70 | 1,084 | 18,764 | 1,064 | 4 | 16 |
@@ -68,8 +68,10 @@ The generated `inventory.json` contains the following final inventory:
 
 Every inventory category carries the season, series, meet/race IDs, date,
 category name, result availability, lap availability, result-row count, and
-lap-record count. Result-only means accepted result rows exist but no usable
-lap checkpoint exists; no lap axis is inferred.
+lap-record count. The race total includes 70 source-listed categories with no
+usable result detail; 3,330 categories have result data. Result-only means
+accepted result rows exist but no usable lap checkpoint exists; no lap axis is
+inferred.
 
 ## 7. Data Pipeline Changes
 
@@ -227,15 +229,16 @@ failure. No layout changes were made in DATA-1.
 | --- | ---: |
 | available seasons | 3 |
 | available events | 205 |
-| available races/categories | 3,400 |
+| indexed race/category records | 3,400 |
 | result rows available | 55,963 |
 | lap-enabled races | 3,283 |
 | result-only races | 47 |
 | indexed riders | 5,696 |
 
 Compared with baseline, DATA-1 adds 2 seasons, 139 available events, and
-2,208 races/categories. Historical-only volume is 37,689 result rows, 2,121
-lap-enabled races, and 41 result-only races.
+2,208 indexed race/category records. Of the final records, 3,330 have result
+data and 70 are source-listed unavailable categories. Historical-only volume
+is 37,689 result rows, 2,121 lap-enabled races, and 41 result-only races.
 
 ## 20. Remaining Data Limitations
 
