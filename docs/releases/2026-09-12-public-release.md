@@ -57,9 +57,17 @@ chartを確認した。result-only historical raceも安全に表示される。
 
 ## Release Evidence
 
-The final documentation commit, public release tag, final main SHA, and the
-READY Production deployment source SHA are recorded after the documentation
-push and final production smoke.
+- Release cut commit SHA: `a6e1a8ae0230733e6e158c05e4e6bb2cbdc93ad3`
+- Public release tag: `v1.0.0`
+- Vercel deployment ID: `dpl_FBBErhvCKhrD5eYM1rxjc1hhniLT`
+- Vercel status: `READY` / `production`
+- Production source commit SHA: `a6e1a8ae0230733e6e158c05e4e6bb2cbdc93ad3`
+- Deployment ready time: `2026-09-12 19:09:00 +09:00`
+- Production verification began at `2026-09-12 19:06:55 +09:00` and included
+  the public alias, historical races, results, analysis, chart, comparison,
+  filters, and rider-first search.
+- The subsequent documentation-evidence commit is a docs-only follow-up; it
+  does not alter Product code, data, API, or UX.
 
 ## UX Status
 

@@ -6,10 +6,12 @@
 - Release stage: `PRODUCTION`.
 - Public release date: 2026-09-12.
 - The public production URL is `https://ajocc-laptime-viewer.vercel.app/`.
-- The verified production source commit is
-  `46a5d9a84e976bf6df98fc7d99f66f18c420f2e0`.
+- The public release cut is tagged `v1.0.0` at
+  `a6e1a8ae0230733e6e158c05e4e6bb2cbdc93ad3`.
+- The verified production source commit for that release cut is the same
+  `a6e1a8ae0230733e6e158c05e4e6bb2cbdc93ad3`.
 - The verified Vercel production deployment is READY:
-  `dpl_CcXBjW5uAEsskAjWgFaTScZxJUBh`.
+  `dpl_FBBErhvCKhrD5eYM1rxjc1hhniLT`.
 - The public release includes the three-season historical data expansion and
   the current production race, results, analysis, chart, comparison, filter,
   and rider-first search flows.
