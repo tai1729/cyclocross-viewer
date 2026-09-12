@@ -1,6 +1,13 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
-## Current active design — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
+## Current project status — PUBLIC RELEASED (2026-09-12)
+
+The project is publicly available in Production at
+`https://ajocc-laptime-viewer.vercel.app/`. The design records below preserve
+the completed DATA-1 and earlier UX implementation decisions; they are
+historical records, not an indication that the public release is pending.
+
+## Historical design record — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
 
 ### Goal
 

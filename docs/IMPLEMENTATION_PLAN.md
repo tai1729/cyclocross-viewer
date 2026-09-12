@@ -1,6 +1,7 @@
-# UX3-5 active implementation plan
+# Historical implementation plan — UX3-5
 
-Status: ACTIVE — re-audit and bounded MR-01 / MR-02 / MR-03 remediation
+Status: ARCHIVED — historical implementation record. Current project status:
+PUBLIC RELEASED in Production as of 2026-09-12.
 
 ## Task graph
 

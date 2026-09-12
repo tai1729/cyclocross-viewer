@@ -2,9 +2,20 @@
 
 ## Current release status
 
-- Phase 1 production completion is closed as of 2026-09-05.
-- The production URL is `https://ajocc-laptime-viewer.vercel.app/`.
-- The verified release is `bab760bea87c2dfc126b70559e375a721b68dd5a`; its Vercel production deployment is READY and reports the same `githubCommitSha`.
+- Status: `PUBLIC RELEASED`.
+- Release stage: `PRODUCTION`.
+- Public release date: 2026-09-12.
+- The public production URL is `https://ajocc-laptime-viewer.vercel.app/`.
+- The verified production source commit is
+  `46a5d9a84e976bf6df98fc7d99f66f18c420f2e0`.
+- The verified Vercel production deployment is READY:
+  `dpl_CcXBjW5uAEsskAjWgFaTScZxJUBh`.
+- The public release includes the three-season historical data expansion and
+  the current production race, results, analysis, chart, comparison, filter,
+  and rider-first search flows.
+- External human pre-release participation was not completed because of
+  participant availability; it is not a release blocker. Post-release usage
+  and feedback are the next validation source.
 - Phase 1 blockers are zero. Phase 2 Slice 4 lap detail and summary is
   complete, Phase 2 Slice 7 URL synchronization is complete, and Phase 2 Slice
   8 provenance/freshness metadata is complete and released from the reviewed

@@ -1,3 +1,18 @@
+# AJOCC LapTime Viewer
+
+**Status: Public Release / Production**
+
+Production: https://ajocc-laptime-viewer.vercel.app/
+
+AJOCCシクロクロスのレース結果・ラップタイムを、選手・順位・周回差・
+ペースなどから分析するWebアプリです。
+
+現在Production環境で一般公開しています。
+
+公開日: 2026-09-12
+
+Release stage: PRODUCTION
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
