@@ -107,6 +107,31 @@ test("Home filters remain independent while canonicalization removes invalid com
   });
 });
 
+test("historical season and series combinations remain canonical", () => {
+  const meets = [
+    { season: "2023-24", series: "関西クロス" },
+    { season: "2023-24", series: "信州クロス" },
+    { season: "2024-25", series: "関西クロス" },
+    { season: "2025-26", series: "全日本選手権" },
+  ] as const;
+
+  assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=2023-24&series=信州クロス"), meets), {
+    season: "2023-24",
+    series: "信州クロス",
+    unknownParams: [],
+  });
+  assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=2025-26&series=関西クロス"), meets), {
+    season: "2025-26",
+    series: "",
+    unknownParams: [],
+  });
+  assert.deepEqual(normalizeHomeUrlState(parseHomeUrlState("season=2024-25&series=関西クロス"), meets), {
+    season: "2024-25",
+    series: "関西クロス",
+    unknownParams: [],
+  });
+});
+
 test("serialization has deterministic known-key order and omits defaults", () => {
   const query = serializeRaceUrlState({
     season: "2025", series: "A", category: "cat-2", rider: "r1", compare: "pinned",

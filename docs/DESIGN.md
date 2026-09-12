@@ -1,5 +1,186 @@
 # AJOCC Lap Time Viewer — Current Design Entry
 
+## Current active design — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
+
+### Goal
+
+Extend the source-backed viewer so the current Cyclocross season and the two
+immediately preceding seasons are fully navigable through event, category,
+results, rider, and lap analysis flows. The target seasons are determined from
+the official `data.cyclocross.jp/meet` season selector and normalized to the
+collector's existing `YYYY-YY` season identifier; calendar years are not used
+as a substitute.
+
+The confirmed source season labels are `2023-24`, `2024-25`, and `2025-26`.
+The current production baseline is the collector's `meets.json` with one
+season, 66 events, and 1,192 category races. The source inventory will be
+recorded before import and the final report will record before/after counts.
+
+### Non-goals
+
+- No redesign of layout, charts, controls, navigation, disclosure behavior,
+  colors, spacing, typography, mobile layout, rider search presentation, or
+  result-table presentation.
+- No new scraping path in the viewer and no direct browser access to the
+  official source. The existing collector repository remains the acquisition
+  and normalization boundary.
+- No invented race IDs, season IDs, lap values, rankings, DNF/DNS/DSQ values,
+  or missing historical data.
+- No deletion, reset, or overwrite of unrelated dirty work in either
+  repository.
+
+### Approved architecture and data flow
+
+```text
+official data.cyclocross.jp season selector
+  -> collector season-aware discovery (source option value -> YYYY-YY label)
+  -> stable meet/race maps (idempotent merge)
+  -> collector race HTML parser and existing normalized RaceResult contract
+  -> generated meets.json / races.json / data/race-*.json / rider index
+  -> viewer runtime fetch of meets and selected race JSON
+  -> viewer rider-search API fetches the generated rider index, with a
+     compatibility fallback to the existing bounded race scan
+```
+
+The collector will discover a requested historical season by reading the
+official selector options rather than hard-coding an assumed numeric season
+identifier. Existing `meetId`, category `raceId`, and rider `riderId` values
+remain the only stable identity keys. Existing uncommitted collector changes
+for `--season`/`--meet` collection are in scope and must be preserved while
+the season-aware discovery and validation are added.
+
+The viewer's public contracts remain unchanged: `MeetEntry`, `RaceResult`,
+`Rider`, `LapRecord`, the race URL contract, data-load error kinds, official
+lap-axis behavior, and existing DNF/lap-down semantics. A generated rider
+index is an additive source artifact, not a replacement for race data. The
+viewer continues to fetch only the selected race for analysis; it never sends
+all historical lap payloads to the initial page.
+
+### Inventory and collection behavior
+
+Before collection, the inventory records season, source season option value,
+series, event ID, date, event name, category/race ID, category name, result
+availability, and lap-data availability. Collection uses bounded concurrency,
+stable-ID maps, and successful-output retention so reruns do not duplicate
+events, races, riders, or generated index entries. A source result page with
+valid result rows but no usable lap checkpoints is retained as result-only;
+source absence or an invalid page is reported as an unavailable/failed source,
+not silently converted into an empty successful result.
+
+### Historical compatibility and semantics
+
+The existing parser remains authoritative for status and timing semantics:
+DNS rows remain absent when the source has no result row, DNF rows retain the
+post-finisher internal position convention, lap-down is distinct from DNF,
+missing or duplicate checkpoints are not inferred, and the official race lap
+axis is not derived from a selected rider's completed laps. Historical parser
+compatibility tests cover old table shapes, missing lap values, start-at-lap-2
+tables, result-only races, DNF, lap-down, duplicate/invalid values, and stable
+IDs.
+
+### Rider search and performance
+
+The generated rider index contains one stable rider entry with bounded,
+deduplicated appearances keyed by meet/category/race IDs. Search matches both
+normalized rider ID and name and returns the existing appearance-to-race URL
+shape. The route caches the index using the existing runtime cache boundary;
+if the additive index is unavailable during rollout, the existing bounded scan
+remains the compatibility path. The home page still fetches only the meet
+index and the race page only the selected category JSON.
+
+### Validation and acceptance criteria
+
+1. The exact three source seasons appear in the viewer and filter correctly by
+   season, series, clear, reload, back, and forward.
+2. Every imported event has metadata and every imported category has a stable
+   race ID; representative events from all three seasons open with results.
+3. Lap analysis works when valid lap data exists and remains safely unavailable
+   when the source has result-only data.
+4. Historical rider IDs/names are searchable and link to the correct season,
+   event, category, and rider analysis without display-name key collisions.
+5. Existing current-season fixtures `CCS-256-003`, `KNS-256-010`, and
+   `KNS-256-011` retain race lap counts and P2 gap semantics.
+6. Data validation reports unique IDs, valid positive lap numbers, no duplicate
+   result rows, valid rank ordering where source data permits it, and race-axis
+   counts that are not inferred from lap-down or DNF riders.
+7. Collector and viewer tests, type checks, lint, build, `git diff --check`,
+   representative browser checks, and production smoke checks pass.
+
+### Repository boundaries and delivery
+
+- Collector repository: season-aware discovery, generated inventory/index,
+  parser compatibility checks, historical normalized race data, and collector
+  tests.
+- Viewer repository: additive data-source/index integration where needed,
+  historical regression tests, DATA-1 report, and no UX redesign.
+- Existing user changes are preserved. Commits and pushes are separate per
+  repository, and the viewer deployment is verified only after the collector
+  data is available from its pushed `main` branch.
+
+### DATA-1 specification resolutions
+
+1. **Season resolution:** `discover --season YYYY-YY` first fetches the
+   official season selector, requires exactly one matching label and a non-empty
+   option value, and fetches that option value. Missing, duplicate, or renamed
+   options fail the command; no date-range fallback is used for an explicit
+   season. The event date-derived season remains a consistency check and the
+   selector label is the stored canonical season string.
+2. **Reruns and upstream load:** historical `--season` and `--meet` collection
+   skips an existing valid race file by default and only retries missing or
+   invalid files. `--force` is the explicit refresh escape hatch. Generated
+   arrays and indexes are deterministic; `updatedAt` may change only for a
+   forced re-collection. This makes normal reruns byte-stable and avoids
+   unnecessary upstream requests.
+3. **Result-only races:** a successfully fetched result page with accepted
+   result rows and no valid lap checkpoints is a valid `RaceResult` with the
+   existing `riders` rows, empty `laps` per rider, and no inferred lap axis.
+   The viewer therefore shows the existing results and analysis-unavailable
+   state. It is not treated as a network or parser failure. A fetched page with
+    no accepted result rows is retained as an explicit `unavailable` inventory
+    category (the source has no usable result rows), not as a fabricated
+    result-only race; only missing/invalid normalized files or integrity
+    violations block the strict release validator.
+4. **Unsupported source statuses:** the existing contract remains
+   `finished | dnf`. Numeric ranks and literal `DNF` continue to be parsed;
+   DNS, DSQ, OTL, and unknown status rows are not mapped to either status and
+   are excluded from `riders`, with their counts recorded in inventory
+   diagnostics. No unsupported status is silently presented as a finisher or
+   DNF.
+5. **Lap-axis compatibility:** the parser's existing official metadata axis is
+   authoritative when present. Historical pages may fall back to the ordered
+    lap-table header axis, but never to a selected rider's completed laps. If
+    metadata is shorter than the numbered timing header, the numbered header
+    is retained so measured checkpoints are not truncated. If neither exists,
+    `raceLapNumbers` is omitted and no synthetic axis is generated; result rows
+    remain available when valid.
+6. **Missing rider links:** when the source has no stable `/racer/` link, the
+   collector assigns a deterministic race-scoped ID using the race ID and
+   source row ordinal. The display name is never used as the primary key.
+   Such entries remain usable inside their race, while cross-race rider
+   aggregation is limited to stable source IDs.
+7. **Generated artifacts:** the collector owns two deterministic root files:
+   `inventory.json` (source/event/category availability and aggregate counts)
+   and `rider-index.json` (version 1, stable rider entries and bounded
+   appearances). Both are staged with generated race data and are required for
+   a historical release. The viewer fetches `rider-index.json` first and uses
+   the existing bounded scan only when the additive index is missing or fails
+   validation; it does not merge stale index and live-scan results.
+ 8. **Failures and release gate:** collection and validation retain structured
+    required failures in `inventory.json`; source-listed events that redirect
+    back to the list without race detail are retained in the additive
+    `discovery-failures.json` diagnostic as non-blocking source limitations.
+    Successful files remain on disk for resumable local reruns, and a DATA-1
+    release push is blocked until the requested three-season inventory has zero
+    unresolved required failures. Legitimate result-only and source-unavailable
+    categories are not parser failures.
+9. **Cross-repository release order:** the collector implementation and
+   generated data are committed and pushed first. The raw GitHub URLs are then
+   verified for `meets.json`, `inventory.json`, `rider-index.json`, and
+   representative races. Only after that does the viewer commit and push its
+   index integration/report, followed by Vercel deployment and production
+   smoke checks. The DATA-1 report records both commit SHAs and any non-task
+   dirty files left untouched.
+
 ## Current design - UX3-5 Limited Scope Implementation
 
 Status: ACTIVE — UX3-5 re-audit/remediation; external human field test remains blocked

@@ -223,6 +223,53 @@ implementation starts:
 
 STATUS: CLEAR
 
+## DATA-1 Three-Season Historical Data Expansion — resolved (2026-09-12)
+
+The current change is a cross-repository data-expansion task. The authoritative
+design is the DATA-1 section in `docs/DESIGN.md`; this section records auditor
+questions and their resolutions before implementation.
+
+Known facts recorded before audit:
+
+- Official source: `https://data.cyclocross.jp/meet` and its race pages.
+- Existing collector: sibling repository `02_ajocc-data-collector`, which
+  generates `meets.json`, `races.json`, and `data/race-*.json`.
+- Viewer baseline: one season (`2025-26`), 66 events, 1,192 category races.
+- Target labels exposed by the official selector: `2023-24`, `2024-25`,
+  `2025-26`; numeric selector values are acquisition parameters, not viewer
+  season IDs.
+- Existing dirty collector changes for `--season` and `--meet` are user-owned
+  and must be preserved.
+
+### Auditor resolutions
+
+Two independent `spec_auditor` runs identified the same season-resolution,
+idempotency, result-only, artifact-schema, status, stable-identity,
+failure-gating, fallback, and dirty-work protection risks. They are resolved in
+the DATA-1 specification resolutions in `docs/DESIGN.md` and the bounded task
+graph in `docs/IMPLEMENTATION_PLAN.md`:
+
+- Official season labels are canonical; selector option values are discovered
+  dynamically and explicit mismatches fail.
+- Historical reruns skip valid outputs unless `--force` is supplied.
+- Result-only races retain valid result rows with empty laps and no inferred
+  axis; analysis remains unavailable through existing behavior.
+- The existing `finished | dnf` contract is preserved. DNS/DSQ/OTL/unknown
+  source rows are excluded rather than misclassified and are counted in the
+  inventory diagnostics.
+- `inventory.json` and `rider-index.json` are deterministic, versioned,
+  collector-owned release artifacts and are staged with race data.
+- Missing source rider links receive deterministic race-scoped IDs; names are
+  not primary keys.
+- Required collection failures make the release command fail while preserving
+  successful local outputs for resumable reruns.
+- Collector push and raw-source verification precede the viewer push, Vercel
+  deployment, and production smoke checks.
+- The current dirty collector files are preserved and their task-relevant
+  behavior is extended without resetting or deleting user work.
+
+STATUS: CLEAR
+
 ## UX3-7R3 final audit closure
 
 The earlier UX3-7R3 draft and the two auditor reports are superseded by the

@@ -1271,3 +1271,116 @@ finish `PASS`. No UX3-8 work is allowed in this plan.
      history. Confirm Vercel deployment, run Production smoke including the
      required URLs/viewports, update the report/evidence, then commit/push the
      release evidence update if needed. Only then set the loop phase to DONE.
+# DATA-1 implementation plan — Three-Season Historical Data Expansion
+
+## Task graph
+
+### DATA-1-A — Source inventory and season resolution — DONE
+
+- Objective: confirm the official season identifiers and baseline counts before
+  collection.
+- Scope: inspect `data.cyclocross.jp/meet`, existing collector metadata, and
+  current viewer runtime sources; record the inventory artifact.
+- Files/components: DATA-1 design/report and collector inventory tooling only.
+- Dependencies: none.
+- Do not change: viewer UX or existing generated data.
+- Acceptance: source labels resolve to `2023-24`, `2024-25`, `2025-26`; baseline
+  is recorded as 1 season / 66 events / 1,192 races; missing or duplicate
+  selector options fail explicitly.
+- Verification: source inventory command and source-page spot checks.
+
+### DATA-1-B — Season-aware collector discovery — READY
+
+- Objective: discover all categories for an explicitly requested source season
+  using the official selector mapping.
+- Scope: collector `scripts/discover.ts`, `lib/raceConfig.ts`, and focused
+  collector tests.
+- Dependencies: DATA-1-A.
+- Do not change: existing parser semantics or unrelated workflow changes.
+- Acceptance: `--season YYYY-YY` fetches the matching source season, merges by
+  stable IDs, is idempotent, records structured failures, and retains current
+  discovery behavior. Existing files are skipped by default; `--force` is the
+  only refresh override.
+- Verification: collector tests and targeted discovery dry run.
+
+### DATA-1-C — Historical collection, normalization, and validation — BLOCKED by DATA-1-B
+
+- Objective: collect and validate historical race HTML using the current parser
+  contract and generate the inventory and rider index.
+- Scope: collector collection/index/validation code, generated `meets.json`,
+  `races.json`, `data/race-*.json`, and focused fixtures/tests.
+- Dependencies: DATA-1-B.
+- Do not change: viewer presentation or existing user-owned collector diffs.
+- Acceptance: all target event/category records are available where the
+  official source provides them; result-only races are retained honestly;
+  unsupported source statuses are counted but never misrepresented; reruns
+  produce no duplicate IDs; deterministic `inventory.json` and
+  `rider-index.json` report integrity counts; required failures make the
+  release command fail.
+- Verification: collector test/typecheck plus integrity validator.
+
+### DATA-1-D — Viewer historical index integration and regression tests — BLOCKED by DATA-1-C
+
+- Objective: make historical rider search efficient while preserving the
+  existing meet/race data boundary and URL contract.
+- Scope: `lib/dataSource.ts`, `lib/riderDiscovery.ts`, rider-search route,
+  tests, and historical regression fixtures.
+- Dependencies: DATA-1-C.
+- Do not change: layout, chart, control, disclosure, and mobile components.
+- Acceptance: search includes historical riders and links to stable historical
+  races; fallback behavior remains controlled and bounded if the additive index
+  is absent or invalid; stale index and live scan are never merged.
+- Verification: viewer tests, typecheck, lint, and build.
+
+### DATA-1-E — Report and release verification — BLOCKED by DATA-1-D
+
+- Objective: document inventory, counts, source cross-checks, representative
+  fixtures, performance, deployment, and remaining limitations.
+- Scope: `docs/data/data-1-three-season-historical-expansion.md` and any small
+  machine-readable inventory artifact.
+- Dependencies: DATA-1-C and DATA-1-D.
+- Do not change: prior history documents or unrelated dirty files.
+- Acceptance: report contains all requested sections and before/after counts;
+  records both repository commit SHAs, reviewer PASS, and separate
+  collector/viewer commits pushed without force in the approved order.
+- Verification: full required command set, browser checks at 1440x900 and
+  390x844, production smoke, and `git diff --check`.
+
+## Required validation commands
+
+Viewer:
+
+```text
+npm test
+npx tsc --noEmit
+npm run lint
+npm run build
+git diff --check
+```
+
+Collector:
+
+```text
+npm test
+npm run typecheck
+git diff --check
+```
+
+## Representative verification set
+
+The final set will include at least two events from each target season and
+will cover a normal race, a large field, a multi-lap race, a lap-down case, and
+a DNF case when the official source exposes those cases. Existing regression
+fixtures remain mandatory.
+
+## DATA-1 execution status (2026-09-12)
+
+- DATA-1-A source inventory and season resolution: DONE.
+- DATA-1-B season-aware collector discovery: DONE.
+- DATA-1-C historical collection, normalization, validation, and artifacts: DONE.
+- DATA-1-D viewer rider-index integration and historical regression tests: DONE.
+- DATA-1-E report, browser verification, review, commit, push, and deployment:
+  IN_PROGRESS.
+- Source-listed events without a race detail page remain recorded in the
+  collector's non-blocking `discovery-failures.json` diagnostic; strict
+  inventory validation has zero required failures.

@@ -5,11 +5,16 @@ import {
   RIDER_DISCOVERY_CACHE_TTL_MS,
   scanRiderDiscoverySources,
   searchRiderDiscoveryIndex,
+  isRiderDiscoveryIndex,
   type RiderDiscoveryIndex,
   type RiderDiscoveryRaceLoader,
   type RiderDiscoveryResponse,
 } from "../../../../lib/riderDiscovery";
-import { fetchMeets, fetchRaceResult } from "../../../../lib/dataSource";
+import {
+  fetchMeets,
+  fetchRaceResult,
+  fetchRiderDiscoveryIndex,
+} from "../../../../lib/dataSource";
 
 export const runtime = "nodejs";
 
@@ -51,6 +56,20 @@ function getCachedIndex(): CompletedIndexCache | null {
   return completedIndexCache;
 }
 
+function responseFromIndex(
+  index: RiderDiscoveryIndex,
+  query: string,
+): RiderDiscoveryResponse {
+  return {
+    status: "complete",
+    query,
+    results: searchRiderDiscoveryIndex(index, query),
+    scannedSources: index.scannedSources ?? index.riders.length,
+    failedSources: index.failedSources ?? 0,
+    totalSources: index.totalSources ?? index.riders.length,
+  };
+}
+
 const loadRace: RiderDiscoveryRaceLoader = (source, signal) =>
   fetchRaceResult(source.url, signal);
 
@@ -61,18 +80,38 @@ export async function GET(request: Request): Promise<Response> {
 
   const cached = getCachedIndex();
   if (cached) {
-    const response: RiderDiscoveryResponse = {
-      status: "complete",
-      query,
-      results: searchRiderDiscoveryIndex(cached.index, query),
-      scannedSources: cached.scannedSources,
-      failedSources: cached.failedSources,
-      totalSources: cached.totalSources,
-    };
-    return jsonResponse(response, 200);
+    return jsonResponse(
+      {
+        status: "complete",
+        query,
+        results: searchRiderDiscoveryIndex(cached.index, query),
+        scannedSources: cached.scannedSources,
+        failedSources: cached.failedSources,
+        totalSources: cached.totalSources,
+      } satisfies RiderDiscoveryResponse,
+      200,
+    );
   }
 
   try {
+    try {
+      const rawIndex = await fetchRiderDiscoveryIndex(request.signal);
+      if (!isRiderDiscoveryIndex(rawIndex)) throw new Error("invalid-rider-index");
+      const index = rawIndex;
+      completedIndexCache = {
+        expiresAt: Date.now() + RIDER_DISCOVERY_CACHE_TTL_MS,
+        index,
+        scannedSources: index.scannedSources ?? index.riders.length,
+        failedSources: index.failedSources ?? 0,
+        totalSources: index.totalSources ?? index.riders.length,
+      };
+      return jsonResponse(responseFromIndex(index, query), 200);
+    } catch (indexError) {
+      // The additive index is a rollout optimization. A missing or malformed
+      // artifact falls back to the existing bounded scan; it is never merged
+      // with a potentially stale index.
+      void indexError;
+    }
     const meets = await fetchMeets(request.signal);
     const sources = createRiderDiscoverySources(meets);
     const scan = await scanRiderDiscoverySources(sources, loadRace, { signal: request.signal });

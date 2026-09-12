@@ -55,6 +55,91 @@ export interface RiderDiscoverySource {
 
 export interface RiderDiscoveryIndex {
   riders: RiderDiscoveryMatch[];
+  version?: 1;
+  generatedAt?: string;
+  scannedSources?: number;
+  failedSources?: number;
+  totalSources?: number;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isNonNegativeSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && Number.isSafeInteger(value) && value >= 0;
+}
+
+function hasValidSourceCounters(index: Record<string, unknown>): boolean {
+  const counterNames = ["scannedSources", "failedSources", "totalSources"] as const;
+  if (counterNames.some((name) => !Object.prototype.hasOwnProperty.call(index, name) || !isNonNegativeSafeInteger(index[name]))) {
+    return false;
+  }
+
+  const scannedSources = index.scannedSources;
+  const failedSources = index.failedSources;
+  const totalSources = index.totalSources;
+  if (!isNonNegativeSafeInteger(scannedSources) || !isNonNegativeSafeInteger(failedSources) || !isNonNegativeSafeInteger(totalSources)) {
+    return false;
+  }
+  return failedSources <= scannedSources && scannedSources <= totalSources && failedSources <= totalSources && scannedSources + failedSources === totalSources;
+}
+
+function isRiderDiscoveryAppearance(value: unknown): value is RiderDiscoveryAppearance {
+  if (!value || typeof value !== "object") return false;
+  const appearance = value as Partial<RiderDiscoveryAppearance>;
+  return (
+    isNonEmptyString(appearance.meetId) &&
+    typeof appearance.meetName === "string" &&
+    isNonEmptyString(appearance.meetDate) &&
+    isNonEmptyString(appearance.season) &&
+    isNonEmptyString(appearance.series) &&
+    isNonEmptyString(appearance.raceId) &&
+    isNonEmptyString(appearance.categoryId) &&
+    appearance.raceId === appearance.categoryId &&
+    typeof appearance.categoryName === "string"
+  );
+}
+
+function isRiderDiscoveryMatch(value: unknown): value is RiderDiscoveryMatch {
+  if (!value || typeof value !== "object") return false;
+  const rider = value as Partial<RiderDiscoveryMatch>;
+  if (
+    !isNonEmptyString(rider.riderId) ||
+    typeof rider.name !== "string" ||
+    (rider.dataQuality !== "ok" && rider.dataQuality !== "error") ||
+    !isNonNegativeSafeInteger(rider.totalAppearances) ||
+    !Array.isArray(rider.appearances)
+  ) return false;
+
+  if (rider.totalAppearances < 1 || rider.appearances.length === 0 || rider.totalAppearances < rider.appearances.length || !rider.appearances.every(isRiderDiscoveryAppearance)) return false;
+  const appearanceKeys = new Set<string>();
+  return rider.appearances.every((appearance) => {
+    const key = `${appearance.meetId}\u0000${appearance.categoryId}`;
+    if (appearanceKeys.has(key)) return false;
+    appearanceKeys.add(key);
+    return true;
+  });
+}
+
+/** Validate the collector-generated additive index without accepting unknown shapes. */
+export function isRiderDiscoveryIndex(value: unknown): value is RiderDiscoveryIndex {
+  if (!value || typeof value !== "object") return false;
+  const index = value as Partial<RiderDiscoveryIndex> & { version?: unknown } & Record<string, unknown>;
+  if (
+    index.version !== 1 ||
+    (Object.prototype.hasOwnProperty.call(index, "generatedAt") && !isNonEmptyString(index.generatedAt)) ||
+    !hasValidSourceCounters(index) ||
+    !Array.isArray(index.riders) ||
+    index.riders.length === 0
+  ) return false;
+
+  const riderIds = new Set<string>();
+  return index.riders.every((rider) => {
+    if (!isRiderDiscoveryMatch(rider) || riderIds.has(rider.riderId)) return false;
+    riderIds.add(rider.riderId);
+    return true;
+  });
 }
 
 export interface RiderDiscoveryScan {

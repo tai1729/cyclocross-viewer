@@ -7,6 +7,8 @@ import {
 export const DATA_BASE_URL =
   "https://raw.githubusercontent.com/tai1729/cyclocross-data-collector/main";
 
+export const RIDER_INDEX_URL = `${DATA_BASE_URL}/rider-index.json`;
+
 export type DataLoadErrorKind =
   | "not-found"
   | "network"
@@ -136,6 +138,17 @@ export async function fetchRaceResult(
     );
   }
   return normalizeRaceResult(data);
+}
+
+/**
+ * Load the collector's additive cross-race rider index. The index is
+ * validated by the rider-discovery boundary because it is not part of the
+ * race result contract.
+ */
+export async function fetchRiderDiscoveryIndex(
+  signal?: AbortSignal,
+): Promise<unknown> {
+  return fetchJson(RIDER_INDEX_URL, signal);
 }
 
 export function describeDataLoadError(
