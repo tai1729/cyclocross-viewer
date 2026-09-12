@@ -52,4 +52,7 @@ test("analysis control deck exposes current rider and comparison identity", () =
   assert.match(html, /data-analysis-identity[^>]*>和田 良平 vs 黒田 将広 \/ 日比 正明/);
   assert.match(html, /注目選手/);
   assert.match(html, /比較する選手/);
+  assert.match(html, /data-desktop-comparison-label/);
+  assert.match(html, /lg:h-\[46px\] lg:min-h-\[46px\]/);
+  assert.equal((html.match(/lg:size-\[46px\]/g) ?? []).length, 2);
 });

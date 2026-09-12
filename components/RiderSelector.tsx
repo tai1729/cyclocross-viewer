@@ -110,7 +110,7 @@ export function RiderSelector({
           aria-label="一つ上の順位の選手へ"
           variant="outline"
           size="icon"
-          className="size-11 shrink-0"
+          className="size-11 shrink-0 lg:size-[46px]"
         >
           ▲
         </Button>
@@ -123,7 +123,7 @@ export function RiderSelector({
             variant="outline"
             aria-label={`注目選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
             className={cn(
-              "min-h-11 w-full min-w-0 justify-between",
+              "min-h-11 w-full min-w-0 justify-between lg:h-[46px] lg:min-h-[46px]",
             )}
           >
             <span className="flex items-baseline gap-2 truncate">
@@ -147,7 +147,7 @@ export function RiderSelector({
           aria-label="一つ下の順位の選手へ"
           variant="outline"
           size="icon"
-          className="size-11 shrink-0"
+          className="size-11 shrink-0 lg:size-[46px]"
         >
           ▼
         </Button>

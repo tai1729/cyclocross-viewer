@@ -90,37 +90,45 @@ export function AnalysisControlDeck({
 
         <div className="min-w-0">
           {isDesktop ? (
-            <Disclosure
-              data-desktop-comparison-disclosure
-              summary={(
-                <>
-                  <span>比較する選手</span>
-                  <span className="min-w-0 break-words text-right text-sm font-normal">
-                    {getAnalysisComparisonLabel(comparisonMode)}・現在{displayedCount}名
-                  </span>
-                </>
-              )}
-              contentClassName="flex min-w-0 flex-col gap-3 p-3"
-            >
-              <ComparisonAdjuster
-                mode={comparisonMode}
-                displayedCount={displayedCount}
-                totalRiderCount={graphableRiders.length}
-                pinnedCount={pinnedCount}
-                onChange={onChangeComparisonMode}
-              />
-              {comparisonMode === "pinned" ? (
-                <div className="min-w-0">
-                  <ComparisonRiderPicker
-                    riders={graphableRiders}
-                    primaryRiderId={selectedRiderId}
-                    pinnedRiderIds={pinnedRiderIds}
-                    onAdd={onAddPinnedRider}
-                    onRemove={onRemovePinnedRider}
-                  />
-                </div>
-              ) : null}
-            </Disclosure>
+            <div className="min-w-0">
+              <p
+                data-desktop-comparison-label
+                className="mb-1 text-xs font-medium text-muted-foreground"
+              >
+                比較する選手
+              </p>
+              <Disclosure
+                data-desktop-comparison-disclosure
+                summary={(
+                  <>
+                    <span className="sr-only">比較する選手:</span>
+                    <span className="min-w-0 break-words text-right text-sm font-normal">
+                      {getAnalysisComparisonLabel(comparisonMode)}・現在{displayedCount}名
+                    </span>
+                  </>
+                )}
+                contentClassName="flex min-w-0 flex-col gap-3 p-3"
+              >
+                <ComparisonAdjuster
+                  mode={comparisonMode}
+                  displayedCount={displayedCount}
+                  totalRiderCount={graphableRiders.length}
+                  pinnedCount={pinnedCount}
+                  onChange={onChangeComparisonMode}
+                />
+                {comparisonMode === "pinned" ? (
+                  <div className="min-w-0">
+                    <ComparisonRiderPicker
+                      riders={graphableRiders}
+                      primaryRiderId={selectedRiderId}
+                      pinnedRiderIds={pinnedRiderIds}
+                      onAdd={onAddPinnedRider}
+                      onRemove={onRemovePinnedRider}
+                    />
+                  </div>
+                ) : null}
+              </Disclosure>
+            </div>
           ) : (
             <MobileComparisonDisclosure
               mode={comparisonMode}
