@@ -1,120 +1,206 @@
 # UX3-1D Production Feedback Activation Report
 
-Status: `UX3-1D NEEDS_HUMAN CONFIGURATION`
+Status: `UX3-1D COMPLETE`
 
-Activation date: 2026-09-06
+Audit date: 2026-09-07 (Asia/Tokyo)
 
-This report records the production activation gate for the already-completed
-UX3-1C implementation. No product code or feedback contract was changed.
-The Human Field Test remains `NOT YET EXECUTED`.
+This is the final audit of the already-completed UX3-1C Feedback Intake. No
+product code, feedback schema, privacy boundary, or existing analysis UX was
+changed for this activation audit. The Human Field Test remains a separate
+activity and is still `NOT YET EXECUTED`.
 
 ## Source and deployment identity
 
-- Source commit: `020809a6cc7ce77aba6e917e42a2d90396dc751d` (`docs: record UX3-1D production activation blocker`)
+- Production source commit: `6bb5b81187c95d0ef98ef72127ad90d911534950`
+- Repository latest commit: `6bb5b81187c95d0ef98ef72127ad90d911534950`
 - Branch: `main`
-- Repository state: clean; `main` matches `origin/main`
+- Worktree before this report-only update: clean; this report is the only audit modification.
+- `main` and `origin/main`: equal
 - Target Vercel project: `ajocc-laptime-viewer`
-- Production deployment: `dpl_CK7RxsKDMEZhADgdCofPYjRxMA3Q`
-- Deployment status: `READY`
+- Production deployment: `dpl_J27TwUn5qVc8HxTbVyDnN6hjo261`
+- Deployment status: `READY` / `PROMOTED`
+- Deployment source SHA: `6bb5b81187c95d0ef98ef72127ad90d911534950`
+- Deployment created: `2026-09-06T15:16:09Z`
+- Deployment ready: `2026-09-06T15:16:53Z`
 - Production alias: `https://ajocc-laptime-viewer.vercel.app/`
-- Deployment source commit: `020809a6cc7ce77aba6e917e42a2d90396dc751d`
-- Deployed timestamp: 2026-09-06 (Vercel deployment metadata)
 
-The local `.vercel/project.json` points to a separate project named
-`01_ajocc-laptime-viewer`; the requested public alias is served by the
-`ajocc-laptime-viewer` project above. The target project was inspected directly.
+The local `.vercel/project.json` points to a separate linked project named
+`01_ajocc-laptime-viewer`. Vercel state for the requested public alias was
+verified against the `ajocc-laptime-viewer` project directly.
 
-## Configuration status
+## Production configuration
 
-- `FEEDBACK_BASIN_ENDPOINT` Production variable: **not configured**.
-- Target project environment-variable listing: empty.
-- Actual Basin endpoint: intentionally not recorded here or in source.
-- Basin account/form access: unavailable in the connected environment; the
-  Basin site presented Log In/Sign Up rather than an authenticated dashboard.
-- Production redeploy after endpoint configuration: not applicable yet.
-- Basin Production form status: not verified.
-- Basin retention setting: not verified.
-- Basin spam/domain settings: not verified.
+The following items were completed by the deployment operator and are treated
+as human-provided production evidence. Basin Dashboard was not reopened or
+re-authenticated during this audit, as requested.
 
-No endpoint value, credential, token, or private Basin account information was
-copied into the repository.
+- Basin Production form: created or selected and active.
+- Basin Data Retention: **90 days**, verified by the deployment operator.
+- Basin spam filter: confirmed.
+- Basin honeypot compatibility: confirmed.
+- Basin domain configuration: confirmed not to block the production server
+  endpoint.
+- `FEEDBACK_BASIN_ENDPOINT`: present in the target Vercel Production
+  environment with `visibility=secret` and `decrypted=false`.
+- The endpoint value is intentionally absent from source, documentation,
+  logs, and this report.
+- Production redeploy: completed.
+- Production alias: points to the READY deployment above.
 
-## Required human configuration
+The Vercel environment listing confirmed the key and Production target without
+revealing its value. The deployment build metadata also contains the variable
+as a server build environment variable; it is not a public environment
+variable.
 
-1. In Basin Dashboard, create or select a Production form named similarly to
-   `AJOCC LapTime Viewer Feedback — Production`.
-2. Configure raw feedback/contact retention to **90 days**.
-3. Enable the appropriate Basin spam filter and honeypot compatibility. Add a
-   production-domain restriction only if it does not block the application
-   server endpoint; verify the setting using Basin's documented behavior.
-4. Set the resulting form endpoint as the encrypted Vercel Production
-   environment variable `FEEDBACK_BASIN_ENDPOINT` for the
-   `ajocc-laptime-viewer` project. Do not set it in client/public variables.
-5. Redeploy the production project and confirm the new deployment is READY and
-   the alias above points to it.
-6. Return to this report and record only non-secret evidence such as
-   `Basin Production form Data Retention: 90 days — verified YYYY-MM-DD`.
+## Production browser verification
 
-Preview may use a separate staging form if desired. Development should retain
-the existing local/mock strategy; do not copy the Production endpoint into
-local development by default.
+No new Production feedback submission was made during this audit. The single
+anonymous smoke submission described below was completed by the deployment
+operator before this audit and is accepted as evidence.
 
-## Pre-smoke and production smoke
+### Desktop
 
-Production UI was not treated as an end-to-end success before configuration.
-The required one-and-only-one anonymous smoke submission was **not run**:
+- Human-completed Production desktop smoke: **PASS**.
+- Desktop feedback entry: visible and usable as a secondary action.
+- Entry does not replace the chart-first analysis surface or analysis controls.
+- `/feedback` route: reachable from the public alias.
+- Current public entry inspection: the home page exposes the accessible link
+  `ご意見・不具合を送る`.
+- Current public form inspection: labels, category control, message control,
+  optional contact field, privacy disclosure, submit, and return link render.
+- Client-side invalid submit was rechecked: category/message errors appeared,
+  focus stayed in the feedback route, and no submission was sent.
+- Human-completed desktop analysis regression smoke: **PASS**.
 
-`[PRODUCTION SMOKE TEST] UX3-1D feedback end-to-end verification.`
+### Mobile
 
-Consequently there is no Basin receipt, no production context comparison, no
-production app-version confirmation, and no test record to delete. No real
-feedback was sent.
+- Human-completed Production mobile smoke: **PASS**.
+- The mobile entry remains a normal footer/non-sticky entry; no fixed floating
+  feedback button was introduced.
+- Human-completed checks reported no rider bottom-sheet, safe-area, browser
+  bottom UI, primary-analysis, or horizontal-overflow regression.
+- Human-completed mobile analysis regression smoke: **PASS**.
 
-The following remain pending until configuration and redeployment:
+### Anonymous smoke
 
-- desktop entry and analysis regression smoke;
-- mobile non-sticky entry and analysis regression smoke;
-- `/feedback` anonymous submission with empty email;
-- sending/success announcement and return flow;
-- Basin receipt/schema/context inspection;
-- forbidden-data and empty-email audit;
-- smoke-record deletion;
-- 90-day retention recheck.
+- Exactly one human-completed Production smoke submission was sent.
+- Category and message were valid.
+- Contact email was left blank.
+- Sending, success announcement, return flow, and no duplicate submission were
+  confirmed by the deployment operator.
+- The test submission was clearly marked as a smoke test and was deleted from
+  Basin after receipt verification.
+- No additional smoke or test submission was generated in this audit.
 
-## Existing implementation evidence
+### Failure behavior
 
-UX3-1C already verified the implementation locally and with a local mock
-provider: server/provider boundary, canonical validation, minimized context,
-forbidden-data exclusions, honeypot, duplicate suppression, success/error UX,
-desktop/mobile placement, and automated tests. This is not a substitute for
-the pending Production Basin smoke.
+- Public client-side validation failure was rechecked without sending data.
+- Existing automated provider failure, timeout, malformed-response, missing-env,
+  retry, and form-retention tests remain PASS.
+- The Production provider was not intentionally broken and no forced failure
+  request was sent.
 
-The deployed client has no public `FEEDBACK_BASIN_ENDPOINT` value. The client
-continues to call only `/api/feedback`; the Basin endpoint is read server-side.
+## Basin receipt and privacy audit
 
-## Acceptance status
+The deployment operator confirmed the Basin receipt for the one smoke record.
+The following were confirmed in the receipt and/or the human production audit:
 
-- AC1 Basin Production form exists: **BLOCKED — human Basin access required**
-- AC2 Retention is 90 days: **BLOCKED — not verified**
-- AC3 Production env configured: **FAIL — variable absent**
-- AC4 Post-config deployment READY: **BLOCKED — redeploy pending**
-- AC5 Alias points to latest configured deployment: **BLOCKED — no configured deployment exists yet**
-- AC6 Desktop entry production-usable: **PENDING production smoke**
-- AC7 Mobile entry production-usable: **PENDING production smoke**
-- AC8 Anonymous production submission: **NOT RUN**
-- AC9 Basin receipt: **NOT RUN**
-- AC10 Expected fields: **NOT RUN**
-- AC11 Context correctness: **NOT RUN**
-- AC12 Forbidden payload audit: **NOT RUN against a receipt**
-- AC13 Production app version: **NOT RUN against a receipt**
-- AC14 Success UX: **PENDING production smoke**
-- AC15 Duplicate submit: **PENDING production smoke**
-- AC16 Test cleanup: **NOT APPLICABLE — no test submitted**
-- AC17 Desktop regression: **PENDING production smoke**
-- AC18 Mobile regression: **PENDING production smoke**
-- AC19 Secret/client exposure: **PASS for current deployed code; endpoint absent**
-- AC20 Human Field Test status preserved: **PASS — NOT YET EXECUTED**
+- expected canonical fields: `schemaVersion`, `category`, `message`, and
+  `context`;
+- context matched the actual analysis state used for the smoke submission,
+  including available race/category, rider, metric, and comparison values;
+- viewport, normalized browser family, and application version were present as
+  applicable;
+- application version identified the deployed release;
+- contact email was absent rather than replaced with a placeholder;
+- no full URL, raw user-agent, rider name, cookie, advertising ID, persistent
+  anonymous ID, analytics ID, referrer, screenshot, arbitrary local-storage
+  data, or browser fingerprint was present in the application payload;
+- provider/hosting network metadata was treated as separate from the
+  application-controlled payload audit.
+
+Retention evidence is the operator confirmation that the Basin Production form
+is configured for 90 days. This matches the UX3-1B policy for raw feedback and
+contact data. The application does not create a second raw copy; any future
+minimal issue record remains subject to the separately documented resolution
+plus 30 days / maximum 12 months policy.
+
+## Secret and client exposure audit
+
+The source boundary remains:
+
+`FeedbackForm -> POST /api/feedback -> server provider adapter -> Basin`
+
+Code-level checks confirmed that `FEEDBACK_BASIN_ENDPOINT` is read only by
+`lib/feedback/provider.ts` through `process.env`. The client form posts only
+to `/api/feedback`; it does not import or reference the Basin endpoint.
+
+Production exposure checks performed on `/` and `/feedback` found:
+
+- HTML endpoint/provider string matches: `0`;
+- downloaded public JavaScript bundle endpoint/provider string matches: `0`;
+- Vercel environment visibility: `secret` / `decrypted=false`;
+- public endpoint value: not exposed.
+
+The canonical schema and context builder continue to enforce the allowlist,
+bounded IDs, fixed-rider maximum, viewport bounds, normalized browser family,
+application-version limit, and forbidden-data exclusions. Automated tests
+continue to cover unknown context keys, rider-name exclusion, full URL/raw-UA
+exclusion, cookies, malformed schema, validation mismatch, honeypot, provider
+error mapping, and retry behavior.
+
+## Acceptance criteria
+
+| AC | Result | Evidence |
+| --- | --- | --- |
+| AC1 Production Basin form exists | **PASS** | Human-completed Basin configuration evidence |
+| AC2 Basin retention is 90 days | **PASS** | Human-completed retention verification |
+| AC3 `FEEDBACK_BASIN_ENDPOINT` is configured in Production | **PASS** | Vercel target project env listing: secret, Production target |
+| AC4 Configuration deployment is READY | **PASS** | `dpl_J27TwUn5qVc8HxTbVyDnN6hjo261`, READY/PROMOTED |
+| AC5 Production alias points to latest deployment | **PASS** | Alias inspection points to the deployment above |
+| AC6 Desktop feedback entry usable | **PASS** | Human desktop smoke plus public entry inspection |
+| AC7 Mobile feedback entry usable | **PASS** | Human mobile smoke plus non-sticky source contract |
+| AC8 Anonymous Production submission succeeds | **PASS** | One human-completed smoke with blank email |
+| AC9 Basin receives the submission | **PASS** | Human receipt verification |
+| AC10 Expected schema fields present | **PASS** | Human receipt verification and canonical schema |
+| AC11 Context matches actual UI state | **PASS** | Human state-to-receipt comparison |
+| AC12 Forbidden application payload data absent | **PASS** | Human receipt audit plus code/test audit |
+| AC13 Application version is correct | **PASS** | Human receipt/version comparison |
+| AC14 Success UX works | **PASS** | Human smoke success announcement and return flow |
+| AC15 Duplicate submission absent | **PASS** | One smoke record, client suppression, automated duplicate tests |
+| AC16 Smoke record deleted | **PASS** | Human-confirmed Basin deletion |
+| AC17 Desktop UX regression absent | **PASS** | Human desktop regression smoke |
+| AC18 Mobile UX regression absent | **PASS** | Human mobile regression smoke |
+| AC19 Secret/client exposure absent | **PASS** | Vercel secret config, source boundary, HTML/bundle scan |
+| AC20 Human Field Test status preserved | **PASS** | Explicitly remains `NOT YET EXECUTED`; it is a separate activity |
+
+Human Field Test is not a UX3-1D blocker. The governing feedback specification
+explicitly separates Production Feedback from Human Field Test and states that
+Feedback is not a substitute for that test. UX3-1D activation therefore does
+not claim Human Field Test completion.
+
+## Validation
+
+Executed against the clean repository at
+`6bb5b81187c95d0ef98ef72127ad90d911534950`:
+
+- `npm test`: **PASS** — 101 tests passed.
+- `npx tsc --noEmit`: **PASS**.
+- `npm run lint`: **PASS**.
+- `npm run build`: **PASS** — Next.js production build completed.
+- `git diff --check`: **PASS**.
+- Public `/` and `/feedback` responses: **HTTP 200**.
+- Production HTML and public JavaScript endpoint exposure scan: **PASS**.
+- Vercel deployment/env/alias inspection: **PASS**.
+
+## Known limitations
+
+- Basin Dashboard was not reopened during this audit; retention, spam, and
+  deletion evidence are accepted from the completed human operation as
+  requested.
+- No new Production submission was made during this audit.
+- Human Field Test analysis remains `NOT YET EXECUTED`.
 
 ## Final verdict
 
-`UX3-1D NEEDS_HUMAN — BASIN ENDPOINT REQUIRED`
+`UX3-1D COMPLETE`

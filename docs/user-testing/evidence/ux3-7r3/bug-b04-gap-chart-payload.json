@@ -1,0 +1,18 @@
+{
+  "issue": "B-04",
+  "raceId": "27160",
+  "baseRiderId": "KNS-000-1252",
+  "targetRiderId": "KNS-000-2145",
+  "source": "GapChart nested Recharts LineChart props.data",
+  "axis": [1, 2, 3, 4, 5, 6, 7, 8],
+  "targetSeries": [null, 0.9, 16, 20.6, 24.1, 27.5, 23.9, 4.9],
+  "lap2FieldPresent": true,
+  "regressionTest": "tests/ux3-7r3-data.test.ts:B-04 render payload keeps the official P2 lap-2 gap",
+  "production": {
+    "url": "https://ajocc-laptime-viewer.vercel.app/race/KNS-256-011?rider=KNS-000-1252&tab=gap",
+    "deploymentId": "dpl_BFU5Lvs6LBPraYK9YrVRG9Z7NFGz",
+    "renderedAxis": [1, 2, 3, 4, 5, 6, 7, 8],
+    "renderedP2": [null, 0.8999999999999773, 16, 20.59999999999991, 24.09999999999991, 27.5, 23.90000000000009, 4.900000000000091],
+    "renderedP3": [null, -0.40000000000009095, 11.299999999999956, 27.700000000000045, 33.40000000000009, 35.5, 34.79999999999973, 10.5]
+  }
+}
