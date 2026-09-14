@@ -9,6 +9,7 @@ import {
   getMaximumLapLoss,
   getRaceLapNumbers,
   getRiderResult,
+  getRiderSummary,
   getMeasuredLapRows,
   getValidCheckpoints,
   getValidTimedLaps,
@@ -230,6 +231,20 @@ test("DNFは内部finalPositionを結果順位として返さない", () => {
     gapToLeaderAtCheckpointSec: 5,
   });
   assert.equal(result && "position" in result, false);
+});
+
+test("annotated-rank summary keeps the official label separate from measured result data", () => {
+  const leader = rider("leader", 1, [lap(1, 60, 60, 1)]);
+  const annotated = rider("annotated", 2, [lap(1, 61, 61, 2)], "annotated-rank");
+  annotated.officialPositionLabel = "2 LapOut";
+
+  const summary = getRiderSummary(race([leader, annotated]), "annotated");
+  assert.equal(summary?.officialPositionLabel, "2 LapOut");
+  assert.equal(summary?.result.kind, "finished");
+  if (summary?.result.kind === "finished") {
+    assert.equal(summary.result.position, 2);
+    assert.equal(summary.result.gapToLeaderSec, 1);
+  }
 });
 
 test("周回遅れのfinished riderは時間差ではなくlapDeficitを返す", () => {

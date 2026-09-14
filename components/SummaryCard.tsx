@@ -9,6 +9,7 @@ interface SummaryCardProps {
 export function SummaryCard({ summary }: SummaryCardProps) {
   const {
     result,
+    officialPositionLabel,
     totalRiders,
     promotionZoneRank,
     promotionGapSec,
@@ -72,6 +73,18 @@ export function SummaryCard({ summary }: SummaryCardProps) {
 
   return (
     <Card size="sm">
+      {officialPositionLabel ? (
+        <CardContent className="border-b border-border/70 pb-3" data-official-position-label>
+          <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+              公式表記
+            </span>
+            <span className="break-words font-mono text-base font-bold tabular-nums text-foreground">
+              {officialPositionLabel}
+            </span>
+          </div>
+        </CardContent>
+      ) : null}
       <CardContent className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3">
       <SummaryItem
         label="順位"

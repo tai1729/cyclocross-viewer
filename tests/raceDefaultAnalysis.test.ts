@@ -44,6 +44,15 @@ test("graphable DNF and lapped riders remain eligible", () => {
   assert.equal(getFirstGraphableRider([lapped, dnf])?.riderId, "dnf");
 });
 
+test("annotated-rank riders with valid checkpoints remain eligible for primary analysis", () => {
+  const annotated = rider("annotated", 2, {
+    status: "annotated-rank",
+    officialPositionLabel: "2 LapOut",
+  });
+
+  assert.equal(getFirstGraphableRider([annotated])?.riderId, "annotated");
+});
+
 test("returns null when no rider has valid graph data", () => {
   assert.equal(
     getFirstGraphableRider([

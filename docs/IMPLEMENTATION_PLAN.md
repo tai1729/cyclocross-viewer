@@ -1385,3 +1385,82 @@ fixtures remain mandatory.
 - Source-listed events without a race detail page remain recorded in the
   collector's non-blocking `discovery-failures.json` diagnostic; strict
   inventory validation has zero required failures.
+
+## LAPOUT-1 additive annotated-rank contract implementation plan (2026-09-14)
+
+This is a bounded cross-repository plan for the LapOut / 80%Out rank-cell
+contract in `docs/PRODUCT.md` and `docs/DESIGN.md`. It starts before code
+implementation. The viewer docs are the cross-repo source of truth because the
+collector repository has no equivalent standard-doc set.
+
+### Dependency order and task graph
+
+1. **LAPOUT-1-VIEWER-GUARD — additive compatibility guard — READY**
+   - Objective: extend the viewer's boundary types/shape guard to accept only
+     the exact optional `officialPositionLabel` and `annotated-rank` shape,
+     while preserving legacy payloads and invalid-data handling.
+   - Scope: viewer types/data-source/data-transform and focused tests only;
+     render the official label as text and preserve existing selection,
+     chart, URL, DNF/lap-down, all, route, and error semantics.
+   - Do not change: collector files, generated data, unrelated UI, routes,
+     dependencies, or security boundaries.
+   - Acceptance: pure numeric remains `finished`, literal DNF remains `dnf`,
+     an annotated graphable rider is eligible for primary/fixed/±N/chart/URL
+     restoration, and malformed/unknown statuses are rejected safely.
+   - Verification: focused viewer tests, `npm test`, `npx tsc --noEmit`,
+     `npm run lint`, `npm run build`, and `git diff --check`; independent
+     reviewer `PASS`; normal viewer commit/push before the next task.
+
+2. **LAPOUT-1-COLLECTOR-PARSER — parser/type/diagnostic support — BLOCKED
+   until VIEWER-GUARD is released**
+   - Objective: parse rank-cell DOM `textContent` into numeric internal rank,
+     exact status, and non-HTML official label according to the approved
+     grammar; retain diagnostic counts for non-numeric-leading statuses.
+   - Scope: collector parser/types/tests and parser-owned fixtures/data only.
+     Full-width normalization, if used, is explicit and numeric-only.
+   - Do not change: unrelated dirty collector work, viewer files, scraper
+     boundaries, generated rows by hand, or unsupported-status semantics.
+   - Acceptance: numeric, DNF, annotated (including `LapOut`/`80%Out` and an
+     unknown suffix), malformed, DNS/DSQ/OTL/unknown cases have deterministic
+     tests and no HTML label path; legacy payload output remains compatible.
+   - Verification: collector `npm test`, `npm run typecheck`,
+     `npm run build-artifacts` (integrity/artifact validation), and
+     `git diff --check`.
+
+3. **LAPOUT-1-REGENERATE — source-backed data publication — BLOCKED until
+   COLLECTOR-PARSER**
+   - Objective: regenerate the affected race JSON from official source HTML
+     using the released parser and verify the additive fields.
+   - Scope: only parser-owned regenerated payloads and release diagnostics;
+     preserve deterministic ordering, valid checkpoints, no post-final-lap
+     inference, same-lap-only gaps, and existing DNF/lap-down semantics.
+   - Acceptance: official labels are preserved as textContent, annotated rows
+     with valid data are graphable, unsupported source rows remain diagnostics,
+     and no generated JSON is manually patched.
+   - Verification: `npm run build-artifacts` integrity validation,
+     representative source cross-checks, collector tests/typecheck, and a
+     separate collector commit SHA recorded without force push.
+
+4. **LAPOUT-1-VIEWER-DATA-SMOKE — integration and release evidence — BLOCKED
+   until REGENERATE**
+   - Objective: verify old and new payloads together, including table/picker
+     official labels, primary/fixed/±N/chart/URL restoration, missing data,
+     DNF/lap-down, all `<= 8`, and same-lap gap behavior.
+   - Scope: focused viewer regression tests, browser smoke, and release
+     documentation/evidence; no unrelated product redesign.
+   - Acceptance: viewer required checks and browser smoke pass at the existing
+     desktop/mobile coverage, and the public routes/error recovery/security
+     contract remains intact.
+   - Verification: viewer `npm test`, `npx tsc --noEmit`, `npm run lint`,
+     `npm run build`, `git diff --check`, and final Production smoke after the
+     new data is publicly reachable.
+
+### Release completion conditions
+
+The contract is not complete on local tests alone. Completion requires both
+repository SHAs, normal non-force pushes, independent reviewer `PASS`, a READY
+Production deployment of the viewer after the collector data is reachable, and
+recorded Production smoke for an old payload and representative annotated
+payload. Any failure or unknown status remains explicit; no hook/runtime state,
+old history document, or unrelated worktree change may be fabricated, reset,
+or removed.

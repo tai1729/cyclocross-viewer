@@ -73,6 +73,23 @@ test("renders one shared rider key for the active metric with role and name text
   assert.match(html, /参考選手・参考次郎/);
 });
 
+test("annotated-rank rider remains a chart participant with its opaque official label", () => {
+  const annotated = {
+    ...rider("annotated", "Annotated Rider", 2),
+    status: "annotated-rank" as const,
+    officialPositionLabel: "2 (80%Out)",
+  };
+  const html = renderChartTabs(
+    [rider("primary", "Primary Rider", 1), annotated],
+    "rank",
+    false,
+    [],
+  );
+
+  assert.match(html, /参考選手・Annotated Rider/);
+  assert.match(html, /data-chart-series-role="context"/);
+});
+
 test("presents chart context and keeps plot, key, and detail adjacent", () => {
   const html = renderChartTabs([
     rider("primary", "Primary Rider", 1),

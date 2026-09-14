@@ -73,6 +73,28 @@ test("all falls back above the graphable limit while pinned may have no fixed ri
   assert.deepEqual(pinned.fixed, []);
 });
 
+test("annotated-rank riders use finalPosition-backed URL selection like legacy riders", () => {
+  const annotated = {
+    ...rider("annotated"),
+    finalPosition: 2,
+    status: "annotated-rank" as const,
+    officialPositionLabel: "2 80%Out",
+  };
+  const normalized = normalizeRaceUrlState(
+    parseRaceUrlState("rider=annotated&compare=pinned&fixed=peer"),
+    {
+      categories,
+      riders: [annotated, rider("peer")],
+      graphableRiderIds: ["annotated", "peer"],
+      lapNumbers: [1],
+    },
+  );
+
+  assert.equal(normalized.rider, "annotated");
+  assert.deepEqual(normalized.fixed, ["peer"]);
+  assert.equal(normalized.compare, "pinned");
+});
+
 test("lap normalization uses only the supplied race axis", () => {
   const valid = normalizeRaceUrlState(parseRaceUrlState("lap=3"), { categories, riders: [], lapNumbers: [1, 3] });
   const invalid = normalizeRaceUrlState(parseRaceUrlState("lap=2"), { categories, riders: [], lapNumbers: [1, 3] });

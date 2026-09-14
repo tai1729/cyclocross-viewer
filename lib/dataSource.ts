@@ -31,6 +31,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function hasValidOfficialPositionLabel(rider: Record<string, unknown>): boolean {
+  if (!Object.prototype.hasOwnProperty.call(rider, "officialPositionLabel")) {
+    return true;
+  }
+  return (
+    typeof rider.officialPositionLabel === "string" &&
+    rider.officialPositionLabel.trim().length > 0
+  );
+}
+
 function isMeetEntry(value: unknown): value is MeetEntry {
   return (
     isRecord(value) &&
@@ -64,7 +74,15 @@ function isRaceResult(value: unknown): value is RaceResult {
         typeof rider.riderId === "string" &&
         typeof rider.name === "string" &&
         typeof rider.finalPosition === "number" &&
-        (rider.status === "finished" || rider.status === "dnf") &&
+        Number.isSafeInteger(rider.finalPosition) &&
+        rider.finalPosition > 0 &&
+        (rider.status === "finished" ||
+          rider.status === "dnf" ||
+          rider.status === "annotated-rank") &&
+        hasValidOfficialPositionLabel(rider) &&
+        (rider.status !== "annotated-rank" ||
+          typeof rider.officialPositionLabel === "string" &&
+          rider.officialPositionLabel.trim().length > 0) &&
         (rider.dataQuality === "ok" || rider.dataQuality === "error") &&
         Array.isArray(rider.laps) &&
         rider.laps.every(isRecord),

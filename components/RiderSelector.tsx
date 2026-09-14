@@ -49,6 +49,9 @@ export function RiderSelector({
       : null;
 
   function positionLabel(rider: Rider): string {
+    if (rider.status === "annotated-rank") {
+      return rider.officialPositionLabel ?? "—";
+    }
     return rider.status === "dnf" ? "DNF" : `${rider.finalPosition}位`;
   }
 
@@ -126,7 +129,7 @@ export function RiderSelector({
               "min-h-11 w-full min-w-0 justify-between lg:h-[46px] lg:min-h-[46px]",
             )}
           >
-            <span className="flex items-baseline gap-2 truncate">
+            <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 break-words">
               <span
                 className={`font-mono text-xs ${
                   selectedRider.status === "dnf" ? "text-flag" : "text-muted-foreground"
@@ -134,7 +137,7 @@ export function RiderSelector({
               >
                 {positionLabel(selectedRider)}
               </span>
-              <span className="truncate font-medium text-ink">
+              <span className="min-w-0 break-words font-medium text-ink">
                 {selectedRider.name}
               </span>
             </span>
@@ -215,13 +218,13 @@ export function RiderSelector({
             >
               <span
                 className={cn(
-                  "w-8 shrink-0 font-mono text-xs",
+                  "min-w-0 max-w-full break-words font-mono text-xs",
                   rider.status === "dnf" ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 {positionLabel(rider)}
               </span>
-              <span className="truncate text-foreground">{rider.name}</span>
+              <span className="min-w-0 break-words text-foreground">{rider.name}</span>
               {isSelected && <span className="ml-auto shrink-0 text-xs">選択中</span>}
             </button>
           );

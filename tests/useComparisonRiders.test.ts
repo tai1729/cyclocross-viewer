@@ -77,6 +77,23 @@ test("all mode returns every supplied rider and keeps its cap constant", () => {
   assert.equal(MAX_ALL_COMPARISON_RIDERS, 8);
 });
 
+test("annotated-rank riders participate in numeric neighbor and capped all comparison", () => {
+  const annotated = {
+    ...rider("r3", 3),
+    status: "annotated-rank" as const,
+    officialPositionLabel: "3 (LapOut)",
+  };
+  const annotatedRiders = riders.map((item) => item.riderId === "r3" ? annotated : item);
+
+  assert.deepEqual(
+    ids(getComparisonRiders(annotatedRiders, "r3", 1)),
+    ["r2", "r3", "r4"],
+  );
+  const all = getComparisonRiders(annotatedRiders, "r3", "all");
+  assert.equal(all.length, 6);
+  assert.equal(all.find((item) => item.riderId === "r3")?.status, "annotated-rank");
+});
+
 test("missing or non-graphable primary produces no comparison riders", () => {
   assert.deepEqual(ids(getComparisonRiders(riders, null, "pinned", ["r1"])), []);
   assert.deepEqual(ids(getComparisonRiders(riders, "not-graphable", "pinned", ["r1"])), []);

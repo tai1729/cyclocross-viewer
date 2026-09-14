@@ -2419,3 +2419,114 @@ live official URL cross-check (when network is available), and final
 Production screenshot/value. “Before” means the current released alias and is
 only contextual; all final After evidence and smoke checks must use the new
 Production deployment for the pushed UX3-7R3 commit.
+
+## Active design — Cross-repository LapOut / 80%Out annotated-rank compatibility (2026-09-14)
+
+### Goal and status
+
+Additive support is required for official rank cells that begin with a numeric
+rank and carry a non-empty note (for example `LapOut` or `80%Out`). This design
+is approved before implementation. The released viewer remains unchanged
+until the ordered viewer-guard, collector, data, and Production steps in
+`docs/IMPLEMENTATION_PLAN.md` complete.
+
+### Canonical parser contract
+
+The collector reads the rank cell through DOM `textContent`; HTML markup is
+never stored, transported, or rendered as a label. The accepted grammar is a
+positive, safe integer prefix in ASCII digits, optionally followed by a
+non-empty note. Full-width digits may be explicitly normalized to ASCII for
+the numeric parse, but this does not rewrite the source label. Outer incidental
+whitespace may be trimmed for matching and display; internal source text is
+preserved.
+
+The mapping is deliberately narrow:
+
+1. A pure positive numeric cell is `status: "finished"`.
+2. The existing literal `DNF` cell is `status: "dnf"`.
+3. A positive numeric prefix plus any non-empty suffix is
+   `status: "annotated-rank"`. `LapOut`, `80%Out`, and future suffixes have no
+   implicit meaning in the viewer.
+4. `DNS`, `DSQ`, `OTL`, and unknown/non-numeric-leading cells are not accepted
+   by this rule, are not mapped to a known status, and remain collector
+   diagnostics/exclusions as today.
+
+The additive rider shape is:
+
+- `finalPosition: number` remains the finite positive internal numeric key for
+  stable sort, numeric `±N` neighbor selection, and URL/state restoration. It
+  is not the official display string.
+- `officialPositionLabel?: string` contains the rank cell's non-HTML DOM
+  `textContent` for table/picker display. An `annotated-rank` rider requires a
+  non-empty string; legacy `finished`/`dnf` payloads may omit it.
+- `status` gains only the exact `annotated-rank` value in addition to the
+  existing `finished | dnf` values. Unknown status strings remain invalid at
+  the viewer data boundary.
+
+The viewer's runtime shape guard is therefore additive and backward
+compatible: it accepts old payloads and the exact new shape before any
+collector payload uses the new status. Malformed optional labels, non-safe
+numeric prefixes, and unsupported statuses retain the existing
+`invalid-data`/diagnostic behavior. Viewer components render the label as a
+text node and never use an HTML-string insertion path.
+
+### Selection, display, and measurement semantics
+
+- An `annotated-rank` rider is graphable when `dataQuality === "ok"` and it
+  has at least one valid checkpoint. It then participates in primary rider
+  selection, fixed comparison, numeric `±N` selection, chart series, and URL
+  restoration. A quality-error or no-checkpoint row stays visible but is not
+  graphable, preserving the existing analysis-unavailable message.
+- Results and rider-picker rank cells show `officialPositionLabel` for an
+  annotated rider. The suffix is not interpreted as DNF, lap-down, DNS, DSQ,
+  OTL, finish percentage, or any other status. Existing DNF and finished
+  lap-down rules remain authoritative; an annotated rider does not create a
+  second status model.
+- `finalPosition` may be used for ordering and numeric neighbor calculations,
+  but it is never substituted for the official label in those surfaces.
+  Existing DNF internal numbering remains hidden as an official rank.
+- Checkpoints are measured points. No rider checkpoint or chart value is
+  inferred after the last measured point. Gap values are available only for a
+  same-lap pair of valid measured checkpoints; missing leader/target points
+  remain missing. Step/linear line choices and `connectNulls={false}` remain.
+- The existing `all` guard remains: it is available only when graphable riders
+  are eight or fewer. Public `/` and `/race/[meetId]` routes, loading,
+  network/http/invalid-data/not-found recovery, DNF/lap-down behavior,
+  responsive controls, and security boundaries are not changed.
+
+### Cross-repository release and regeneration
+
+This change is the one approved exception to the established collector-first
+sequence. The release order is strictly:
+
+1. Implement and release the viewer additive guard while old collector payloads
+   still work; run the viewer required checks and obtain an independent review
+   `PASS` for that bounded change.
+2. Implement the collector parser/type/test changes, publish them normally,
+   and regenerate only parser-owned data from source HTML (never hand-edit a
+   generated JSON row). Run collector tests, typecheck, integrity validation,
+   and `git diff --check`; preserve unrelated collector work.
+3. Verify representative regenerated payloads and raw-source rank-cell
+   cross-checks, then run the viewer's complete Production smoke against the
+   new data. Any malformed/unknown source status must be visible in diagnostic
+   counts and must not be silently reclassified.
+
+The collector repository has no standard product source-of-truth documents;
+this viewer's PRODUCT, DESIGN, IMPLEMENTATION_PLAN, and SPEC_AUDIT sections
+are the cross-repository contract. Collector implementation, regeneration,
+and validation must reference these sections and report the separate
+collector/viewer commit SHAs.
+
+### Boundaries and acceptance
+
+No product behavior outside the additive rank field/status is authorized by
+this design. Do not change routes, URL keys, DNF/lap-down/all limits, chart
+interpolation, error taxonomy, security handling, or unrelated generated
+artifacts. Before release, tests must cover pure numeric, literal DNF,
+annotated numeric prefixes (`LapOut`, `80%Out`, and an unknown suffix),
+non-numeric-leading DNS/DSQ/OTL/unknown exclusions, malformed labels,
+graphable and unavailable annotated riders, official-label table/picker
+display, URL restoration, no post-final-lap inference, and same-lap-only gaps.
+The implementation is complete only after the required viewer and collector
+checks, independent reviewer `PASS`, normal commits/pushes (no force), final
+Production deployment, and Production smoke are all recorded.

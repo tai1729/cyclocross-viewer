@@ -311,3 +311,64 @@ AJOCCシクロクロスの公開結果は大会・カテゴリーごとの結果
 - `docs/2026-09-05-project-handoff.md`
 
 これらは作成時点の設計・レビュー・履歴資産であり、削除しない。現在の挙動と矛盾する記述（例: Phase 1実装前の公開版評価、当時存在しなかったtest script）は、日付付きの履歴として解釈し、現在の実装と本書を優先する。
+
+## Additive cross-repository contract — LapOut / 80%Out annotated ranks (design approved 2026-09-14)
+
+This is a planned additive contract for the next collector/viewer change; it is
+not part of the `v1.0.0` release described above. Until the ordered release is
+complete, existing payloads and the current `finished | dnf` behavior remain
+unchanged.
+
+### Source rank parsing and payload fields
+
+- The collector reads the rank cell's DOM `textContent`, never an HTML string.
+  A source row is accepted when the cell starts with a positive,
+  safe integer written in ASCII digits and may have an optional non-empty note,
+  such as `LapOut` or `80%Out`. Full-width digits may be explicitly normalized
+  to ASCII for numeric parsing only; the displayed label remains source text.
+- A pure numeric cell maps to `status: "finished"`. The existing literal
+  `DNF` cell maps to `status: "dnf"`. A numeric prefix with any non-empty
+  suffix maps to `status: "annotated-rank"`; the suffix is intentionally
+  meaning-free and must not be interpreted as a new result rule.
+- `finalPosition: number` is the internal numeric key for stable sorting,
+  neighbor `±N` comparison, and URL/state restoration. It is never a claim
+  that the numeric prefix is the complete official label.
+- `officialPositionLabel?: string` is the non-HTML source rank-cell
+  `textContent` used for official wording in the results table and rider
+  picker. Only incidental outer whitespace may be trimmed; no note may be
+  synthesized, translated, or assigned semantics. An annotated row must carry
+  a non-empty label; legacy rows may omit the optional field.
+- Rows beginning with `DNS`, `DSQ`, `OTL`, or another unknown/non-numeric
+  status are not automatically accepted or mapped to `finished`, `dnf`, or
+  `annotated-rank`. They remain excluded/diagnostic data under the collector's
+  existing unsupported-status behavior.
+
+### Viewer meaning and compatibility
+
+- The viewer's additive shape guard accepts legacy `finished`/`dnf` riders and
+  the exact new `annotated-rank` shape, while retaining invalid-data handling
+  for unknown status values, malformed labels, and malformed numeric fields.
+  Rendering uses ordinary text nodes; it never injects the label as HTML.
+- An `annotated-rank` rider with `dataQuality: "ok"` and at least one valid
+  checkpoint participates in primary selection, fixed comparison, numeric
+  `±N` comparison, charts, and URL restoration exactly like other graphable
+  riders. Missing checkpoints or `dataQuality: "error"` retain the existing
+  visible result row and analysis-unavailable behavior.
+- The table and picker show `officialPositionLabel` for annotated rows. The
+  annotation is not inferred to mean DNF, lap-down, DNS, DSQ, OTL, finish
+  percentage, or any other status; existing DNF/lap-down summaries and the
+  `all` limit (allowed only when graphable riders are `<= 8`) remain
+  authoritative.
+- Lap series remain measured data: no checkpoint or value is appended after a
+  rider's final measured point, and a gap is shown only when both riders have
+  an actual checkpoint at the same lap. Existing sparse chart, public route,
+  loading/error/not-found, security, and no-HTML boundaries remain unchanged.
+
+### Release boundary
+
+The normal collector-first release order has one explicit exception for this
+contract: publish the viewer's additive guard backward-compatibly first, then
+publish the collector parser and regenerated data, and only then run the final
+production smoke. The collector repository has no standard product docs, so
+this section and its detailed design/plan/audit sections are the cross-repo
+source of truth for collector changes, regeneration, and verification.

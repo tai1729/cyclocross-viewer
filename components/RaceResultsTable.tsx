@@ -26,7 +26,10 @@ interface RaceResultsTableProps {
   embedded?: boolean;
 }
 
-function positionLabel(result: RiderResult | null): string {
+function positionLabel(rider: Rider, result: RiderResult | null): string {
+  if (rider.status === "annotated-rank") {
+    return rider.officialPositionLabel ?? "—";
+  }
   return result?.kind === "finished" || result?.kind === "lapped"
     ? String(result.position)
     : "—";
@@ -52,6 +55,9 @@ function resultLabel(result: RiderResult | null): string {
 }
 
 function statusLabel(rider: Rider, result: RiderResult | null): string {
+  if (rider.status === "annotated-rank") {
+    return rider.officialPositionLabel ?? "順位確認不可";
+  }
   if (result?.kind === "dnf") {
     return result.finalCheckpointRank === null
       ? "DNF"
@@ -127,10 +133,10 @@ export function RaceResultsTable({
                 {race.category}の順位、選手、結果、ステータス
               </caption>
               <colgroup>
-                <col className="w-10 sm:w-14" />
+                <col className="w-[6rem] sm:w-24" />
                 <col />
-                <col className="w-[4.75rem] sm:w-28" />
-                <col className="w-[5.5rem] sm:w-36" />
+                <col className="w-[4rem] sm:w-28" />
+                <col className="w-[4.5rem] sm:w-36" />
               </colgroup>
               <thead className="bg-card">
                 <tr className="border-b border-border text-xs text-muted-foreground">
@@ -160,8 +166,8 @@ export function RaceResultsTable({
                         isSelected && "bg-accent/70",
                       )}
                     >
-                      <td className="px-2 py-1 font-mono tabular-nums text-foreground sm:px-3">
-                        {positionLabel(result)}
+                      <td className="min-w-0 break-words px-2 py-1 font-mono tabular-nums text-foreground sm:px-3">
+                        {positionLabel(rider, result)}
                       </td>
                       <th scope="row" className="p-0 font-normal">
                         <button

@@ -388,6 +388,8 @@ export function getRiderResult(
 
 export interface RiderSummary {
   result: RiderResult;
+  /** Original collector label for numeric ranks with an official annotation. */
+  officialPositionLabel: string | null;
   totalRiders: number;
   promotionZoneRank: number | null;
   promotionGapSec: number | null;
@@ -416,6 +418,10 @@ export function getRiderSummary(
 
   return {
     result,
+    officialPositionLabel:
+      rider.status === "annotated-rank"
+        ? rider.officialPositionLabel ?? null
+        : null,
     totalRiders: race.riders.length,
     promotionZoneRank: race.promotionZoneRank ?? null,
     promotionGapSec,

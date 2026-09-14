@@ -1,7 +1,10 @@
 export type DataQuality = "ok" | "error";
 
-/** "finished": 完走。 "dnf": 途中棄権（完走者の後ろに連番の順位が割り当てられる）。 */
-export type RiderStatus = "finished" | "dnf";
+/**
+ * "finished": 完走。 "dnf": 途中棄権（完走者の後ろに連番の順位が割り当てられる）。
+ * "annotated-rank": 数値順位に公式の追記がある（追記の意味は解釈しない）。
+ */
+export type RiderStatus = "finished" | "dnf" | "annotated-rank";
 
 export interface LapRecord {
   lapNumber: number;
@@ -15,6 +18,8 @@ export interface Rider {
   name: string;
   finalPosition: number;
   status: RiderStatus;
+  /** Source rank-cell text for an annotated official rank, used for display only. */
+  officialPositionLabel?: string;
   laps: LapRecord[];
   dataQuality: DataQuality;
 }

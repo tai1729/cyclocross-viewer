@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
 import { RiderSelector } from "@/components/RiderSelector";
+import { SummaryCard } from "@/components/SummaryCard";
+import { getRiderSummary } from "@/lib/dataTransform";
 import type { Rider } from "@/lib/types";
 
 const rider: Rider = {
@@ -46,6 +48,15 @@ function renderRiderSelector(presentation?: "inline" | "mobile-modal") {
   );
 }
 
+const annotatedRider: Rider = {
+  ...rider,
+  riderId: "annotated-rider",
+  name: "A Very Long Annotated Rider Name For Narrow Screens",
+  status: "annotated-rank",
+  officialPositionLabel: "15 (LapOut)",
+  finalPosition: 2,
+};
+
 function renderComparisonRiderPicker() {
   return renderToStaticMarkup(
     createElement(ComparisonRiderPicker, {
@@ -78,6 +89,62 @@ test("rider selector arrows retain 44px controls in both presentations", () => {
   assert.doesNotMatch(inlineHtml, /sm:size-8/);
   assert.doesNotMatch(inlineHtml, /sm:min-h-8/);
   assert.match(inlineHtml, /注目選手/);
+});
+
+test("desktop and mobile rider selectors expose the annotated official rank label", () => {
+  const render = (presentation: "inline" | "mobile-modal") =>
+    renderToStaticMarkup(
+      createElement(RiderSelector, {
+        riders: [annotatedRider],
+        categoryName: "Test Category",
+        selectedRiderId: annotatedRider.riderId,
+        onSelect: () => undefined,
+        presentation,
+      }),
+    );
+
+  const desktopHtml = render("inline");
+  const mobileHtml = render("mobile-modal");
+  assert.match(desktopHtml, /15 \(LapOut\)/);
+  assert.match(desktopHtml, /注目選手を変更: 15 \(LapOut\) A Very Long Annotated Rider Name For Narrow Screens/);
+  assert.match(mobileHtml, /15 \(LapOut\)/);
+  assert.match(mobileHtml, /15 \(LapOut\) A Very Long Annotated Rider Name For Narrow Screens/);
+  assert.match(desktopHtml, /break-words/);
+  assert.match(mobileHtml, /break-words/);
+  assert.match(desktopHtml, /flex min-w-0 flex-wrap[^\"]*break-words/);
+  assert.match(mobileHtml, /min-w-0 max-w-full break-words font-mono/);
+  assert.doesNotMatch(desktopHtml, /w-8 shrink-0/);
+  assert.doesNotMatch(mobileHtml, /w-8 shrink-0/);
+  assert.doesNotMatch(desktopHtml, /truncate/);
+  assert.doesNotMatch(mobileHtml, /truncate/);
+  assert.doesNotMatch(desktopHtml, />DNF</);
+  assert.doesNotMatch(mobileHtml, />DNF</);
+});
+
+test("annotated summary renders the official label as an independent display field", () => {
+  const lap = { lapNumber: 1, lapTimeSec: 60, cumulativeTimeSec: 60, rankAtLap: 1 };
+  const summary = getRiderSummary(
+    {
+      raceId: "race-1",
+      raceName: "Race",
+      category: "Category",
+      updatedAt: "2026-09-14",
+      riders: [
+        { ...rider, laps: [lap] },
+        {
+          ...annotatedRider,
+          laps: [{ ...lap, cumulativeTimeSec: 61, rankAtLap: 2 }],
+        },
+      ],
+    },
+    annotatedRider.riderId,
+  );
+  assert.ok(summary);
+  const html = renderToStaticMarkup(createElement(SummaryCard, { summary }));
+  assert.match(html, /data-official-position-label/);
+  assert.match(html, /公式表記/);
+  assert.match(html, /15 \(LapOut\)/);
+  assert.doesNotMatch(html, /公式注記/);
 });
 
 test("comparison rider picker keeps mobile touch targets through tablet widths", () => {

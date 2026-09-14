@@ -223,6 +223,77 @@ implementation starts:
 
 STATUS: CLEAR
 
+## LAPOUT-1 LapOut / 80%Out annotated-rank contract — resolved audit (2026-09-14)
+
+This audit resolves the cross-repository contract before implementation. The
+viewer standard docs are the source of truth for the sibling collector because
+that repository has no standard product/design/plan/audit documents. The
+released viewer's current `finished | dnf` behavior is a baseline contract;
+the additive `annotated-rank` status below is a planned, backward-compatible
+extension and does not rewrite release history.
+
+### Questions audited
+
+- Which rank-cell forms are accepted, and how are LapOut/80%Out notes carried
+  without inventing their meaning?
+- Which values are display-only versus internal numeric ordering keys?
+- How can a new status be accepted without breaking old payloads or turning
+  DNS/DSQ/OTL/unknown rows into false finishes/DNFs?
+- Which annotated rows are eligible for selection and charts, and which
+  existing lap/gap/status/error/security contracts must remain unchanged?
+- What is the cross-repository release, regeneration, review, and Production
+  verification order?
+
+### Resolutions
+
+1. The collector reads rank-cell DOM `textContent`, never HTML. A positive
+   safe ASCII integer prefix plus an optional non-empty suffix is accepted.
+   Full-width digits may be explicitly normalized for numeric
+   parsing only; the official display label remains source text with only
+   incidental outer whitespace removed.
+2. Pure numeric is `finished`; exact literal `DNF` is `dnf`; numeric prefix plus
+   any non-empty suffix is `annotated-rank`. The suffix is opaque and does not
+   imply LapOut, 80%-out, lap-down, DNF, or any future status. Numeric-leading
+   unknown suffixes are still annotated rather than semantically classified;
+   non-numeric-leading `DNS`, `DSQ`, `OTL`, and unknown values are not accepted
+   automatically and remain diagnostics/exclusions.
+3. `finalPosition:number` is the internal finite positive key for stable sort,
+   numeric `±N`, and URL/state restoration. `officialPositionLabel?:string`
+   is the non-HTML rank-cell text for table/picker display. An annotated rider
+   must have a non-empty label; legacy rows may omit it. The viewer never
+   substitutes the internal number for that official label in display surfaces.
+4. The viewer guard is additive: it accepts old `finished`/`dnf` payloads and
+   only the exact new `annotated-rank` shape. Unknown status strings,
+   malformed labels, unsafe numbers, and malformed records retain the existing
+   invalid-data behavior. React text rendering, not HTML insertion, is the
+   only label path.
+5. An annotated rider participates in primary, fixed, numeric `±N`, chart, and
+   URL restoration only when `dataQuality: "ok"` and at least one valid
+   checkpoint exist. Quality-error/no-checkpoint rows remain visible and
+   unavailable. DNF/lap-down rules, `all` only for graphable count `<= 8`,
+   public routes, loading/error/not-found recovery, and security boundaries are
+   unchanged.
+6. No measured point is inferred after the final checkpoint. Gaps require
+   actual valid measurements for both riders at the same lap. Sparse chart
+   lines remain disconnected at missing points, and no status/annotation is
+   derived from a suffix.
+7. The normal collector-first rule has one explicit exception here: release
+   the viewer additive guard first against old data; then publish collector
+   parser and regenerated data; then run final Production smoke. Collector
+   regeneration is source-backed and never a hand edit. Both repository SHAs,
+   tests, integrity checks, reviewer `PASS`, normal pushes, READY deployment,
+   and Production smoke are required for completion.
+
+### Audit verdict
+
+The former ambiguity between the released two-status viewer contract and the
+new source annotation is resolved as an additive status/label extension. The
+unknown-status, display, measurement, eligibility, compatibility, and release
+boundaries are explicit and consistent across PRODUCT.md, DESIGN.md, and
+IMPLEMENTATION_PLAN.md. No implementation-significant ambiguity remains.
+
+STATUS: CLEAR — implementation may proceed in the dependency order above.
+
 ## DATA-1 Three-Season Historical Data Expansion — resolved (2026-09-12)
 
 The current change is a cross-repository data-expansion task. The authoritative
