@@ -146,6 +146,92 @@ test("annotated-rankのラベル欠落・空文字・未知statusはinvalid-data
   }
 });
 
+test("annotated-rankはofficialPositionLabelプロパティ自体の欠落を受理しない", async () => {
+  await assertErrorKind(
+    async () =>
+      Response.json({
+        raceId: "race-1",
+        raceName: "Race",
+        category: "Category",
+        updatedAt: "2026-09-14",
+        riders: [
+          {
+            riderId: "annotated",
+            name: "Annotated",
+            finalPosition: 2,
+            status: "annotated-rank",
+            dataQuality: "ok",
+            laps: [],
+          },
+        ],
+      }),
+    "invalid-data",
+  );
+});
+
+test("annotated-rankは安全な数値prefix・非空suffix・finalPosition一致だけを受理する", async () => {
+  const acceptedLabels = ["2 LapOut", "2 (80%Out)"];
+  for (const officialPositionLabel of acceptedLabels) {
+    await withFetch(
+      async () =>
+        Response.json({
+          raceId: "race-1",
+          raceName: "Race",
+          category: "Category",
+          updatedAt: "2026-09-14",
+          riders: [
+            {
+              riderId: "annotated",
+              name: "Annotated",
+              finalPosition: 2,
+              status: "annotated-rank",
+              officialPositionLabel,
+              dataQuality: "ok",
+              laps: [],
+            },
+          ],
+        }),
+      async () => {
+        const result = await fetchRaceResult("https://example.invalid/race.json");
+        assert.equal(result.riders[0]?.officialPositionLabel, officialPositionLabel);
+      },
+    );
+  }
+
+  const rejectedLabels = [
+    "2",
+    "2 ",
+    "3 LapOut",
+    "0 LapOut",
+    "9007199254740992 LapOut",
+    "2\u0000LapOut",
+    "2 <span>LapOut</span>",
+  ];
+  for (const officialPositionLabel of rejectedLabels) {
+    await assertErrorKind(
+      async () =>
+        Response.json({
+          raceId: "race-1",
+          raceName: "Race",
+          category: "Category",
+          updatedAt: "2026-09-14",
+          riders: [
+            {
+              riderId: "annotated",
+              name: "Annotated",
+              finalPosition: 2,
+              status: "annotated-rank",
+              officialPositionLabel,
+              dataQuality: "ok",
+              laps: [],
+            },
+          ],
+        }),
+      "invalid-data",
+    );
+  }
+});
+
 test("取得エラーの種類ごとに異なる説明を返す", () => {
   const descriptions = [
     describeDataLoadError(new DataLoadError("not-found", ""), "レース"),

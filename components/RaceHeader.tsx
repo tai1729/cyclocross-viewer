@@ -21,7 +21,7 @@ export function RaceHeader({
   const finishedCount = race.riders.filter(
     (rider) => rider.status === "finished",
   ).length;
-  const dnfCount = race.riders.length - finishedCount;
+  const dnfCount = race.riders.filter((rider) => rider.status === "dnf").length;
   const sourceUrl = getRaceSourceUrl(race.raceId);
 
   return (

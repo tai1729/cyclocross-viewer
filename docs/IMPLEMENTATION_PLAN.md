@@ -1464,3 +1464,93 @@ recorded Production smoke for an old payload and representative annotated
 payload. Any failure or unknown status remains explicit; no hook/runtime state,
 old history document, or unrelated worktree change may be fabricated, reset,
 or removed.
+
+## LAPOUT-1B known numeric-less exclusions — bounded collector follow-up (2026-09-15)
+
+This is a documentation-first contract extension to the LapOut work. It must be
+resolved in the viewer standard docs before the collector correction starts.
+The existing known-excluded diagnostic statuses (`?`, `DNS`, `DSQ`, `OTL`) are
+preserved, and exactly `FIN`, `FIN/OPEN`, `DNS/OPEN`, and `DNF/OPEN` are added
+as non-fatal numeric-less exclusions.
+
+### Evidence and bounded semantics
+
+- The 2023-24 force-regeneration review found 21 strict failures covering 37
+  rows: `FIN` (4), `FIN/OPEN` (19), `DNS/OPEN` (8), and `DNF/OPEN` (6).
+- No separate numeric rank column was found for these rows. All four labels are
+  admitted as known numeric-less diagnostic exclusions.
+- The four labels are not accepted into `riders`, `finalPosition`,
+  `officialPositionLabel`, chart series, or graphable selection; their status
+  counts remain in inventory diagnostics and are non-fatal to strict validation.
+- The exact standalone `DNF` branch remains unchanged: literal `DNF` is still
+  imported as the existing DNF rider and retains its existing graphability.
+  The known numeric-less exclusions must not be absorbed before that parser
+  branch.
+- All other unknown or malformed inputs, including control-character and
+  overflow values, remain strict-fatal. The annotated-rank positive
+  numeric-prefix contract is unchanged.
+
+### Ordered work and gates
+
+1. Review the artifacts and tests that produced the evidence above before
+   changing the collector.
+2. Force-regenerate `2024-25` from the beginning, then force-regenerate
+   `2025-26` from the beginning. Check `2023-24` against the new validator for
+   strict consistency. Preserve deterministic outputs and diagnostics.
+3. Keep intermediate diffs and temporary preloaded data private; do not publish
+   either form.
+4. After every target is strict and the review is complete, use normal
+   collector/viewer commits and pushes, verify the Raw artifacts, and run the
+   viewer Production smoke. No viewer code, tests, or configuration change is
+   included in this bounded documentation task.
+
+### LAPOUT-1B completion conditions
+
+Completion requires the four standard docs to agree on the existing known set
+plus the exact four-label numeric-less exclusion set, collector tests and strict artifact validation
+to pass, the standalone `DNF` and annotated-rank regressions to remain green,
+and the separate collector/viewer SHAs plus Raw and Production smoke evidence
+to be recorded. Unknown or malformed input may not be made non-fatal by this
+follow-up.
+
+## LAP-REG-1 confirmed lap-time regression — bounded parser/data gate (2026-09-15)
+
+This is an additive regression-control record. It does not authorize viewer
+code, collector code, generated-artifact edits, or publication in this
+documentation-only task. The confirmed failure mode is that a global C0
+sentinel was replaced with LF, leaving all lap-time values `null` in affected
+generated artifacts.
+
+### Required regression coverage
+
+- Sentinel detection is exact. Whitespace, including LF and whitespace-only
+  source cells, is excluded from the sentinel grammar and cannot become a
+  sentinel, clock value, zero, or inferred lap.
+- Keep source-backed regression fixtures for newline-delimited time values and
+  representative races `24579` and `25888`. Clock-like source values in each
+  fixture must survive normalization as non-null usable measured laps; missing
+  or invalid cells remain missing and are not interpolated.
+- Add a hard quality gate with the exact predicate
+  `clock-like source values >= 1 AND accepted riders >= 1 AND usable laps == 0`.
+  When it holds, strict artifact validation fails; a structurally valid JSON
+  file does not waive this gate.
+
+### Safe recovery and ordered execution
+
+1. Stop immediately on the sentinel/LF symptom or the zero-usable-lap gate;
+   do not publish the artifact or any intermediate/partial output.
+2. Restore the generated artifacts from the last known-good `origin` revision
+   before any regeneration attempt. Do not hand-edit generated JSON or rerun
+   on top of contaminated local output.
+3. Correct the parser, regenerate from the restored origin artifacts/source,
+   and run the newline-time, `24579`, `25888`, and zero-usable-lap checks.
+4. Only after strict validation and review pass may normal repository
+   publication and the downstream Raw-source/viewer Production checks proceed.
+
+### Completion conditions
+
+The regression is closed only when the three named fixtures preserve usable
+lap times, whitespace is excluded from sentinel matching, the
+clock-like/accepted-rider/zero-usable-lap case fails strict validation,
+generated artifacts are proven to start from restored origin output, and no
+unreviewed output has been published.

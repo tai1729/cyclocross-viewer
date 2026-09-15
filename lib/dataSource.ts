@@ -31,13 +31,35 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+const UNSAFE_OFFICIAL_POSITION_LABEL = /[\p{Cc}\p{Cf}\u2028\u2029\ufffd<>]/u;
+
+function officialLabelRank(label: string): number | null {
+  const match = label.trim().match(/^(\d+)(.*)$/u);
+  if (!match || match[2]?.length === 0) return null;
+
+  const rank = Number(match[1]);
+  return Number.isSafeInteger(rank) && rank > 0 ? rank : null;
+}
+
 function hasValidOfficialPositionLabel(rider: Record<string, unknown>): boolean {
   if (!Object.prototype.hasOwnProperty.call(rider, "officialPositionLabel")) {
-    return true;
+    return rider.status !== "annotated-rank";
   }
+
+  if (typeof rider.officialPositionLabel !== "string") return false;
+
+  const label = rider.officialPositionLabel.trim();
+  if (label.length === 0 || UNSAFE_OFFICIAL_POSITION_LABEL.test(rider.officialPositionLabel)) {
+    return false;
+  }
+
+  if (rider.status !== "annotated-rank") return true;
+
   return (
-    typeof rider.officialPositionLabel === "string" &&
-    rider.officialPositionLabel.trim().length > 0
+    typeof rider.finalPosition === "number" &&
+    Number.isSafeInteger(rider.finalPosition) &&
+    rider.finalPosition > 0 &&
+    officialLabelRank(label) === rider.finalPosition
   );
 }
 
@@ -80,9 +102,6 @@ function isRaceResult(value: unknown): value is RaceResult {
           rider.status === "dnf" ||
           rider.status === "annotated-rank") &&
         hasValidOfficialPositionLabel(rider) &&
-        (rider.status !== "annotated-rank" ||
-          typeof rider.officialPositionLabel === "string" &&
-          rider.officialPositionLabel.trim().length > 0) &&
         (rider.dataQuality === "ok" || rider.dataQuality === "error") &&
         Array.isArray(rider.laps) &&
         rider.laps.every(isRecord),

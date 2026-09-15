@@ -343,6 +343,57 @@ unchanged.
   `annotated-rank`. They remain excluded/diagnostic data under the collector's
   existing unsupported-status behavior.
 
+### Known numeric-less source exclusions — Limited B (approved 2026-09-15)
+
+The collector validator keeps the existing known-excluded diagnostic statuses
+(`?`, `DNS`, `DSQ`, and `OTL`) and adds exactly `FIN`, `FIN/OPEN`, `DNS/OPEN`,
+and `DNF/OPEN` to that same known numeric-less set. These four labels are
+accepted only as non-fatal strict-validator exclusions: they remain in
+inventory status counts, but never become a viewer `rider`, `finalPosition`,
+`officialPositionLabel`, or chart/graphable record. No separate numeric rank
+column is assumed for them.
+
+This exception does not change the exact standalone `DNF` branch. A literal
+`DNF` continues to be imported as the existing `status: "dnf"` rider and keeps
+its existing graphability rules. The known numeric-less cases must not be
+absorbed before that parser branch. All other unknown or malformed inputs,
+including control-character and overflow values, remain strict-fatal. The
+annotated-rank positive numeric-prefix contract above is unchanged.
+
+The collector-side change is gated by artifact/test review. Regeneration starts
+from scratch for `2024-25` and `2025-26` with `--force`; `2023-24` is checked
+for strict-validator consistency with the new known set. Intermediate diffs
+and temporary preloaded data are not published. After every target artifact is
+strict and reviewed, the repositories use normal commits/pushes followed by
+Raw-source and viewer Production smoke checks.
+
+### Confirmed lap-time regression gate — global C0 sentinel / LF (approved 2026-09-15)
+
+A confirmed collector/data regression replaced the global C0 sentinel with LF
+and caused every lap-time value in the affected generated artifacts to become
+`null`. This is a parser/data-integrity failure, not a valid sparse-lap or
+no-lap result. Sentinel matching must be exact: whitespace, including LF and
+whitespace-only source cells, is excluded from the sentinel grammar and must
+not be accepted as a sentinel or converted into a lap time. A valid
+clock-shaped source value must remain a usable measured lap after parsing.
+
+The regression suite must retain source-backed fixtures for newline-delimited
+time values and for races `24579` and `25888`. Each fixture must prove that
+clock-like source values produce non-null usable laps and that no values are
+fabricated across missing or invalid records. The hard quality-gate failure is
+exactly `clock-like source values >= 1 AND accepted riders >= 1 AND usable laps == 0`:
+the source lap table contains one or more clock-like values, it contains one
+or more accepted riders, and normalization produces zero usable laps. A
+structurally valid JSON artifact must still be rejected and not published when
+this gate fires.
+
+On this failure, stop publication and restore the generated artifacts from the
+last known-good `origin` revision before attempting regeneration. Do not repair
+the generated JSON by hand, publish an intermediate/partial output, or rerun
+on top of contaminated generated artifacts. Regeneration resumes only from the
+restored origin artifacts after the parser fix and the three regression
+fixtures plus the zero-usable-lap gate pass.
+
 ### Viewer meaning and compatibility
 
 - The viewer's additive shape guard accepts legacy `finished`/`dnf` riders and

@@ -294,6 +294,89 @@ IMPLEMENTATION_PLAN.md. No implementation-significant ambiguity remains.
 
 STATUS: CLEAR — implementation may proceed in the dependency order above.
 
+## LAPOUT-1B known numeric-less exclusions — resolved audit (2026-09-15)
+
+This bounded follow-up resolves the known numeric-less statuses observed during
+collector regeneration before any collector correction begins. It is additive
+to the LapOut annotated-rank contract and does not alter the released viewer
+code or the existing standalone `DNF` behavior.
+
+### Evidence reviewed
+
+- The 2023-24 force-regeneration review recorded 21 strict failures across 37
+  rows: `FIN` (4), `FIN/OPEN` (19), `DNS/OPEN` (8), and `DNF/OPEN` (6).
+- No separate numeric rank column was confirmed for those rows. All four labels
+  are retained as known numeric-less diagnostic exclusions and are non-fatal to
+  strict validation.
+
+### Resolutions
+
+1. The validator's known-excluded diagnostic set retains the existing `?`,
+   `DNS`, `DSQ`, and `OTL` statuses and adds exactly `FIN`, `FIN/OPEN`,
+   `DNS/OPEN`, and `DNF/OPEN`.
+2. All four added labels remain numeric-less: they do not enter `riders`,
+   `finalPosition`, `officialPositionLabel`, chart series, or graphable
+   selection. Their counts remain in inventory status diagnostics, and these
+   known exclusions are non-fatal to strict validation.
+3. The exact standalone `DNF` parser branch is preserved. Literal `DNF` still
+   imports as the existing DNF rider with unchanged graphability; the known
+   numeric-less exclusions must not be absorbed before that branch.
+4. Any other unknown or malformed input, including control-character and
+   overflow values, remains strict-fatal. The annotated-rank contract remains
+   unchanged: a positive numeric prefix plus a non-empty suffix is the only
+   annotated-rank path.
+5. The next work is gated by artifact/test review, then force regeneration from
+   the beginning for `2024-25` and `2025-26`, plus strict-consistency checking
+   of `2023-24`. Intermediate diffs and temporary preloaded data are not
+   publishable. After all data is strict and reviewed, normal commits/pushes,
+   Raw verification, and viewer Production smoke are required.
+
+### Audit verdict
+
+The Limited B status set, non-fatal boundary, rider/chart exclusion, exact DNF
+ordering, and strict-fatal remainder are now explicit and consistent across
+PRODUCT.md, DESIGN.md, and IMPLEMENTATION_PLAN.md. No implementation may use a
+numeric-less label as a substitute `finalPosition` or official label.
+
+STATUS: CLEAR — collector correction may proceed only in the ordered gates above.
+
+## LAP-REG-1 confirmed lap-time regression — resolved audit (2026-09-15)
+
+This audit records a confirmed parser/data-integrity regression discovered
+around the Limited B regeneration work. A global C0 sentinel was replaced with
+LF, and all lap-time values in the affected generated artifacts became `null`.
+The result is a hard quality failure, not legitimate sparse data or an empty
+lap race. This section is additive and does not alter the existing Limited B
+status set or standalone `DNF` behavior.
+
+### Resolutions
+
+1. Sentinel matching is exact. Whitespace, including LF and whitespace-only
+   source cells, is excluded from the sentinel grammar. Whitespace is neither a
+   sentinel nor a clock value, zero, or inferred lap.
+2. Regression fixtures are required for newline-delimited time values and the
+   representative race artifacts `24579` and `25888`. Clock-like source values
+   must produce non-null usable measured laps in all three fixtures; missing or
+   invalid cells remain sparse and are not filled.
+3. The strict quality gate fails only for the exact predicate
+   `clock-like source values >= 1 AND accepted riders >= 1 AND usable laps == 0`.
+   This remains a failure even if the JSON shape and other race fields pass; the
+   artifact is not publishable.
+4. Recovery stops publication, restores generated artifacts from the last
+   known-good `origin` revision, and only then permits source regeneration after
+   the parser correction. Hand-repair, partial publication, and regeneration on
+   contaminated output are prohibited.
+
+### Audit verdict
+
+The C0/LF failure mode, whitespace exclusion, newline-time/`24579`/`25888`
+fixtures, clock-like/accepted-rider/zero-usable-lap hard gate, and origin-restore
+recovery are now explicit and consistent across the four standard docs. No release or Raw-source
+verification may proceed until all four regression checks pass on restored
+generated artifacts.
+
+STATUS: CLEAR — the parser/data correction remains gated by LAP-REG-1.
+
 ## DATA-1 Three-Season Historical Data Expansion — resolved (2026-09-12)
 
 The current change is a cross-repository data-expansion task. The authoritative
