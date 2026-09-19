@@ -317,6 +317,8 @@ interval and must not presume that it is the latter half of the race.
 
 ### RACE-STORY-1D phase summary
 
+Status: COMPLETE — independent review and production smoke verification passed
+
 For six or more valid selected-rider checkpoints, split the observed records
 by count into an equal first and latter group. Display one line per group:
 `前半: N位→M位、相対ペース…` and `後半: N位→M位、相対ペース…`. Rank and

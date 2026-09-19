@@ -51,11 +51,14 @@ Status: COMPLETE — independent review and production smoke verified
 
 ## RACE-STORY-1D phase summary tasks
 
-1. Split six-or-more-checkpoint rider stories by observed record count and
-   retain the whole-race story for five or fewer checkpoints.
-2. Render phase rank ranges and independently measured pace, with focused
-   transform and presentation regression tests.
-3. Run validation, independent review, deployment, and production smoke.
+Status: COMPLETE — independent review and production smoke verified
+
+1. DONE — Split six-or-more-checkpoint rider stories by observed record count
+   and retain the whole-race story for five or fewer checkpoints.
+2. DONE — Render phase rank ranges and independently measured pace, with
+   focused transform and presentation regression tests.
+3. DONE — Run validation, independent review, deployment, and production
+   smoke.
 
 ---
 
