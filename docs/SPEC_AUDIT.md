@@ -38,6 +38,27 @@ authoritative before implementation:
 
 Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
 
+## RACE-STORY-1B correction audit — resolved
+
+1. The relevant pace interval ends at the later lap of the selected rider's
+   final consecutive-checkpoint rank movement. If no movement is observed, it
+   ends at the final valid checkpoint. Records after that boundary cannot
+   establish a cause for an already-settled rank.
+2. A candidate peer must have two shared timed observations inside that
+   interval and its absolute same-lap cumulative gap to the selected rider at
+   either observation must be no greater than the selected rider's mean valid
+   lap time. This is a relevance guard, not a claim that the riders were side
+   by side.
+3. A rider reaching and then retaining rank 1 through consecutive valid
+   checkpoints takes the factual leader path; no peer pace verdict is emitted.
+   A continuous leader uses the same factual wording without an entry lap.
+   Missing or invalid observations cannot bridge a claimed lead entry.
+4. Missing, duplicate, invalid, non-consecutive, and unmatched measurements
+   remain excluded. The correction changes no chart, URL, data contract, or
+   status semantics.
+
+Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
+
 ## UX3-5 specification audit — in progress
 
 Current Change: UX3-5 Limited Scope Implementation

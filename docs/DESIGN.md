@@ -279,6 +279,25 @@ cause such as a crash, mechanical problem, or illness.
    `LapSummaryCard`, all charts, URL/history, error states, keyboard behavior,
    and 320px/390px layouts remain compatible.
 
+### RACE-STORY-1B correction — competitive time-gap relevance
+
+The original whole-race first/last-lap comparison can misattribute a late
+sprint by riders who no longer affect the selected rider's position. The
+story must instead use a competitive interval ending at the selected rider's
+last observed rank movement. A peer contributes only if it has two shared
+valid timed laps in that interval and is within one selected-rider mean lap
+time in cumulative gap at either of those observations. This preserves the
+rank-reversal and five-rank cohort rules but makes cumulative time gap a
+required relevance condition.
+
+If the selected rider reaches rank 1 through consecutive valid checkpoints
+and remains rank 1 through their last checkpoint, the narrative is factual and
+does not evaluate later peer pace: `N周目に首位へ上がり、そのまま首位を守り切りました。`.
+If rank 1 is held continuously from the first valid checkpoint through the
+last, it reads `首位を守り切りました。`. These statements do not infer a
+physical solo gap; they report only recorded rank continuity and do not bridge
+a missing or invalid checkpoint.
+
 ## Current design - UX3-5 Limited Scope Implementation
 
 Status: ACTIVE — UX3-5 re-audit/remediation; external human field test remains blocked

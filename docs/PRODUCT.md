@@ -38,10 +38,20 @@ late-versus-early relative lap pace against nearby competitors.
 The comparison cohort prioritizes riders whose recorded ahead/behind relation
 with the selected rider reverses. If fewer than two such riders exist, it adds
 graphable riders observed within five ranks at a shared checkpoint. Pace uses
-only each peer's first and last shared valid timed laps with the selected
-rider; the median relative change across at least two eligible peers is
-classified as improvement, maintenance, or decline using the larger of three
-seconds and two percent of the selected rider's mean valid lap time.
+only the first and last shared valid timed laps within the interval ending at
+the selected rider's final observed rank movement. A peer is eligible only
+when its cumulative gap is within one selected-rider mean lap time at either
+of those observations. The median relative change across at least two eligible
+peers is classified as improvement, maintenance, or decline using the larger
+of three seconds and two percent of the selected rider's mean valid lap time.
+
+If the rider reaches rank 1 and holds it through consecutive valid checkpoints
+to the final valid checkpoint, the narrative reports that recorded rank
+continuity instead of assigning a peer-pace verdict:
+`N周目に首位へ上がり、そのまま首位を守り切りました。`. An uninterrupted
+recorded leader reads `首位を守り切りました。`. This does not assert a physical
+solo gap, does not bridge missing or invalid checkpoints, and late pace changes
+by distant riders do not change that statement.
 
 DNF and opaque annotated-rank riders are evaluated only through their final
 valid checkpoint. The viewer does not infer a DNF cause or interpret labels

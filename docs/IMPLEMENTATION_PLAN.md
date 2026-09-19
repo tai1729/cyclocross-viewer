@@ -26,6 +26,15 @@ Status: COMPLETE — all required verification and independent review passed
 - Required checks: `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run
   build`, and `git diff --check`.
 
+## RACE-STORY-1B correction tasks
+
+1. Update the pure story transform to bound pace comparisons to the last rank
+   movement and require same-lap cumulative-gap relevance.
+2. Add focused cases for a settled leader and distant late sprint, then update
+   the product behavior record.
+3. Run full validation, independent review, production deployment, and
+   production smoke verification.
+
 ---
 
 # Historical implementation plan — UX3-5

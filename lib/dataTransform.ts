@@ -154,14 +154,39 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
   const selectedTimedLaps = getValidTimedLaps(selectedRider);
   if (selectedTimedLaps.length === 0) return unavailable();
 
-  const cohort = getRaceStoryCohort(race, selectedRider);
+  const lastRankMovement = getLastObservedRankMovement(selectedCheckpoints);
+  const competitiveEndLap = lastRankMovement?.lapNumber ?? lastCheckpoint.lapNumber;
+  const finalLeadStartLap = getFinalLeadStartLap(selectedCheckpoints);
+  if (finalLeadStartLap !== null && finalLeadStartLap <= competitiveEndLap) {
+    return {
+      highestRank,
+      maximumRankChange,
+      narrative:
+        finalLeadStartLap === firstCheckpoint.lapNumber
+          ? "首位を守り切りました。"
+          : `${finalLeadStartLap}周目に首位へ上がり、そのまま首位を守り切りました。`,
+      available: true,
+      paceTrend: null,
+      netRankChange,
+    };
+  }
+
+  const meanSelectedLap =
+    selectedTimedLaps.reduce((total, lap) => total + lap.lapTimeSec, 0) /
+    selectedTimedLaps.length;
+  const cohort = getRaceStoryCohort(race, selectedRider, competitiveEndLap);
   const changes = cohort.flatMap((peer) => {
-    const sharedTimedLaps = getSharedTimedLaps(selectedTimedLaps, getValidTimedLaps(peer));
+    const sharedTimedLaps = getSharedTimedLaps(
+      selectedTimedLaps,
+      getValidTimedLaps(peer),
+      competitiveEndLap,
+    );
     if (sharedTimedLaps.length < 2) return [];
 
     const early = sharedTimedLaps[0];
     const late = sharedTimedLaps.at(-1);
     if (!late) return [];
+    if (!hasCompetitiveTimeGap(early, late, meanSelectedLap)) return [];
     return [
       (late.peer.lapTimeSec - late.selected.lapTimeSec) -
         (early.peer.lapTimeSec - early.selected.lapTimeSec),
@@ -170,9 +195,6 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
 
   if (changes.length < 2) return unavailable();
 
-  const meanSelectedLap =
-    selectedTimedLaps.reduce((total, lap) => total + lap.lapTimeSec, 0) /
-    selectedTimedLaps.length;
   const tolerance = Math.max(3, meanSelectedLap * 0.02);
   const relativePaceChange = getMedian(changes);
   const paceTrend: RaceStoryPaceTrend =
@@ -190,6 +212,51 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
     paceTrend,
     netRankChange,
   };
+}
+
+function getLastObservedRankMovement(
+  checkpoints: readonly LapRecord[],
+): LapRecord | null {
+  for (let index = checkpoints.length - 1; index >= 1; index--) {
+    const current = checkpoints[index];
+    const previous = checkpoints[index - 1];
+    if (
+      current &&
+      previous &&
+      current.lapNumber === previous.lapNumber + 1 &&
+      current.rankAtLap !== previous.rankAtLap
+    ) {
+      return current;
+    }
+  }
+  return null;
+}
+
+function getFinalLeadStartLap(checkpoints: readonly LapRecord[]): number | null {
+  const lastCheckpoint = checkpoints.at(-1);
+  if (!lastCheckpoint || lastCheckpoint.rankAtLap !== 1) return null;
+
+  let startIndex = checkpoints.length - 1;
+  while (startIndex > 0 && checkpoints[startIndex - 1]?.rankAtLap === 1) {
+    startIndex--;
+  }
+
+  for (let index = startIndex + 1; index < checkpoints.length; index++) {
+    const previous = checkpoints[index - 1];
+    const current = checkpoints[index];
+    if (!previous || !current || current.lapNumber !== previous.lapNumber + 1) {
+      return null;
+    }
+  }
+
+  const leadStart = checkpoints[startIndex];
+  if (!leadStart) return null;
+  if (startIndex === 0) return leadStart.lapNumber;
+
+  const beforeLead = checkpoints[startIndex - 1];
+  return beforeLead && leadStart.lapNumber === beforeLead.lapNumber + 1
+    ? leadStart.lapNumber
+    : null;
 }
 
 function getHighestObservedRank(
@@ -233,8 +300,14 @@ function getMaximumObservedRankChange(
   return maximum;
 }
 
-function getRaceStoryCohort(race: RaceResult, selectedRider: Rider): Rider[] {
-  const selectedCheckpoints = getValidCheckpoints(selectedRider);
+function getRaceStoryCohort(
+  race: RaceResult,
+  selectedRider: Rider,
+  competitiveEndLap: number,
+): Rider[] {
+  const selectedCheckpoints = getValidCheckpoints(selectedRider).filter(
+    (lap) => lap.lapNumber <= competitiveEndLap,
+  );
   const selectedMap = new Map(selectedCheckpoints.map((lap) => [lap.lapNumber, lap]));
   const graphablePeers = race.riders.filter(
     (rider) =>
@@ -243,7 +316,10 @@ function getRaceStoryCohort(race: RaceResult, selectedRider: Rider): Rider[] {
       getValidCheckpoints(rider).length > 0,
   );
   const reversalPeers = graphablePeers.filter((peer) =>
-    hasRankReversal(selectedMap, getValidCheckpoints(peer)),
+    hasRankReversal(
+      selectedMap,
+      getValidCheckpoints(peer).filter((lap) => lap.lapNumber <= competitiveEndLap),
+    ),
   );
 
   if (reversalPeers.length >= 2) return reversalPeers;
@@ -251,7 +327,12 @@ function getRaceStoryCohort(race: RaceResult, selectedRider: Rider): Rider[] {
   const selectedIds = new Set(reversalPeers.map((peer) => peer.riderId));
   for (const peer of graphablePeers) {
     if (selectedIds.has(peer.riderId)) continue;
-    if (isWithinFiveRanks(selectedMap, getValidCheckpoints(peer))) {
+    if (
+      isWithinFiveRanks(
+        selectedMap,
+        getValidCheckpoints(peer).filter((lap) => lap.lapNumber <= competitiveEndLap),
+      )
+    ) {
       selectedIds.add(peer.riderId);
     }
   }
@@ -287,12 +368,26 @@ function isWithinFiveRanks(
 function getSharedTimedLaps(
   selectedLaps: readonly LapRecord[],
   peerLaps: readonly LapRecord[],
+  competitiveEndLap: number,
 ): { selected: LapRecord; peer: LapRecord }[] {
   const peerMap = new Map(peerLaps.map((lap) => [lap.lapNumber, lap]));
   return selectedLaps.flatMap((selected) => {
+    if (selected.lapNumber > competitiveEndLap) return [];
     const peer = peerMap.get(selected.lapNumber);
-    return peer ? [{ selected, peer }] : [];
+    return peer && peer.lapNumber <= competitiveEndLap ? [{ selected, peer }] : [];
   });
+}
+
+function hasCompetitiveTimeGap(
+  early: { selected: LapRecord; peer: LapRecord },
+  late: { selected: LapRecord; peer: LapRecord },
+  meanSelectedLap: number,
+): boolean {
+  return (
+    Math.abs(early.peer.cumulativeTimeSec - early.selected.cumulativeTimeSec) <=
+      meanSelectedLap ||
+    Math.abs(late.peer.cumulativeTimeSec - late.selected.cumulativeTimeSec) <= meanSelectedLap
+  );
 }
 
 function getMedian(values: readonly number[]): number {

@@ -169,3 +169,102 @@ test("unmatched timed laps cannot supply a relative pace narrative", () => {
   assert.equal(result?.narrative, "記録が限られるため、レース展開は評価できません。");
   assert.equal(result?.maximumRankChange?.lapNumber, 2);
 });
+
+test("a rider who settles into the lead is described by the settled rank, not a distant late sprint", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [
+        lap(1, 100, 4),
+        lap(2, 100, 7),
+        lap(3, 100, 7),
+        lap(4, 100, 3),
+        lap(5, 100, 2),
+        lap(6, 100, 1),
+        lap(7, 100, 1),
+        lap(8, 100, 1),
+      ]),
+      rider("peer-a", [
+        lap(1, 101, 3),
+        lap(2, 101, 4),
+        lap(3, 101, 4),
+        lap(4, 101, 4),
+        lap(5, 101, 3),
+        lap(6, 101, 2),
+        lap(7, 80, 2),
+        lap(8, 80, 2),
+      ]),
+      rider("peer-b", [
+        lap(1, 102, 2),
+        lap(2, 102, 3),
+        lap(3, 102, 3),
+        lap(4, 102, 2),
+        lap(5, 102, 4),
+        lap(6, 102, 3),
+        lap(7, 79, 3),
+        lap(8, 79, 3),
+      ]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.available, true);
+  assert.equal(result?.paceTrend, null);
+  assert.equal(result?.narrative, "6周目に首位へ上がり、そのまま首位を守り切りました。");
+});
+
+test("a distant late sprint cannot change a non-leader's settled rank-interval pace verdict", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [
+        lap(1, 100, 5),
+        lap(2, 100, 4),
+        lap(3, 100, 3),
+        lap(4, 100, 3),
+        lap(5, 100, 3),
+      ]),
+      rider("peer-a", [
+        lap(1, 98, 4),
+        lap(2, 104, 5),
+        lap(3, 105, 5),
+        lap(4, 70, 5),
+        lap(5, 70, 5),
+      ]),
+      rider("peer-b", [
+        lap(1, 97, 3),
+        lap(2, 103, 3),
+        lap(3, 104, 5),
+        lap(4, 70, 5),
+        lap(5, 70, 5),
+      ]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.available, true);
+  assert.equal(result?.paceTrend, "improved");
+  assert.equal(result?.narrative, "後半に相対的なペースを上げ、順位を2つ上げました。");
+});
+
+test("rank-near peers with a large cumulative gap cannot supply a pace verdict", () => {
+  const selectedLaps = [lap(1, 100, 4), lap(2, 100, 3)];
+  const farPeerA = [lap(1, 90, 3), lap(2, 70, 4)].map((record) => ({
+    ...record,
+    cumulativeTimeSec: record.cumulativeTimeSec + 300,
+  }));
+  const farPeerB = [lap(1, 91, 5), lap(2, 71, 4)].map((record) => ({
+    ...record,
+    cumulativeTimeSec: record.cumulativeTimeSec + 300,
+  }));
+  const result = getRaceStory(
+    race([
+      rider("selected", selectedLaps),
+      rider("peer-a", farPeerA),
+      rider("peer-b", farPeerB),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.available, false);
+  assert.equal(result?.paceTrend, null);
+  assert.equal(result?.narrative, "記録が限られるため、レース展開は評価できません。");
+});
