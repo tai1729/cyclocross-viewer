@@ -15,6 +15,7 @@ import {
 } from "@/hooks/useComparisonRiders";
 import {
   getRaceLapNumbers,
+  getRaceStory,
   getRiderById,
   getRiderSummary,
   getValidCheckpoints,
@@ -606,6 +607,9 @@ export function RaceViewer({ meet }: RaceViewerProps) {
   const summary = selfRiderId && hasValidData && hasLapData
     ? getRiderSummary(race, selfRiderId)
     : null;
+  const raceStory = selfRiderId && hasValidData && hasLapData
+    ? getRaceStory(race, selfRiderId)
+    : null;
   const fixedRiders = comparisonMode === "pinned"
     ? comparisonRiders.filter((rider) => rider.riderId !== selfRider?.riderId)
     : [];
@@ -662,7 +666,7 @@ export function RaceViewer({ meet }: RaceViewerProps) {
             {analysisChart}
           </div>
           <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-            <SummaryCard summary={summary} />
+            <SummaryCard summary={summary} raceStory={raceStory} />
             <LapSummaryCard
               primaryRider={selfRider}
               fixedRiders={fixedRiders}

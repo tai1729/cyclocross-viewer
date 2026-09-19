@@ -1,3 +1,33 @@
+# RACE-STORY-1 bounded implementation plan
+
+Status: COMPLETE — all required verification and independent review passed
+
+## Task graph
+
+1. **RACE-STORY-1-SPEC** — DONE. The pure-analysis thresholds, wording, and
+   no-evidence fallback are resolved in `docs/SPEC_AUDIT.md`.
+2. **RACE-STORY-1-TRANSFORM** — DONE. Add a pure `lib/dataTransform.ts` helper and
+   observable tests for cohort selection, rank facts, trend verdicts, DNF,
+   opaque annotated ranks, short races, and sparse/invalid inputs.
+3. **RACE-STORY-1-UI** — DONE. Extend `SummaryCard` with the responsive race-story
+   section beneath its existing three metrics and pass the pure result from
+   `RaceViewer`.
+4. **RACE-STORY-1-DOCS** — DONE. Update the product behavior and closeout records.
+5. **RACE-STORY-1-VERIFY** — DONE. `npm test` (191 tests), typecheck, lint,
+   build, diff check, local browser smoke, and independent review passed.
+
+## Boundaries
+
+- Allowed product files: `lib/dataTransform.ts`, `components/SummaryCard.tsx`,
+  `components/RaceViewer.tsx`, and focused tests.
+- Do not change routes, URL state, data-source contracts, collector data,
+  chart formulas/rendering, existing lap-summary semantics, dependencies, or
+  unrelated dirty files.
+- Required checks: `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run
+  build`, and `git diff --check`.
+
+---
+
 # Historical implementation plan — UX3-5
 
 Status: ARCHIVED — historical implementation record. Current project status:

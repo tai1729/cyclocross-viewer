@@ -100,6 +100,227 @@ export function getLapStatistics(rider: Rider): LapStatistics {
   return { fastestLap, averageLapTimeSec };
 }
 
+export type RaceStoryPaceTrend = "improved" | "maintained" | "declined";
+
+export interface RaceStoryRankChange {
+  lapNumber: number;
+  positions: number;
+  direction: "gained" | "lost";
+}
+
+export interface RaceStory {
+  highestRank: { lapNumber: number; rank: number } | null;
+  maximumRankChange: RaceStoryRankChange | null;
+  narrative: string;
+  available: boolean;
+  paceTrend: RaceStoryPaceTrend | null;
+  netRankChange: number | null;
+}
+
+const RACE_STORY_UNAVAILABLE =
+  "記録が限られるため、レース展開は評価できません。";
+
+/**
+ * Build a conservative race-level story from observed ranks and same-lap
+ * timing. It is intentionally not an incident or cause detector.
+ */
+export function getRaceStory(race: RaceResult, riderId: string): RaceStory | null {
+  const selectedRider = getRiderById(race, riderId);
+  if (!selectedRider) return null;
+
+  const selectedCheckpoints = getValidCheckpoints(selectedRider);
+  const highestRank = getHighestObservedRank(selectedCheckpoints);
+  const maximumRankChange = getMaximumObservedRankChange(selectedCheckpoints);
+  const firstCheckpoint = selectedCheckpoints.at(0);
+  const lastCheckpoint = selectedCheckpoints.at(-1);
+  const netRankChange =
+    firstCheckpoint && lastCheckpoint && firstCheckpoint !== lastCheckpoint
+      ? firstCheckpoint.rankAtLap - lastCheckpoint.rankAtLap
+      : null;
+
+  const unavailable = (): RaceStory => ({
+    highestRank,
+    maximumRankChange,
+    narrative: RACE_STORY_UNAVAILABLE,
+    available: false,
+    paceTrend: null,
+    netRankChange,
+  });
+
+  if (!firstCheckpoint || !lastCheckpoint || netRankChange === null) {
+    return unavailable();
+  }
+
+  const selectedTimedLaps = getValidTimedLaps(selectedRider);
+  if (selectedTimedLaps.length === 0) return unavailable();
+
+  const cohort = getRaceStoryCohort(race, selectedRider);
+  const changes = cohort.flatMap((peer) => {
+    const sharedTimedLaps = getSharedTimedLaps(selectedTimedLaps, getValidTimedLaps(peer));
+    if (sharedTimedLaps.length < 2) return [];
+
+    const early = sharedTimedLaps[0];
+    const late = sharedTimedLaps.at(-1);
+    if (!late) return [];
+    return [
+      (late.peer.lapTimeSec - late.selected.lapTimeSec) -
+        (early.peer.lapTimeSec - early.selected.lapTimeSec),
+    ];
+  });
+
+  if (changes.length < 2) return unavailable();
+
+  const meanSelectedLap =
+    selectedTimedLaps.reduce((total, lap) => total + lap.lapTimeSec, 0) /
+    selectedTimedLaps.length;
+  const tolerance = Math.max(3, meanSelectedLap * 0.02);
+  const relativePaceChange = getMedian(changes);
+  const paceTrend: RaceStoryPaceTrend =
+    relativePaceChange > tolerance
+      ? "improved"
+      : relativePaceChange < -tolerance
+        ? "declined"
+        : "maintained";
+
+  return {
+    highestRank,
+    maximumRankChange,
+    narrative: getRaceStoryNarrative(paceTrend, netRankChange),
+    available: true,
+    paceTrend,
+    netRankChange,
+  };
+}
+
+function getHighestObservedRank(
+  checkpoints: readonly LapRecord[],
+): { lapNumber: number; rank: number } | null {
+  const highest = checkpoints.reduce<LapRecord | null>((best, checkpoint) => {
+    if (
+      best === null ||
+      checkpoint.rankAtLap < best.rankAtLap ||
+      (checkpoint.rankAtLap === best.rankAtLap && checkpoint.lapNumber < best.lapNumber)
+    ) {
+      return checkpoint;
+    }
+    return best;
+  }, null);
+  return highest ? { lapNumber: highest.lapNumber, rank: highest.rankAtLap } : null;
+}
+
+function getMaximumObservedRankChange(
+  checkpoints: readonly LapRecord[],
+): RaceStoryRankChange | null {
+  let maximum: RaceStoryRankChange | null = null;
+
+  for (let index = 1; index < checkpoints.length; index++) {
+    const previous = checkpoints[index - 1];
+    const current = checkpoints[index];
+    if (!previous || !current || current.lapNumber !== previous.lapNumber + 1) continue;
+
+    const change = previous.rankAtLap - current.rankAtLap;
+    const positions = Math.abs(change);
+    if (positions === 0) continue;
+    if (maximum === null || positions > maximum.positions) {
+      maximum = {
+        lapNumber: current.lapNumber,
+        positions,
+        direction: change > 0 ? "gained" : "lost",
+      };
+    }
+  }
+
+  return maximum;
+}
+
+function getRaceStoryCohort(race: RaceResult, selectedRider: Rider): Rider[] {
+  const selectedCheckpoints = getValidCheckpoints(selectedRider);
+  const selectedMap = new Map(selectedCheckpoints.map((lap) => [lap.lapNumber, lap]));
+  const graphablePeers = race.riders.filter(
+    (rider) =>
+      rider.riderId !== selectedRider.riderId &&
+      rider.dataQuality === "ok" &&
+      getValidCheckpoints(rider).length > 0,
+  );
+  const reversalPeers = graphablePeers.filter((peer) =>
+    hasRankReversal(selectedMap, getValidCheckpoints(peer)),
+  );
+
+  if (reversalPeers.length >= 2) return reversalPeers;
+
+  const selectedIds = new Set(reversalPeers.map((peer) => peer.riderId));
+  for (const peer of graphablePeers) {
+    if (selectedIds.has(peer.riderId)) continue;
+    if (isWithinFiveRanks(selectedMap, getValidCheckpoints(peer))) {
+      selectedIds.add(peer.riderId);
+    }
+  }
+  return graphablePeers.filter((peer) => selectedIds.has(peer.riderId));
+}
+
+function hasRankReversal(
+  selectedMap: ReadonlyMap<number, LapRecord>,
+  peerCheckpoints: readonly LapRecord[],
+): boolean {
+  let firstRelation: number | null = null;
+  for (const peer of peerCheckpoints) {
+    const selected = selectedMap.get(peer.lapNumber);
+    if (!selected) continue;
+    const relation = Math.sign(peer.rankAtLap - selected.rankAtLap);
+    if (relation === 0) continue;
+    if (firstRelation !== null && relation !== firstRelation) return true;
+    firstRelation = relation;
+  }
+  return false;
+}
+
+function isWithinFiveRanks(
+  selectedMap: ReadonlyMap<number, LapRecord>,
+  peerCheckpoints: readonly LapRecord[],
+): boolean {
+  return peerCheckpoints.some((peer) => {
+    const selected = selectedMap.get(peer.lapNumber);
+    return selected !== undefined && Math.abs(peer.rankAtLap - selected.rankAtLap) <= 5;
+  });
+}
+
+function getSharedTimedLaps(
+  selectedLaps: readonly LapRecord[],
+  peerLaps: readonly LapRecord[],
+): { selected: LapRecord; peer: LapRecord }[] {
+  const peerMap = new Map(peerLaps.map((lap) => [lap.lapNumber, lap]));
+  return selectedLaps.flatMap((selected) => {
+    const peer = peerMap.get(selected.lapNumber);
+    return peer ? [{ selected, peer }] : [];
+  });
+}
+
+function getMedian(values: readonly number[]): number {
+  const ordered = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(ordered.length / 2);
+  if (ordered.length % 2 === 1) return ordered[middle] ?? 0;
+  return ((ordered[middle - 1] ?? 0) + (ordered[middle] ?? 0)) / 2;
+}
+
+function getRaceStoryNarrative(
+  paceTrend: RaceStoryPaceTrend,
+  netRankChange: number,
+): string {
+  const rankPhrase =
+    netRankChange > 0
+      ? `順位を${netRankChange}つ上げました。`
+      : netRankChange < 0
+        ? `順位を${Math.abs(netRankChange)}つ下げました。`
+        : "順位を維持しました。";
+  const pacePhrase =
+    paceTrend === "improved"
+      ? "後半に相対的なペースを上げ、"
+      : paceTrend === "declined"
+        ? "後半は周囲に対するペースが落ち、"
+        : "後半も相対的にペースを維持し、";
+  return `${pacePhrase}${rankPhrase}`;
+}
+
 export interface LapDeltaRow {
   lapNumber: number;
   deltas: Record<string, number | undefined>;

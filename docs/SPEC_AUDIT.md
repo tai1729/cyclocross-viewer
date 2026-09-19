@@ -1,5 +1,43 @@
 # Specification Audit
 
+## RACE-STORY-1 specification audit — resolved
+
+Current Change: measured selected-rider race narrative.
+
+The approved product intent is one short, numeric `レース展開` sentence plus
+highest-rank and maximum-rank-change facts. The following resolutions are
+authoritative before implementation:
+
+1. For every eligible cohort peer, its early and late observations are its
+   first and last shared valid timed laps with the selected rider. Compute the
+   peer's change in relative pace as `(peerLate - selectedLate) - (peerEarly
+   - selectedEarly)`, then take the median across peers. A change above the
+   larger of three seconds and two percent of the selected rider's mean timed
+   lap is relative improvement for the selected rider; the symmetric negative
+   case is relative decline; otherwise it is maintenance. This gives a
+   short-race-safe, rider-balanced result and does not convert varying course
+   conditions into a cause claim.
+2. A rank-reversal peer has two or more shared valid checkpoints whose strict
+   ahead/behind relation changes sign in chronological order. The checkpoints
+   do not have to be adjacent; equal ranks cannot create a reversal. When
+   there are fewer than two reversal peers, add graphable peers observed
+   within five ranks at any shared valid checkpoint, in stable race order.
+3. A narrative requires first and last selected checkpoints plus at least two
+   cohort peers that each have two shared valid timed laps. There is no race
+   duration or raw lap-count minimum, so a three-lap race can qualify. Other
+   cases show the exact neutral unavailable message.
+4. DNF is named only by the existing summary card. The story evaluates through
+   its final valid checkpoint. `annotated-rank` labels, including `LapOut` and
+   `80%Out`, are deliberately opaque under the existing contract; the story
+   evaluates their final valid checkpoint without calling it a cut or assigning
+   any cause.
+5. The card is keyboard-passive text, has no URL/history state, and remains a
+   responsive supporting-information card. Existing charts, controls,
+   summaries, result states, sparse-data rules, and 320px/390px behavior are
+   regression-protected.
+
+Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
+
 ## UX3-5 specification audit — in progress
 
 Current Change: UX3-5 Limited Scope Implementation

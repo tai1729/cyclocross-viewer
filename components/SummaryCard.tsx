@@ -1,12 +1,13 @@
-import { formatGapSec, type RiderSummary } from "@/lib/dataTransform";
+import { formatGapSec, type RaceStory, type RiderSummary } from "@/lib/dataTransform";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 interface SummaryCardProps {
   summary: RiderSummary;
+  raceStory?: RaceStory | null;
 }
 
-export function SummaryCard({ summary }: SummaryCardProps) {
+export function SummaryCard({ summary, raceStory }: SummaryCardProps) {
   const {
     result,
     officialPositionLabel,
@@ -45,6 +46,7 @@ export function SummaryCard({ summary }: SummaryCardProps) {
             }
           />
         </CardContent>
+        {raceStory ? <RaceStorySection story={raceStory} /> : null}
       </Card>
     );
   }
@@ -115,7 +117,71 @@ export function SummaryCard({ summary }: SummaryCardProps) {
         emphasize={isInPromotionZone}
       />
       </CardContent>
+      {raceStory ? <RaceStorySection story={raceStory} /> : null}
     </Card>
+  );
+}
+
+function RaceStorySection({ story }: { story: RaceStory }) {
+  const maximumChange = story.maximumRankChange
+    ? `${story.maximumRankChange.positions}つ${
+        story.maximumRankChange.direction === "gained" ? "上昇" : "下降"
+      }`
+    : "—";
+  const maximumChangeDetail = story.maximumRankChange
+    ? `${story.maximumRankChange.lapNumber}周目`
+    : undefined;
+
+  return (
+    <CardContent className="border-t border-border/70 pt-3">
+      <div className="flex min-w-0 flex-col gap-3">
+        <div>
+          <h3 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+            レース展開
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-foreground">{story.narrative}</p>
+        </div>
+        <dl className="grid min-w-0 grid-cols-2 gap-3">
+          <StoryMetric
+            label="最高順位"
+            value={story.highestRank ? `${story.highestRank.rank}位` : "—"}
+            detail={story.highestRank ? `${story.highestRank.lapNumber}周目` : undefined}
+          />
+          <StoryMetric
+            label="最大の順位変化"
+            value={maximumChange}
+            detail={maximumChangeDetail}
+          />
+        </dl>
+        <p className="text-xs text-muted-foreground">
+          有効な実測ラップと、順位が近い選手の記録をもとにしています。
+        </p>
+      </div>
+    </CardContent>
+  );
+}
+
+function StoryMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-md bg-muted/50 px-3 py-2.5">
+      <dt className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+        {label}
+      </dt>
+      <dd className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="font-mono text-lg font-semibold tabular-nums text-foreground">
+          {value}
+        </span>
+        {detail ? <span className="text-xs text-muted-foreground">{detail}</span> : null}
+      </dd>
+    </div>
   );
 }
 

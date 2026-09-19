@@ -23,8 +23,32 @@
   8 provenance/freshness metadata is complete and released from the reviewed
   working tree.
 - Phase 3-1 chart-default spike is complete. The initial chart remains
-  `順位`; no Phase 3 product implementation has started because real-user
-  demand evidence is not yet available.
+  `順位`. RACE-STORY-1 adds a bounded race-level narrative derived solely
+  from the selected rider's and nearby riders' valid recorded laps; it does
+  not add cross-race history or incident inference.
+
+## RACE-STORY-1 current behavior — measured race narrative
+
+The selected rider's result summary includes a `レース展開` section below the
+existing rank, leader-gap, and promotion fields. It exposes highest observed
+rank, the largest rank movement across consecutive recorded checkpoints, and
+one short narrative that combines net rank movement with the rider's
+late-versus-early relative lap pace against nearby competitors.
+
+The comparison cohort prioritizes riders whose recorded ahead/behind relation
+with the selected rider reverses. If fewer than two such riders exist, it adds
+graphable riders observed within five ranks at a shared checkpoint. Pace uses
+only each peer's first and last shared valid timed laps with the selected
+rider; the median relative change across at least two eligible peers is
+classified as improvement, maintenance, or decline using the larger of three
+seconds and two percent of the selected rider's mean valid lap time.
+
+DNF and opaque annotated-rank riders are evaluated only through their final
+valid checkpoint. The viewer does not infer a DNF cause or interpret labels
+such as `LapOut`/`80%Out`. Short races remain eligible when their actual
+measurements satisfy the same rule. Missing, duplicated, invalid, or unmatched
+lap values are not bridged; if rank or shared-pace evidence is insufficient,
+the section states `記録が限られるため、レース展開は評価できません。`.
 
 ## Phase 2 Slice 8 current behavior - data provenance and freshness
 

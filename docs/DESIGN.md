@@ -188,6 +188,97 @@ index and the race page only the selected category JSON.
    smoke checks. The DATA-1 report records both commit SHAs and any non-task
    dirty files left untouched.
 
+## Current design — RACE-STORY-1 measured race narrative
+
+Status: COMPLETE — verification and independent review passed
+
+### Goal
+
+Add a compact `レース展開` section beneath the existing three-metric result
+summary inside `SummaryCard` in the analysis workspace. It gives the selected rider one short, numeric,
+evidence-backed description of how their rank changed in relation to their
+lap pace and that of nearby competitors. The card is an entry point to the
+existing rank and lap charts; it does not replace them or claim an unmeasured
+cause such as a crash, mechanical problem, or illness.
+
+### Scope and presentation
+
+- The card is shown whenever a selected rider has enough valid measured data
+  to create a narrative, including a `dnf` rider and an `annotated-rank`
+  rider whose source label may contain an opaque notation such as `LapOut`.
+- It has three compact items: `最高順位`, `最大の順位変化`, and `レース展開`.
+  The first two expose lap number and rank-change count; the third is one
+  sentence that includes the net rank change when one is measurable.
+- Example: `後半も相対的にペースを維持し、周囲のペース低下もあって順位を4つ上げました。`
+- A short card-level note identifies the evidence as valid recorded laps and
+  nearby competitors. It must not expose a raw per-lap event feed or create
+  a new URL, history, or comparison-control state.
+- The section remains inside the existing left-hand summary card beneath the
+  chart. Mobile keeps it inside that card above the stacked lap-summary card;
+  it must not create page-level horizontal overflow.
+
+### Measurement contract
+
+1. Only the existing valid checkpoint and valid timed-lap rules apply:
+   positive unique lap number, finite cumulative time/rank for a checkpoint,
+   and positive timed lap with a valid preceding checkpoint for a timed lap.
+   Missing, duplicate, invalid, and post-final records are never inferred.
+2. The rider's assessed interval ends at their last valid checkpoint. This is
+   also true for DNF and annotated-rank cases; the card describes only the
+   recorded interval and never assigns a retirement reason or interprets an
+   opaque official annotation as a particular event status.
+3. Rank facts use the first/last valid checkpoints in that interval. `最高順位`
+   is the smallest observed rank (earliest lap wins a tie). `最大の順位変化` is
+   the largest absolute change between adjacent observed rank checkpoints;
+   it names the direction and the later lap. Missing laps are not treated as
+   adjacent observations.
+4. The comparison cohort begins with every graphable rider whose strict rank
+   relation to the selected rider reverses across two shared valid
+   checkpoints. Equal ranks are not a reversal. If fewer than two such riders are available, it is augmented
+   with unique graphable riders within five ranks of the selected rider at any
+   shared valid checkpoint. A rider contributes pace only on a lap where both
+   riders have valid timed laps.
+5. For each cohort rider with at least two common valid timed laps, calculate
+   `(peer late lap - selected late lap) - (peer early lap - selected early
+   lap)`. The median of those rider-level changes is the relative-pace trend;
+   a positive value favors the selected rider late, a negative value favors
+   the peer late. Its neutral tolerance is the larger of three seconds and
+   two percent of the selected rider's mean valid lap time. Values outside
+   that tolerance use `相対的にペースを上げ` / `周囲に対するペースが落ち`; values
+   within it use `相対的にペースを維持`. It never claims a cause or
+   generalizes from a missing measurement.
+6. A rider with no rank interval, no valid timed comparison, or fewer than
+   two cohort riders with two shared valid timed laps receives the neutral unavailable message `記録が限られるため、レース展開は評価できません。` instead of a fabricated
+   conclusion. Short races are eligible whenever their actual records meet
+   the same evidence rule; they do not need a minimum race duration or lap
+   count.
+
+### Compatibility and non-goals
+
+- Preserve all current race JSON contracts, URL parameters, chart values and
+  render semantics, DNF/lapped meanings, result-table behavior, comparison
+  controls, and lap-summary metrics.
+- Do not add collection, cross-race history, any new dependency, generated
+  data, AI model, user-entered narrative, or inference about race incidents.
+- Do not reinterpret DNF, opaque annotated-rank labels, missing, duplicated,
+  or invalid data.
+
+### Acceptance criteria
+
+1. A graphable normal finisher, DNF rider, annotated-rank rider, and short three-lap race each
+   receive a narrative only when valid recorded evidence is sufficient.
+2. Narratives numerically state a measurable net rank movement where present
+   and correctly distinguish relative pace improvement, maintenance, and
+   decline without cause attribution.
+3. The cohort prioritizes observed rank-reversal riders and uses the
+   five-rank supplement only when fewer than two reversal riders exist.
+4. Missing/duplicate/invalid and unmatched timed laps neither affect a fact
+   nor cause a gap to be bridged. Insufficient evidence produces the exact
+   neutral unavailable message.
+5. The existing rank/top-gap/promotion meanings inside `SummaryCard`,
+   `LapSummaryCard`, all charts, URL/history, error states, keyboard behavior,
+   and 320px/390px layouts remain compatible.
+
 ## Current design - UX3-5 Limited Scope Implementation
 
 Status: ACTIVE — UX3-5 re-audit/remediation; external human field test remains blocked
