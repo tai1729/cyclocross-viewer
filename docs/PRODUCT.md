@@ -42,6 +42,14 @@ that recorded laps alone cannot identify the reason for the rank change. Pace
 wording describes the measured comparison interval rather than presuming it is
 the latter half of the race.
 
+For riders with six or more valid recorded checkpoints, the card instead
+shows a two-line phase summary. It divides that rider's observed checkpoints
+into equal first and latter groups, then reports each group's start-to-end
+rank and relative pace as separate facts. Five or fewer checkpoints retain the
+single whole-race summary, so short races are not given an artificial split.
+If a phase lacks shared pace evidence, only that phase says pace cannot be
+evaluated.
+
 The comparison cohort prioritizes riders whose recorded ahead/behind relation
 with the selected rider reverses. If fewer than two such riders exist, it adds
 graphable riders observed within five ranks at a shared checkpoint. Pace uses

@@ -139,7 +139,13 @@ function RaceStorySection({ story }: { story: RaceStory }) {
           <h3 className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
             レース展開
           </h3>
-          <p className="mt-1 text-sm leading-relaxed text-foreground">{story.narrative}</p>
+          {story.phaseNarratives ? (
+            <div className="mt-1 space-y-1 text-sm leading-relaxed text-foreground">
+              {story.phaseNarratives.map((narrative) => <p key={narrative}>{narrative}</p>)}
+            </div>
+          ) : (
+            <p className="mt-1 text-sm leading-relaxed text-foreground">{story.narrative}</p>
+          )}
         </div>
         <dl className="grid min-w-0 grid-cols-2 gap-3">
           <StoryMetric

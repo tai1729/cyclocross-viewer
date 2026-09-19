@@ -76,6 +76,21 @@ Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
 
 Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
 
+## RACE-STORY-1D phase summary audit — resolved
+
+1. Six or more valid selected-rider checkpoints are divided by record count:
+   the first `ceil(count / 2)` are 前半 and the remainder are 後半. Five or
+   fewer checkpoints use the established whole-race narrative without a split.
+2. Each phase states observed start and end rank plus a separately measured
+   relative pace. The phase wording never asserts that pace caused the rank
+   movement.
+3. A phase needs at least two selected timed laps and two relevant peers with
+   two shared timed laps; otherwise it retains its rank range but says
+   `ペースは評価できません。`. Existing validity, cumulative-gap relevance,
+   DNF, and annotated-rank rules remain in force.
+
+Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
+
 ## UX3-5 specification audit — in progress
 
 Current Change: UX3-5 Limited Scope Implementation

@@ -115,6 +115,7 @@ export interface RaceStory {
   available: boolean;
   paceTrend: RaceStoryPaceTrend | null;
   netRankChange: number | null;
+  phaseNarratives?: readonly string[];
 }
 
 const RACE_STORY_UNAVAILABLE =
@@ -133,6 +134,11 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
   const maximumRankChange = getMaximumObservedRankChange(selectedCheckpoints);
   const firstCheckpoint = selectedCheckpoints.at(0);
   const lastCheckpoint = selectedCheckpoints.at(-1);
+  const phaseNarratives = getRaceStoryPhaseNarratives(
+    race,
+    selectedRider,
+    selectedCheckpoints,
+  );
   const netRankChange =
     firstCheckpoint && lastCheckpoint && firstCheckpoint !== lastCheckpoint
       ? firstCheckpoint.rankAtLap - lastCheckpoint.rankAtLap
@@ -145,6 +151,7 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
     available: false,
     paceTrend: null,
     netRankChange,
+    ...(phaseNarratives ? { phaseNarratives } : {}),
   });
 
   if (!firstCheckpoint || !lastCheckpoint || netRankChange === null) {
@@ -168,18 +175,24 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
       available: true,
       paceTrend: null,
       netRankChange,
+      ...(phaseNarratives ? { phaseNarratives } : {}),
     };
   }
 
   const meanSelectedLap =
     selectedTimedLaps.reduce((total, lap) => total + lap.lapTimeSec, 0) /
     selectedTimedLaps.length;
-  const cohort = getRaceStoryCohort(race, selectedRider, competitiveEndLap);
+  const cohort = getRaceStoryCohort(
+    race,
+    selectedRider,
+    firstCheckpoint.lapNumber,
+    competitiveEndLap,
+  );
   const changes = cohort.flatMap((peer) => {
     const sharedTimedLaps = getSharedTimedLaps(
       selectedTimedLaps,
       getValidTimedLaps(peer),
-      competitiveEndLap,
+      new Set(selectedCheckpoints.filter((lap) => lap.lapNumber <= competitiveEndLap).map((lap) => lap.lapNumber)),
     );
     if (sharedTimedLaps.length < 2) return [];
 
@@ -211,7 +224,69 @@ export function getRaceStory(race: RaceResult, riderId: string): RaceStory | nul
     available: true,
     paceTrend,
     netRankChange,
+    ...(phaseNarratives ? { phaseNarratives } : {}),
   };
+}
+
+function getRaceStoryPhaseNarratives(
+  race: RaceResult,
+  selectedRider: Rider,
+  checkpoints: readonly LapRecord[],
+): readonly string[] | null {
+  if (checkpoints.length <= 5) return null;
+  const splitIndex = Math.ceil(checkpoints.length / 2);
+  return [
+    getRaceStoryPhaseNarrative("前半", race, selectedRider, checkpoints.slice(0, splitIndex)),
+    getRaceStoryPhaseNarrative("後半", race, selectedRider, checkpoints.slice(splitIndex)),
+  ];
+}
+
+function getRaceStoryPhaseNarrative(
+  label: "前半" | "後半",
+  race: RaceResult,
+  selectedRider: Rider,
+  checkpoints: readonly LapRecord[],
+): string {
+  const first = checkpoints.at(0);
+  const last = checkpoints.at(-1);
+  if (!first || !last || first === last) return `${label}: 記録が限られるため評価できません。`;
+
+  const lapNumbers = new Set(checkpoints.map((lap) => lap.lapNumber));
+  const selectedTimedLaps = getValidTimedLaps(selectedRider).filter((lap) =>
+    lapNumbers.has(lap.lapNumber),
+  );
+  if (selectedTimedLaps.length < 2) {
+    return `${label}: ${first.rankAtLap}位→${last.rankAtLap}位、ペースは評価できません。`;
+  }
+
+  const meanSelectedLap =
+    selectedTimedLaps.reduce((total, lap) => total + lap.lapTimeSec, 0) /
+    selectedTimedLaps.length;
+  const cohort = getRaceStoryCohort(race, selectedRider, first.lapNumber, last.lapNumber);
+  const changes = cohort.flatMap((peer) => {
+    const shared = getSharedTimedLaps(selectedTimedLaps, getValidTimedLaps(peer), lapNumbers);
+    if (shared.length < 2) return [];
+    const early = shared[0];
+    const late = shared.at(-1);
+    if (!late || !hasCompetitiveTimeGap(early, late, meanSelectedLap)) return [];
+    return [
+      (late.peer.lapTimeSec - late.selected.lapTimeSec) -
+        (early.peer.lapTimeSec - early.selected.lapTimeSec),
+    ];
+  });
+  if (changes.length < 2) {
+    return `${label}: ${first.rankAtLap}位→${last.rankAtLap}位、ペースは評価できません。`;
+  }
+
+  const tolerance = Math.max(3, meanSelectedLap * 0.02);
+  const change = getMedian(changes);
+  const pace =
+    change > tolerance
+      ? "相対ペースを上げました。"
+      : change < -tolerance
+        ? "相対ペースを下げました。"
+        : "相対ペースはおおむね維持でした。";
+  return `${label}: ${first.rankAtLap}位→${last.rankAtLap}位、${pace}`;
 }
 
 function getLastObservedRankMovement(
@@ -303,10 +378,11 @@ function getMaximumObservedRankChange(
 function getRaceStoryCohort(
   race: RaceResult,
   selectedRider: Rider,
+  competitiveStartLap: number,
   competitiveEndLap: number,
 ): Rider[] {
   const selectedCheckpoints = getValidCheckpoints(selectedRider).filter(
-    (lap) => lap.lapNumber <= competitiveEndLap,
+    (lap) => lap.lapNumber >= competitiveStartLap && lap.lapNumber <= competitiveEndLap,
   );
   const selectedMap = new Map(selectedCheckpoints.map((lap) => [lap.lapNumber, lap]));
   const graphablePeers = race.riders.filter(
@@ -318,7 +394,9 @@ function getRaceStoryCohort(
   const reversalPeers = graphablePeers.filter((peer) =>
     hasRankReversal(
       selectedMap,
-      getValidCheckpoints(peer).filter((lap) => lap.lapNumber <= competitiveEndLap),
+      getValidCheckpoints(peer).filter(
+        (lap) => lap.lapNumber >= competitiveStartLap && lap.lapNumber <= competitiveEndLap,
+      ),
     ),
   );
 
@@ -330,7 +408,9 @@ function getRaceStoryCohort(
     if (
       isWithinFiveRanks(
         selectedMap,
-        getValidCheckpoints(peer).filter((lap) => lap.lapNumber <= competitiveEndLap),
+        getValidCheckpoints(peer).filter(
+          (lap) => lap.lapNumber >= competitiveStartLap && lap.lapNumber <= competitiveEndLap,
+        ),
       )
     ) {
       selectedIds.add(peer.riderId);
@@ -368,13 +448,13 @@ function isWithinFiveRanks(
 function getSharedTimedLaps(
   selectedLaps: readonly LapRecord[],
   peerLaps: readonly LapRecord[],
-  competitiveEndLap: number,
+  allowedLapNumbers: ReadonlySet<number>,
 ): { selected: LapRecord; peer: LapRecord }[] {
   const peerMap = new Map(peerLaps.map((lap) => [lap.lapNumber, lap]));
   return selectedLaps.flatMap((selected) => {
-    if (selected.lapNumber > competitiveEndLap) return [];
+    if (!allowedLapNumbers.has(selected.lapNumber)) return [];
     const peer = peerMap.get(selected.lapNumber);
-    return peer && peer.lapNumber <= competitiveEndLap ? [{ selected, peer }] : [];
+    return peer && allowedLapNumbers.has(peer.lapNumber) ? [{ selected, peer }] : [];
   });
 }
 

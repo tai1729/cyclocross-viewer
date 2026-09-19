@@ -315,6 +315,16 @@ and pace facts separately and state that the records cannot determine the
 reason for the rank change. Pace wording refers to the measured comparison
 interval and must not presume that it is the latter half of the race.
 
+### RACE-STORY-1D phase summary
+
+For six or more valid selected-rider checkpoints, split the observed records
+by count into an equal first and latter group. Display one line per group:
+`前半: N位→M位、相対ペース…` and `後半: N位→M位、相対ペース…`. Rank and
+pace are parallel facts; neither is phrased as the other's cause. A phase
+with insufficient shared timing evidence reports only its observed rank range
+and `ペースは評価できません。`. Five or fewer valid checkpoints continue to
+use the existing whole-race narrative without a split.
+
 ## Current design - UX3-5 Limited Scope Implementation
 
 Status: ACTIVE — UX3-5 re-audit/remediation; external human field test remains blocked

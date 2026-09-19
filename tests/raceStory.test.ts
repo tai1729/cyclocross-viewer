@@ -278,6 +278,112 @@ test("a changed relative pace with stable rank does not invent a rank-change rea
   assert.equal(result?.narrative, "順位を維持しました。周囲との相対ペースを上げました。");
 });
 
+test("six or more valid checkpoints report separate first and latter race phases", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [
+        lap(1, 100, 5),
+        lap(2, 100, 4),
+        lap(3, 100, 3),
+        lap(4, 100, 3),
+        lap(5, 100, 2),
+        lap(6, 100, 2),
+      ]),
+      rider("peer-a", [
+        lap(1, 99, 4),
+        lap(2, 104, 5),
+        lap(3, 105, 5),
+        lap(4, 104, 4),
+        lap(5, 105, 3),
+        lap(6, 106, 3),
+      ]),
+      rider("peer-b", [
+        lap(1, 98, 3),
+        lap(2, 103, 3),
+        lap(3, 104, 5),
+        lap(4, 103, 5),
+        lap(5, 104, 4),
+        lap(6, 105, 4),
+      ]),
+    ]),
+    "selected",
+  );
+
+  assert.deepEqual(result?.phaseNarratives, [
+    "前半: 5位→3位、相対ペースを上げました。",
+    "後半: 3位→2位、相対ペースはおおむね維持でした。",
+  ]);
+});
+
+test("phase rank ranges remain visible when shared pace evidence is unavailable", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [
+        lap(1, 100, 5),
+        lap(2, 100, 4),
+        lap(3, 100, 3),
+        lap(4, 100, 3),
+        lap(5, 100, 2),
+        lap(6, 100, 2),
+      ]),
+      rider("peer-a", [
+        lap(1, 0, 4),
+        lap(2, 0, 5),
+        lap(3, 0, 5),
+        lap(4, 0, 4),
+        lap(5, 0, 3),
+        lap(6, 0, 3),
+      ]),
+      rider("peer-b", [
+        lap(1, 0, 3),
+        lap(2, 0, 3),
+        lap(3, 0, 5),
+        lap(4, 0, 5),
+        lap(5, 0, 4),
+        lap(6, 0, 4),
+      ]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.available, false);
+  assert.deepEqual(result?.phaseNarratives, [
+    "前半: 5位→3位、ペースは評価できません。",
+    "後半: 3位→2位、ペースは評価できません。",
+  ]);
+});
+
+test("five valid checkpoints retain the whole-race narrative without phase rows", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [
+        lap(1, 100, 5),
+        lap(2, 100, 4),
+        lap(3, 100, 3),
+        lap(4, 100, 2),
+        lap(5, 100, 1),
+      ]),
+      rider("peer-a", [
+        lap(1, 99, 4),
+        lap(2, 104, 5),
+        lap(3, 105, 5),
+        lap(4, 106, 5),
+        lap(5, 107, 5),
+      ]),
+      rider("peer-b", [
+        lap(1, 98, 3),
+        lap(2, 103, 3),
+        lap(3, 104, 5),
+        lap(4, 105, 5),
+        lap(5, 106, 5),
+      ]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.phaseNarratives, undefined);
+});
+
 test("rank-near peers with a large cumulative gap cannot supply a pace verdict", () => {
   const selectedLaps = [lap(1, 100, 4), lap(2, 100, 3)];
   const farPeerA = [lap(1, 90, 3), lap(2, 70, 4)].map((record) => ({
