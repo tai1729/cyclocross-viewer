@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Rider } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,29 @@ interface RiderSelectorProps {
   closeKey?: string | number;
 }
 
+interface RiderSelectorCloseActions {
+  setQuery: (query: string) => void;
+  setShouldFocusSearch: (shouldFocusSearch: boolean) => void;
+  setIsOpen: (isOpen: boolean) => void;
+  restoreFocus: () => void;
+}
+
+export function isRiderSelectorCloseKey(key: string): boolean {
+  return key === "Enter" || key === " " || key === "Escape";
+}
+
+export function closeRiderSelector({
+  setQuery,
+  setShouldFocusSearch,
+  setIsOpen,
+  restoreFocus,
+}: RiderSelectorCloseActions): void {
+  setQuery("");
+  setShouldFocusSearch(false);
+  restoreFocus();
+  setIsOpen(false);
+}
+
 export function RiderSelector({
   riders,
   categoryName,
@@ -33,6 +56,8 @@ export function RiderSelector({
   const [isOpen, setIsOpen] = useState(selectedRiderId === null);
   const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
   const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
+  const riderListInstanceId = useId();
+  const riderListId = `rider-list-${riderListInstanceId.replaceAll(":", "")}`;
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const riderListRef = useRef<HTMLDivElement | null>(null);
   const selectedControlRef = useRef<HTMLButtonElement | null>(null);
@@ -60,6 +85,17 @@ export function RiderSelector({
     onSelect(riderId);
     setQuery("");
     setIsOpen(false);
+  }
+
+  function closeSelector() {
+    closeRiderSelector({
+      setQuery,
+      setShouldFocusSearch,
+      setIsOpen,
+      restoreFocus: () => {
+        if (selectedRider) restoreFocusAfterSelectionRef.current = true;
+      },
+    });
   }
 
   function openSelector() {
@@ -104,7 +140,7 @@ export function RiderSelector({
     previousSelectedRiderIdRef.current = selectedRiderId;
   }, [selectedRiderId]);
 
-  if (!isOpen && selectedRider) {
+  if ((!isOpen || presentation === "mobile-modal") && selectedRider) {
     return (
       <div className="flex items-end gap-2">
         <Button
@@ -125,6 +161,8 @@ export function RiderSelector({
             onClick={openSelector}
             variant="outline"
             aria-label={`注目選手を変更: ${positionLabel(selectedRider)} ${selectedRider.name}`}
+            aria-expanded={presentation === "inline" ? isOpen : isMobileDialogOpen}
+            aria-controls={presentation === "inline" ? riderListId : undefined}
             className={cn(
               "min-h-11 w-full min-w-0 justify-between lg:h-[46px] lg:min-h-[46px]",
             )}
@@ -176,9 +214,42 @@ export function RiderSelector({
   );
 
   return (
-    <Card size="sm">
-      <CardHeader>
+    <Card
+      size="sm"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeSelector();
+        }
+      }}
+    >
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>注目選手を選ぶ</CardTitle>
+        {presentation === "inline" && selectedRider ? (
+          <Button
+            type="button"
+            data-race-rider-close
+            variant="outline"
+            onClick={closeSelector}
+            onKeyDown={(event) => {
+              if (isRiderSelectorCloseKey(event.key)) {
+                event.preventDefault();
+                event.stopPropagation();
+                closeSelector();
+              }
+            }}
+            aria-label={`選択中の選手 ${positionLabel(selectedRider)} ${selectedRider.name}。選手一覧を閉じる`}
+            aria-expanded={isOpen}
+            aria-controls={riderListId}
+            className="min-h-11 w-full min-w-0 justify-between gap-2 px-3 text-left sm:w-auto sm:max-w-full sm:flex-1"
+          >
+            <span className="min-w-0 break-words text-xs font-medium">
+              <span className="text-muted-foreground">現在: </span>
+              {positionLabel(selectedRider)} {selectedRider.name}
+            </span>
+            <span className="shrink-0 text-xs font-bold">閉じる</span>
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
       <Field>
@@ -197,7 +268,11 @@ export function RiderSelector({
           {categoryName}内の選手名が検索対象です。
         </FieldDescription>
       </Field>
-      <div ref={riderListRef} className="flex max-h-64 flex-col overflow-y-auto">
+      <div
+        id={riderListId}
+        ref={riderListRef}
+        className="flex max-h-64 flex-col overflow-y-auto"
+      >
         {filtered.map((rider) => {
           const isSelected = rider.riderId === selectedRiderId;
           return (

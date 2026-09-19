@@ -4,7 +4,11 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ComparisonAdjuster } from "@/components/ComparisonAdjuster";
 import { ComparisonRiderPicker } from "@/components/ComparisonRiderPicker";
-import { RiderSelector } from "@/components/RiderSelector";
+import {
+  closeRiderSelector,
+  isRiderSelectorCloseKey,
+  RiderSelector,
+} from "@/components/RiderSelector";
 import { SummaryCard } from "@/components/SummaryCard";
 import { getRiderSummary } from "@/lib/dataTransform";
 import type { Rider } from "@/lib/types";
@@ -44,6 +48,18 @@ function renderRiderSelector(presentation?: "inline" | "mobile-modal") {
       selectedRiderId: rider.riderId,
       onSelect: () => undefined,
       presentation,
+    }),
+  );
+}
+
+function renderOpenRiderSelector() {
+  return renderToStaticMarkup(
+    createElement(RiderSelector, {
+      riders: [rider],
+      categoryName: "Test Category",
+      selectedRiderId: null,
+      onSelect: () => undefined,
+      presentation: "inline",
     }),
   );
 }
@@ -89,6 +105,57 @@ test("rider selector arrows retain 44px controls in both presentations", () => {
   assert.doesNotMatch(inlineHtml, /sm:size-8/);
   assert.doesNotMatch(inlineHtml, /sm:min-h-8/);
   assert.match(inlineHtml, /注目選手/);
+});
+
+test("rider selector links the desktop trigger and list with expanded state", () => {
+  const closedHtml = renderRiderSelector("inline");
+  const openHtml = renderOpenRiderSelector();
+
+  assert.match(closedHtml, /data-race-rider-trigger[^>]*aria-expanded="false"/);
+  assert.match(closedHtml, /aria-controls="rider-list-[^"]+"/);
+  assert.match(openHtml, /id="rider-list-[^"]+"/);
+  assert.doesNotMatch(closedHtml, /data-race-rider-close/);
+});
+
+test("mobile rider selector keeps dialog presentation without desktop close controls", () => {
+  const mobileHtml = renderRiderSelector("mobile-modal");
+
+  assert.doesNotMatch(mobileHtml, /data-race-rider-close/);
+  assert.doesNotMatch(mobileHtml, /aria-controls="rider-list-/);
+});
+
+test("rider selector close interactions reset search and restore focus for pointer and keyboard paths", () => {
+  const closeReasons = ["pointer", "Enter", " ", "Escape"] as const;
+
+  for (const reason of closeReasons) {
+    if (reason !== "pointer") {
+      assert.equal(isRiderSelectorCloseKey(reason), true);
+    }
+
+    let query = "selected rider";
+    let shouldFocusSearch = true;
+    let isOpen = true;
+    let focusRestored = false;
+    closeRiderSelector({
+      setQuery: (value) => {
+        query = value;
+      },
+      setShouldFocusSearch: (value) => {
+        shouldFocusSearch = value;
+      },
+      setIsOpen: (value) => {
+        isOpen = value;
+      },
+      restoreFocus: () => {
+        focusRestored = true;
+      },
+    });
+
+    assert.equal(query, "");
+    assert.equal(shouldFocusSearch, false);
+    assert.equal(isOpen, false);
+    assert.equal(focusRestored, true);
+  }
 });
 
 test("desktop and mobile rider selectors expose the annotated official rank label", () => {

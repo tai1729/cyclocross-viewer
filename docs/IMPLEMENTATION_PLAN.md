@@ -1554,3 +1554,53 @@ lap times, whitespace is excluded from sentinel matching, the
 clock-like/accepted-rider/zero-usable-lap case fails strict validation,
 generated artifacts are proven to start from restored origin output, and no
 unreviewed output has been published.
+
+## UX3-7R3-FOLLOWUP — Desktop rider close affordance and active chart tab visibility
+
+This bounded follow-up is authorized by the matching design and audit
+sections dated 2026-09-18. It is limited to two existing presentation
+boundaries and must not be combined with UX3-8 or any new data/routing work.
+
+### Task graph
+
+1. **UX3-7R3-F-A — Desktop rider close affordance — READY**
+   - Objective: add an explicit upper close toggle to the open Desktop inline
+     `RiderSelector` list.
+   - Scope: `components/RiderSelector.tsx` and its focused behavior test only.
+   - Acceptance: the selected rider name and close affordance are visible in a
+     44px-class control; pointer, Enter, Space, and Escape close the list;
+     search resets; focus returns to the compact trigger; existing
+     `aria-expanded`/`aria-controls`, selection, URL/history, and mobile modal
+     behavior remain unchanged.
+   - Do not change: data contracts, URL helpers, comparison state, mobile
+     layout, shared disclosure, or chart internals.
+
+2. **UX3-7R3-F-B — Active chart tab visibility — READY**
+   - Objective: make the selected metric visually unambiguous and announce it
+     at the point of use.
+   - Scope: `components/ChartTabs.tsx`, existing tab-focused test coverage, and
+     only the bounded design/report/audit records for this follow-up.
+   - Acceptance: the active trigger has filled treatment, bold text, and a
+     2–3px underline, while the chart context visibly reads `表示中: 指標名`;
+     all four tab keys, URL/history state, accessible tab semantics, chart
+     data, lap state, mobile tab-strip behavior, and shared `ui/tabs` behavior
+     remain unchanged.
+   - Do not change: metric formulas, reading-guide semantics, route/query
+     contracts, mobile design, or production dependencies.
+
+3. **UX3-7R3-F-V — Focused integration and required validation — BLOCKED until
+   F-A and F-B**
+   - Verify the Desktop pointer/keyboard close flow, focus return, search reset,
+     active-tab markup/styles, and the responsive no-overflow boundary. Record
+     any evidence in the existing follow-up report/evidence location without
+     modifying historical UX3-7R3 evidence.
+   - Run `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`,
+     `git diff --check`, and the existing 1440x900, 1280x720, 390x844, and
+     320px-class browser smoke checks.
+
+### File boundary
+
+The implementation may touch only the two named components, focused tests,
+and the bounded follow-up report/evidence plus the three standard docs. Do not
+edit collector files, route/data transforms, package/config files, shared
+mobile/disclosure components, or prior history documents for this follow-up.

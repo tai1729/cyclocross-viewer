@@ -1533,3 +1533,43 @@ resolutions are authoritative for this review:
    post-release continuation and is never claimed complete.
 
 STATUS: CLEAR
+
+## UX3-7R3 bounded follow-up audit — Desktop rider close affordance and active chart tab visibility (2026-09-18)
+
+The follow-up is implementation-authorized as two presentation-only fixes
+requested for the current Desktop analysis surface. It does not alter the
+existing UX3-7R3 data contract, URL/state contract, mobile presentation, or
+shared disclosure/tab semantics.
+
+### Resolved audit points
+
+1. **Desktop rider close path:** the open inline `RiderSelector` list must have
+   one obvious upper close toggle that includes the current rider name and a
+   visible close affordance. Its target is at least 44px, and pointer, Enter,
+   Space, and Escape all close the list. Closure clears only transient search
+   text, preserves the current selected rider and URL/history, retains the
+   existing `aria-expanded`/`aria-controls` relationship, and returns focus to
+   the stable compact rider trigger. The mobile rider modal is out of scope.
+2. **Active tab visibility:** `ChartTabs` keeps the existing controlled tab
+   value and accessible tab semantics. The active trigger additionally uses a
+   filled treatment, bold text, and a 2–3px underline; the visible context
+   string is exactly the existing metric label prefixed as `表示中: 指標名`.
+   This is supplemental visual/text feedback, not a metric, chart, or URL
+   meaning change. Color is not the sole active-state signal.
+3. **Responsive boundary:** Desktop is the existing `min-width: 1024px`
+   presentation boundary. Mobile modal/disclosure behavior, internal tab-strip
+   handling, focus rules, and no-page-overflow requirements remain as before.
+4. **Verification boundary:** focused component tests and rendered keyboard/
+   style checks are required before the standard test, typecheck, lint, build,
+   diff, and viewport smoke gates. No new dependency, route/query key,
+   upstream field, or historical-doc rewrite is needed.
+
+### Traceability and status
+
+The approved implementation units are F-A (Desktop rider close control), F-B
+(active chart tab emphasis), and F-V (integration/verification), matching the
+bounded plan. Unresolved specification questions: none. Implementation may
+start within the named file boundary; final acceptance remains blocked until
+the focused checks and the required repository/browser gates pass.
+
+STATUS: CLEAR — IMPLEMENTATION AUTHORIZED

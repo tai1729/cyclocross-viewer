@@ -143,7 +143,7 @@ export function ChartTabs({
               data-chart-metric
               className="min-w-0 break-words text-xs text-muted-foreground"
             >
-              表示: <span className="font-medium text-foreground">{readingGuide.label}</span>
+              表示中: <span className="font-medium text-foreground">{readingGuide.label}</span>
             </p>
           </div>
           <TabsList
@@ -156,7 +156,7 @@ export function ChartTabs({
                 key={tab.key}
                 value={tab.key}
                 aria-label={tab.label}
-                className="min-h-11 min-w-0 px-1 text-muted-foreground data-active:font-bold data-active:text-foreground lg:min-h-8 lg:px-1.5"
+                className="min-h-11 min-w-0 px-1 text-muted-foreground data-active:!bg-accent data-active:!font-bold data-active:!text-accent-foreground data-active:after:!h-[3px] lg:min-h-8 lg:px-1.5"
               >
                 <span aria-hidden="true" className="lg:hidden">
                   {tab.mobileLabel}

@@ -98,7 +98,7 @@ test("presents chart context and keeps plot, key, and detail adjacent", () => {
 
   assert.match(html, /data-chart-stage="true"/);
   assert.match(html, /data-chart-comparison[^>]*>[^<]*Primary Rider vs Challenger/);
-  assert.match(html, /data-chart-metric[^>]*>表示: <span[^>]*>タイム差/);
+  assert.match(html, /data-chart-metric[^>]*>表示中: <span[^>]*>タイム差/);
 
   const plotIndex = html.indexOf("data-chart-plot");
   const keyIndex = html.indexOf("data-chart-series-key");
@@ -121,6 +121,31 @@ test("keeps the chart key and interaction context safe to wrap on narrow widths"
   assert.match(html, /data-chart-series-role="fixed"[^>]*class="[^"]*max-w-full/);
   assert.match(html, /data-chart-interaction-hint[^>]*class="[^"]*break-words/);
   assert.equal((html.match(/data-chart-series-key/g) ?? []).length, 1);
+});
+
+test("keeps exactly one active chart tab and exposes its visual emphasis state", () => {
+  for (const [activeTab, activeLabel] of [
+    ["rank", "順位"],
+    ["gap", "タイム差"],
+  ] as const) {
+    const html = renderChartTabs(
+      [rider("primary", "Primary Rider", 1)],
+      activeTab,
+    );
+    const triggers = html.match(
+      /<button[^>]*data-slot="tabs-trigger"[^>]*>[\s\S]*?<\/button>/g,
+    ) ?? [];
+    const activeTriggers = triggers.filter((trigger) => trigger.includes('data-active=""'));
+
+    assert.equal(triggers.length, 4);
+    assert.equal(activeTriggers.length, 1);
+    assert.match(activeTriggers[0], /aria-selected="true"/);
+    assert.match(
+      activeTriggers[0],
+      /data-active:!bg-accent.*data-active:!font-bold.*data-active:!text-accent-foreground.*data-active:after:!h-\[3px\]/,
+    );
+    assert.match(html, new RegExp(`data-chart-metric[^>]*>表示中: <span[^>]*>${activeLabel}`));
+  }
 });
 
 test("exposes distinct fixed and context markers and dash patterns in the shared key", () => {

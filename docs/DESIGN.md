@@ -2581,3 +2581,57 @@ display, URL restoration, no post-final-lap inference, and same-lap-only gaps.
 The implementation is complete only after the required viewer and collector
 checks, independent reviewer `PASS`, normal commits/pushes (no force), final
 Production deployment, and Production smoke are all recorded.
+
+## UX3-7R3 bounded follow-up — Desktop rider close affordance and active chart tab visibility (2026-09-18)
+
+### Goal and approval boundary
+
+This is a small presentation/accessibility follow-up to the active analysis
+workspace. It is approved for implementation only in the two bounded areas
+below: the Desktop inline `RiderSelector` open state and the active metric tab
+in `ChartTabs`. It does not reopen the completed data, routing, disclosure,
+mobile, or chart-semantics decisions recorded above.
+
+### Desktop rider selector
+
+At the existing Desktop breakpoint (`min-width: 1024px`), the open inline
+rider list must expose an explicit close control at its upper edge. The
+control shows the current selected rider name together with a visible close
+affordance, is at least 44px high, and closes the list on pointer activation
+and on Enter or Space. Escape also closes the open list. Closing clears the
+transient search query, keeps the existing `aria-expanded`/`aria-controls`
+contract, and returns focus to the compact selected-rider trigger. Selecting a
+rider keeps the existing URL/history, selection, ordering, and focus behavior.
+The control must remain usable with long names and must not create page-level
+horizontal overflow. The Mobile rider modal and its bottom-sheet/keyboard
+behavior are unchanged; this follow-up does not add a second mobile control or
+change mobile disclosure/state design.
+
+### Active chart tab
+
+The active `ChartTabs` trigger must be unmistakable without relying on color
+alone. In addition to its existing accessible selected-tab semantics, the
+active tab uses a filled treatment, bold label, and a visible 2–3px underline
+that remains legible against the tab strip. The chart context explicitly says
+`表示中: 指標名` using the active metric's existing label. Inactive tabs keep
+their current labels and keyboard operation. The four existing metric keys,
+URL/history `tab` state, active chart data, reading-guide text, mobile tab-strip
+behavior, and shared `ui/tabs` semantics remain unchanged.
+
+### Acceptance and verification
+
+- Desktop open rider selection shows the upper close control with the current
+  rider name, a 44px-class target, visible focus, pointer/Enter/Space/Escape
+  closure, cleared search text, focus return, and preserved aria state.
+- Desktop closed selection and all mobile selection/modal paths retain their
+  current labels, URL/history behavior, comparison state, and responsive
+  layout; no page-level horizontal overflow is introduced at 1440px, 1280px,
+  390px, or 320px-class widths.
+- Each chart tab exposes one active trigger with filled background, bold text,
+  a 2–3px underline, and the visible `表示中: 指標名` context; switching tabs
+  still preserves the existing metric state and active/pinned lap behavior.
+- Verification must cover focused keyboard interaction and rendered markup/
+  styles for both components, followed by `npm test`, `npx tsc --noEmit`,
+  `npm run lint`, `npm run build`, `git diff --check`, and the existing browser
+  viewport smoke. No production dependency, upstream field, route/query key,
+  or mobile design change is authorized by this follow-up.
