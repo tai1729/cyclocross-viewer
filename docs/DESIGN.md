@@ -306,6 +306,8 @@ a missing or invalid checkpoint.
 
 ### RACE-STORY-1C correction — non-causal wording
 
+Status: COMPLETE — independent review and production smoke verification passed
+
 Relative pace and net rank change are separate observations. When their
 directions align, the card may express them together. When they do not align,
 including a rank movement with maintained pace, the card must list the rank

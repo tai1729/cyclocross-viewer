@@ -40,10 +40,14 @@ Status: COMPLETE — independent review passed; production smoke verified
 
 ## RACE-STORY-1C wording correction tasks
 
-1. Replace latter-half wording with neutral comparison-interval wording.
-2. Separate conflicting pace and rank facts, with an explicit no-cause
-   statement; protect this behavior with regression tests.
-3. Run validation, independent review, deployment, and production smoke.
+Status: COMPLETE — independent review and production smoke verified
+
+1. DONE — Replace latter-half wording with neutral comparison-interval
+   wording.
+2. DONE — Separate conflicting pace and rank facts, with an explicit
+   no-cause statement; protect this behavior with regression tests.
+3. DONE — Run validation, independent review, deployment, and production
+   smoke.
 
 ---
 
