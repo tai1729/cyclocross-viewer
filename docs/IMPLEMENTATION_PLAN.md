@@ -28,12 +28,15 @@ Status: COMPLETE — all required verification and independent review passed
 
 ## RACE-STORY-1B correction tasks
 
-1. Update the pure story transform to bound pace comparisons to the last rank
-   movement and require same-lap cumulative-gap relevance.
-2. Add focused cases for a settled leader and distant late sprint, then update
-   the product behavior record.
-3. Run full validation, independent review, production deployment, and
-   production smoke verification.
+Status: COMPLETE — independent review passed; production smoke verified
+
+1. DONE — Bound the pure story transform to the last rank movement and require
+   same-lap cumulative-gap relevance.
+2. DONE — Add focused cases for a settled leader, a non-leader's distant late
+   sprint, and distant cumulative-gap peers; update the product behavior
+   record.
+3. DONE — Typecheck, lint, build, diff check, independent review, production
+   deployment, and production smoke verification.
 
 ---
 

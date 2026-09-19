@@ -281,6 +281,8 @@ cause such as a crash, mechanical problem, or illness.
 
 ### RACE-STORY-1B correction — competitive time-gap relevance
 
+Status: COMPLETE — independent review and production smoke verification passed
+
 The original whole-race first/last-lap comparison can misattribute a late
 sprint by riders who no longer affect the selected rider's position. The
 story must instead use a competitive interval ending at the selected rider's
