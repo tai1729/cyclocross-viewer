@@ -209,7 +209,7 @@ cause such as a crash, mechanical problem, or illness.
 - It has three compact items: `最高順位`, `最大の順位変化`, and `レース展開`.
   The first two expose lap number and rank-change count; the third is one
   sentence that includes the net rank change when one is measurable.
-- Example: `後半も相対的にペースを維持し、周囲のペース低下もあって順位を4つ上げました。`
+- Example: `順位を4つ上げました。周囲との相対ペースはおおむね維持でした。順位変化の理由は記録だけでは特定できません。`
 - A short card-level note identifies the evidence as valid recorded laps and
   nearby competitors. It must not expose a raw per-lap event feed or create
   a new URL, history, or comparison-control state.
@@ -244,9 +244,13 @@ cause such as a crash, mechanical problem, or illness.
    a positive value favors the selected rider late, a negative value favors
    the peer late. Its neutral tolerance is the larger of three seconds and
    two percent of the selected rider's mean valid lap time. Values outside
-   that tolerance use `相対的にペースを上げ` / `周囲に対するペースが落ち`; values
-   within it use `相対的にペースを維持`. It never claims a cause or
-   generalizes from a missing measurement.
+   that tolerance use `周囲との相対ペースを上げ` / `周囲との相対ペースを下げ`;
+   values within it use `周囲との相対ペースはおおむね維持`. These phrases
+   describe the full measured comparison interval, not necessarily the latter
+   half of the race. When the pace direction and net-rank direction do not
+   align, the narrative separates the facts and states that the reason for the
+   rank change cannot be identified from the records alone. It never claims a
+   cause or generalizes from a missing measurement.
 6. A rider with no rank interval, no valid timed comparison, or fewer than
    two cohort riders with two shared valid timed laps receives the neutral unavailable message `記録が限られるため、レース展開は評価できません。` instead of a fabricated
    conclusion. Short races are eligible whenever their actual records meet
@@ -299,6 +303,15 @@ If rank 1 is held continuously from the first valid checkpoint through the
 last, it reads `首位を守り切りました。`. These statements do not infer a
 physical solo gap; they report only recorded rank continuity and do not bridge
 a missing or invalid checkpoint.
+
+### RACE-STORY-1C correction — non-causal wording
+
+Relative pace and net rank change are separate observations. When their
+directions align, the card may express them together. When they do not align,
+including a rank movement with maintained pace, the card must list the rank
+and pace facts separately and state that the records cannot determine the
+reason for the rank change. Pace wording refers to the measured comparison
+interval and must not presume that it is the latter half of the race.
 
 ## Current design - UX3-5 Limited Scope Implementation
 

@@ -409,11 +409,27 @@ function getRaceStoryNarrative(
         : "順位を維持しました。";
   const pacePhrase =
     paceTrend === "improved"
-      ? "後半に相対的なペースを上げ、"
+      ? "周囲との相対ペースを上げました。"
       : paceTrend === "declined"
-        ? "後半は周囲に対するペースが落ち、"
-        : "後半も相対的にペースを維持し、";
-  return `${pacePhrase}${rankPhrase}`;
+        ? "周囲との相対ペースを下げました。"
+        : "周囲との相対ペースはおおむね維持でした。";
+  const aligned =
+    (paceTrend === "improved" && netRankChange > 0) ||
+    (paceTrend === "declined" && netRankChange < 0) ||
+    (paceTrend === "maintained" && netRankChange === 0);
+
+  if (!aligned) {
+    if (netRankChange === 0) return `${rankPhrase}${pacePhrase}`;
+    return `${rankPhrase}${pacePhrase}順位変化の理由は記録だけでは特定できません。`;
+  }
+
+  const joinedPacePhrase =
+    paceTrend === "improved"
+      ? "周囲との相対ペースを上げ、"
+      : paceTrend === "declined"
+        ? "周囲との相対ペースを下げ、"
+        : "周囲との相対ペースをおおむね維持し、";
+  return `${joinedPacePhrase}${rankPhrase}`;
 }
 
 export interface LapDeltaRow {

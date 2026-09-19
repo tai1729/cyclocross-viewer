@@ -38,6 +38,13 @@ Status: COMPLETE — independent review passed; production smoke verified
 3. DONE — Typecheck, lint, build, diff check, independent review, production
    deployment, and production smoke verification.
 
+## RACE-STORY-1C wording correction tasks
+
+1. Replace latter-half wording with neutral comparison-interval wording.
+2. Separate conflicting pace and rank facts, with an explicit no-cause
+   statement; protect this behavior with regression tests.
+3. Run validation, independent review, deployment, and production smoke.
+
 ---
 
 # Historical implementation plan — UX3-5

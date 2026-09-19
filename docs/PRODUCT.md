@@ -32,8 +32,15 @@
 The selected rider's result summary includes a `レース展開` section below the
 existing rank, leader-gap, and promotion fields. It exposes highest observed
 rank, the largest rank movement across consecutive recorded checkpoints, and
-one short narrative that combines net rank movement with the rider's
-late-versus-early relative lap pace against nearby competitors.
+one short narrative that reports net rank movement alongside the rider's
+relative lap pace against nearby competitors.
+
+When the measured relative-pace direction and the overall rank movement point
+in different directions, the narrative does not present either as the cause
+of the other. It states the rank result and pace result separately, then notes
+that recorded laps alone cannot identify the reason for the rank change. Pace
+wording describes the measured comparison interval rather than presuming it is
+the latter half of the race.
 
 The comparison cohort prioritizes riders whose recorded ahead/behind relation
 with the selected rider reverses. If fewer than two such riders exist, it adds

@@ -59,6 +59,23 @@ Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
 
 Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
 
+## RACE-STORY-1C wording correction audit — resolved
+
+1. Relative pace and net rank movement are independently observed facts. A
+   joined sentence may imply a causal relation only when both directions align:
+   pace improves with rank gain, pace declines with rank loss, or both remain
+   stable.
+2. Every other combination with a rank movement, including maintained pace
+   with a rank movement, must state rank and pace as separate facts and append
+   `順位変化の理由は記録だけでは特定できません。`. When rank is stable and
+   pace changes, it states only those two facts. The viewer must not invent an
+   explanation from the observed laps.
+3. Pace wording describes the valid competitive comparison interval. It must
+   not call that interval `後半`, because the interval can begin or end at any
+   recorded lap.
+
+Audit status: RESOLVED — IMPLEMENTATION AUTHORIZED
+
 ## UX3-5 specification audit — in progress
 
 Current Change: UX3-5 Limited Scope Implementation

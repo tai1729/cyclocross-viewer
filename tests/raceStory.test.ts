@@ -50,7 +50,7 @@ test("race story reports a rank gain with relative pace improvement from reversa
   assert.deepEqual(result, {
     highestRank: { lapNumber: 3, rank: 3 },
     maximumRankChange: { lapNumber: 2, positions: 1, direction: "gained" },
-    narrative: "後半に相対的なペースを上げ、順位を2つ上げました。",
+    narrative: "周囲との相対ペースを上げ、順位を2つ上げました。",
     available: true,
     paceTrend: "improved",
     netRankChange: 2,
@@ -69,7 +69,7 @@ test("race story reports a rank loss with relative pace decline", () => {
 
   assert.equal(result?.paceTrend, "declined");
   assert.equal(result?.netRankChange, -2);
-  assert.equal(result?.narrative, "後半は周囲に対するペースが落ち、順位を2つ下げました。");
+  assert.equal(result?.narrative, "周囲との相対ペースを下げ、順位を2つ下げました。");
 });
 
 test("a short DNF interval is evaluated through its final valid checkpoint", () => {
@@ -84,7 +84,7 @@ test("a short DNF interval is evaluated through its final valid checkpoint", () 
 
   assert.equal(result?.available, true);
   assert.equal(result?.paceTrend, "maintained");
-  assert.equal(result?.narrative, "後半も相対的にペースを維持し、順位を維持しました。");
+  assert.equal(result?.narrative, "周囲との相対ペースをおおむね維持し、順位を維持しました。");
 });
 
 test("annotated ranks remain opaque while their recorded interval is evaluated", () => {
@@ -242,7 +242,40 @@ test("a distant late sprint cannot change a non-leader's settled rank-interval p
 
   assert.equal(result?.available, true);
   assert.equal(result?.paceTrend, "improved");
-  assert.equal(result?.narrative, "後半に相対的なペースを上げ、順位を2つ上げました。");
+  assert.equal(result?.narrative, "周囲との相対ペースを上げ、順位を2つ上げました。");
+});
+
+test("a contradictory pace and rank direction separates facts without claiming a cause", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [lap(1, 100, 2), lap(2, 100, 3), lap(3, 100, 3)]),
+      rider("peer-a", [lap(1, 99, 3), lap(2, 104, 2), lap(3, 105, 2)]),
+      rider("peer-b", [lap(1, 98, 4), lap(2, 103, 2), lap(3, 104, 2)]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.paceTrend, "improved");
+  assert.equal(result?.netRankChange, -1);
+  assert.equal(
+    result?.narrative,
+    "順位を1つ下げました。周囲との相対ペースを上げました。順位変化の理由は記録だけでは特定できません。",
+  );
+});
+
+test("a changed relative pace with stable rank does not invent a rank-change reason", () => {
+  const result = getRaceStory(
+    race([
+      rider("selected", [lap(1, 100, 3), lap(2, 100, 3), lap(3, 100, 3)]),
+      rider("peer-a", [lap(1, 99, 4), lap(2, 104, 4), lap(3, 105, 4)]),
+      rider("peer-b", [lap(1, 98, 5), lap(2, 103, 4), lap(3, 104, 4)]),
+    ]),
+    "selected",
+  );
+
+  assert.equal(result?.paceTrend, "improved");
+  assert.equal(result?.netRankChange, 0);
+  assert.equal(result?.narrative, "順位を維持しました。周囲との相対ペースを上げました。");
 });
 
 test("rank-near peers with a large cumulative gap cannot supply a pace verdict", () => {
