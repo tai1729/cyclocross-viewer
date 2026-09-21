@@ -7,6 +7,50 @@ The project is publicly available in Production at
 the completed DATA-1 and earlier UX implementation decisions; they are
 historical records, not an indication that the public release is pending.
 
+## Current design — Data freshness and resilient collection schedule (2026-09-21)
+
+### Goal
+
+Move the generated race-day collection trigger away from GitHub Actions' busy
+start-of-hour boundary and expose the last collector data publication time on
+the home page.
+
+### Approved architecture and data flow
+
+The collector keeps `race_days.json` as the date source and generates
+`.github/workflows/collect.yml` entries at minute `7` for the existing
+09:00–23:00 JST window. Successful discovery of a new meet or successful race
+collection writes the small `site-metadata.json` artifact with one UTC ISO 8601
+`updatedAt` value. A no-op check does not change that file.
+
+The viewer fetches `site-metadata.json` independently of `meets.json`. The
+metadata request is optional: a failure produces `更新日時不明` while the
+existing meet list remains available. The home page formats the value with the
+existing Asia/Tokyo helper. Race pages continue to show each selected race's
+existing `RaceResult.updatedAt`.
+
+```text
+calendar -> updateSchedule.ts -> collect.yml minute-7 schedules
+discover/collect successful change -> site-metadata.json
+site-metadata.json + meets.json -> viewer useMeetData -> home freshness label
+```
+
+### Compatibility boundary
+
+This is an additive cross-repository artifact. `MeetEntry`, `RaceResult`, rider
+and lap contracts, routes, URL state, race freshness display, and error
+semantics remain unchanged. No new dependency or viewer-side scraping path is
+introduced. The detailed design is recorded in
+`docs/superpowers/specs/2026-09-21-data-freshness-and-resilient-schedule-design.md`.
+
+### Acceptance and verification
+
+- Every generated race-day schedule uses minute `7`.
+- Only successful discovery or collection changes advance `site-metadata.json`.
+- Home freshness is visible in JST and is non-blocking when metadata is absent
+  or invalid.
+- Collector and viewer tests, type checks, lint, build, and diff checks pass.
+
 ## Historical design record — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
 
 ### Goal

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { sortSeriesOptions } from "@/lib/seriesOrder";
-import type { MeetEntry } from "@/lib/types";
+import type { MeetEntry, SiteMetadata } from "@/lib/types";
+import { formatRaceUpdatedAt } from "@/lib/raceMetadata";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,9 +18,10 @@ import {
 
 interface MeetSelectorProps {
   meets: MeetEntry[];
+  siteMetadata: SiteMetadata | null;
 }
 
-export function MeetSelector({ meets }: MeetSelectorProps) {
+export function MeetSelector({ meets, siteMetadata }: MeetSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const seasons = useMemo(() => [...new Set(meets.map((meet) => meet.season))].sort().reverse(), [meets]);
@@ -77,6 +79,7 @@ export function MeetSelector({ meets }: MeetSelectorProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-flag">AJOCC results</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">大会を選ぶ</h1>
         <p className="mt-1 text-sm text-muted-foreground">シーズンとシリーズから大会を絞り込み、大会を選ぶと分析を始められます。</p>
+        <p className="mt-2 text-xs text-muted-foreground">データ更新: {formatRaceUpdatedAt(siteMetadata?.updatedAt)}</p>
       </div>
 
       <Card size="sm">

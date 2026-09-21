@@ -27,3 +27,8 @@ test("rider discovery controls share a responsive aligned row", () => {
   assert.match(formSource, /<Button type="submit"[\s\S]*className="min-h-11[^\"]*"/);
   assert.doesNotMatch(formSource, /sm:items-end/);
 });
+
+test("home list exposes collector freshness without changing its meet-list flow", () => {
+  assert.match(meetSelectorSource, /formatRaceUpdatedAt\(siteMetadata\?\.updatedAt\)/);
+  assert.match(meetSelectorSource, /データ更新:/);
+});

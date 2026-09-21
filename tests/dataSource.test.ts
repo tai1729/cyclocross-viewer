@@ -4,6 +4,7 @@ import {
   DataLoadError,
   describeDataLoadError,
   fetchRaceResult,
+  fetchSiteMetadata,
 } from "../lib/dataSource";
 
 async function withFetch(
@@ -43,6 +44,29 @@ test("HTTP 500をhttp errorとして区別する", async () => {
   await assertErrorKind(
     async () => new Response(null, { status: 500 }),
     "http",
+  );
+});
+
+test("サイト更新情報の正常なpayloadを受理する", async () => {
+  await withFetch(
+    async () => Response.json({ updatedAt: "2026-09-21T07:19:14.000Z" }),
+    async () => {
+      const result = await fetchSiteMetadata();
+      assert.equal(result.updatedAt, "2026-09-21T07:19:14.000Z");
+    },
+  );
+});
+
+test("サイト更新情報のshape不正をinvalid-dataとして扱う", async () => {
+  await withFetch(
+    async () => Response.json({ generatedAt: "2026-09-21T07:19:14.000Z" }),
+    async () => {
+      await assert.rejects(
+        () => fetchSiteMetadata(),
+        (error: unknown) =>
+          error instanceof DataLoadError && error.kind === "invalid-data",
+      );
+    },
   );
 });
 

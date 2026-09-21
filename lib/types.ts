@@ -73,3 +73,7 @@ export interface MeetEntry {
   meetName: string;
   categories: MeetCategory[];
 }
+
+export interface SiteMetadata {
+  updatedAt: string;
+}

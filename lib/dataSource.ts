@@ -2,12 +2,14 @@ import {
   isValidRaceLapNumbers,
   type MeetEntry,
   type RaceResult,
+  type SiteMetadata,
 } from "@/lib/types";
 
 export const DATA_BASE_URL =
   "https://raw.githubusercontent.com/tai1729/cyclocross-data-collector/main";
 
 export const RIDER_INDEX_URL = `${DATA_BASE_URL}/rider-index.json`;
+export const SITE_METADATA_URL = `${DATA_BASE_URL}/site-metadata.json`;
 
 export type DataLoadErrorKind =
   | "not-found"
@@ -82,6 +84,10 @@ function isMeetEntry(value: unknown): value is MeetEntry {
   );
 }
 
+function isSiteMetadata(value: unknown): value is SiteMetadata {
+  return isRecord(value) && typeof value.updatedAt === "string";
+}
+
 function isRaceResult(value: unknown): value is RaceResult {
   return (
     isRecord(value) &&
@@ -153,6 +159,19 @@ export async function fetchMeets(signal?: AbortSignal): Promise<MeetEntry[]> {
     throw new DataLoadError(
       "invalid-data",
       "大会一覧データの形式が正しくありません。",
+    );
+  }
+  return data;
+}
+
+export async function fetchSiteMetadata(
+  signal?: AbortSignal,
+): Promise<SiteMetadata> {
+  const data = await fetchJson(SITE_METADATA_URL, signal);
+  if (!isSiteMetadata(data)) {
+    throw new DataLoadError(
+      "invalid-data",
+      "サイト更新情報の形式が正しくありません。",
     );
   }
   return data;

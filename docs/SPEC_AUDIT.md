@@ -1,5 +1,27 @@
 # Specification Audit
 
+## Data freshness and resilient collection schedule — resolved
+
+Current Change: move generated collection schedules to minute `7` and expose
+an optional site-level collector freshness artifact.
+
+1. `site-metadata.json` is additive and contains only `updatedAt` as a UTC ISO
+   8601 string; existing `MeetEntry` and `RaceResult` contracts do not change.
+2. The collector advances the timestamp only after discovery adds a meet or at
+   least one race collection succeeds. A no-op run and a wholly failed run do
+   not advance it.
+3. The viewer fetches metadata separately from `meets.json`. Missing, invalid,
+   or failed metadata is non-blocking and renders `更新日時不明`; meet-list
+   failures retain their existing error path.
+4. The home label means collector data update time, not official organizer
+   result publication time. It is displayed as zero-padded
+   `YYYY/MM/DD HH:mm JST` with `Asia/Tokyo` conversion.
+5. The generated schedule remains 09:00–23:00 JST on race days, but uses
+   minute `7` to reduce start-of-hour scheduling pressure. The generator and
+   committed generated workflow must agree.
+
+Audit status: RESOLVED — implementation and required verification complete
+
 ## RACE-STORY-1 specification audit — resolved
 
 Current Change: measured selected-rider race narrative.

@@ -1,3 +1,43 @@
+# Data freshness and resilient collection schedule implementation plan
+
+Status: COMPLETE — implementation and required verification passed
+
+## Task graph
+
+1. **FRESHNESS-SPEC** — DONE. Record the cross-repository data flow and
+   compatibility boundary in the current design and dated specification.
+2. **FRESHNESS-COLLECTOR** — DONE. Change generated schedule minute,
+   add `site-metadata.json`, publish it only after successful discovery or
+   collection changes, and cover the behavior with collector tests.
+3. **FRESHNESS-VIEWER** — DONE. Optionally fetch and validate the metadata,
+   preserve meet-list errors and loading behavior, and display the JST value on
+   the home page.
+4. **FRESHNESS-DOCS** — DONE. Record final behavior and verification without
+   rewriting historical design or review documents.
+5. **FRESHNESS-VERIFY** — DONE. Collector/viewer tests, type checks, lint,
+   build, diff check, and a focused browser smoke passed.
+
+## Boundaries
+
+- Collector: `lib/raceConfig.ts`, `scripts/updateSchedule.ts`,
+  `scripts/discover.ts`, `scripts/collect.ts`, `.github/workflows/collect.yml`,
+  `site-metadata.json`, and focused tests.
+- Viewer: `lib/types.ts`, `lib/dataSource.ts`, `hooks/useMeetData.ts`,
+  `app/page.tsx`, `components/MeetSelector.tsx`, and focused tests.
+- Do not change routes, URL state, `MeetEntry`/`RaceResult` contracts, race
+  analysis, existing race-header freshness, dependencies, or unrelated dirty
+  files.
+
+## Required verification
+
+- Collector: `npm test`, `npx tsc --noEmit`, and `git diff --check`.
+- Viewer: `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
+  `git diff --check`.
+- Browser: home page shows the metadata label, and a metadata fetch failure
+  leaves the meet list usable.
+
+---
+
 # RACE-STORY-1 bounded implementation plan
 
 Status: COMPLETE — all required verification and independent review passed

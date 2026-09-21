@@ -10,10 +10,10 @@ import { describeDataLoadError } from "@/lib/dataSource";
 import { RiderDiscovery } from "@/components/RiderDiscovery";
 
 export default function Home() {
-  const { meets, isLoading, error, retry } = useMeetData();
+  const { meets, isLoading, error, siteMetadata, retry } = useMeetData();
 
   if (isLoading && !error) return <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4 xl:px-8"><Skeleton className="h-8 w-48" /><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></main>;
   if (error) return <main className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 sm:py-4 xl:px-8"><Alert variant="destructive"><AlertTitle>大会一覧を取得できませんでした</AlertTitle><AlertDescription className="flex flex-col items-start gap-3"><span>{describeDataLoadError(error, "大会一覧")}</span><Button type="button" onClick={retry} disabled={isLoading} className="min-h-11">{isLoading ? "再試行中…" : "再試行"}</Button><span className="sr-only" aria-live="polite">{isLoading ? "大会一覧を再取得しています" : ""}</span></AlertDescription></Alert></main>;
 
-  return <main className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 sm:py-4 xl:px-8"><Suspense fallback={<div className="flex flex-col gap-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></div>}><div className="flex flex-col gap-4"><RiderDiscovery /><MeetSelector meets={meets} /></div></Suspense></main>;
+  return <main className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 sm:py-4 xl:px-8"><Suspense fallback={<div className="flex flex-col gap-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-28 w-full" /><Skeleton className="h-80 w-full" /></div>}><div className="flex flex-col gap-4"><RiderDiscovery /><MeetSelector meets={meets} siteMetadata={siteMetadata} /></div></Suspense></main>;
 }
