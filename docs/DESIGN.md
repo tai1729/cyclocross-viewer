@@ -19,8 +19,9 @@ home page.
 
 The collector keeps `race_days.json` as the date source and generates
 `.github/workflows/collect.yml` entries at minute `7` for the existing
-09:00–23:00 JST window. Each successful discovery and collection command writes
-the small `site-metadata.json` artifact with one UTC ISO 8601 `updatedAt` value,
+09:00–23:00 JST window on each official race day and the following calendar day.
+Consecutive dates are deduplicated. Each successful discovery and collection
+command writes the small `site-metadata.json` artifact with one UTC ISO 8601 `updatedAt` value,
 including when no new race data is available. A failed workflow does not publish
 the staged metadata.
 
@@ -46,7 +47,9 @@ introduced. The detailed design is recorded in
 
 ### Acceptance and verification
 
-- Every generated race-day schedule uses minute `7`.
+- Every generated race-day and following-day schedule uses minute `7`.
+- Each official race day has collection coverage on that day and the following
+  calendar day, with duplicate dates removed.
 - Every successful collector run, including a no-op run, advances
   `site-metadata.json`; a failed workflow does not publish it.
 - Home freshness is visible in JST and is non-blocking when metadata is absent

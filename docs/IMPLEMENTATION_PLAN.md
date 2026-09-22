@@ -6,7 +6,8 @@ Status: COMPLETE — implementation and required verification passed
 
 1. **FRESHNESS-SPEC** — DONE. Record the cross-repository data flow and
    compatibility boundary in the current design and dated specification.
-2. **FRESHNESS-COLLECTOR** — DONE. Change generated schedule minute,
+2. **FRESHNESS-COLLECTOR** — DONE. Change generated schedule minute and cover
+   each race day plus the following day,
    add `site-metadata.json`, publish it after every successful collector run
    including no-op runs, and cover the behavior with collector tests.
 3. **FRESHNESS-VIEWER** — DONE. Optionally fetch and validate the metadata,

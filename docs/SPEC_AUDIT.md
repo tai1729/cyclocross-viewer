@@ -16,9 +16,10 @@ an optional site-level timestamp for the last successful collector run.
 4. The home label means the last successful collector run time, not official
    organizer result publication time. It is displayed as zero-padded
    `YYYY/MM/DD HH:mm JST` with `Asia/Tokyo` conversion.
-5. The generated schedule remains 09:00–23:00 JST on race days, but uses
-   minute `7` to reduce start-of-hour scheduling pressure. The generator and
-   committed generated workflow must agree.
+5. The generated schedule covers 09:00–23:00 JST on each race day and the
+   following calendar day, uses minute `7` to reduce start-of-hour scheduling
+   pressure, and deduplicates consecutive dates. The generator and committed
+   generated workflow must agree.
 
 Audit status: RESOLVED — implementation and required verification complete
 
