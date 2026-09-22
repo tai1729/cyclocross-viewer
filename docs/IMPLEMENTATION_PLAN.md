@@ -1,6 +1,6 @@
 # Hourly external collector trigger implementation plan
 
-Status: IN PROGRESS — implementation authorized; collector cutover pending
+Status: IN PROGRESS — deployed; first live Cron verification pending
 
 ## Task graph
 
@@ -9,15 +9,16 @@ Status: IN PROGRESS — implementation authorized; collector cutover pending
    rollback boundary in the dated specification.
 2. **STANDARD-DOCS** — DONE. Update the current design, implementation plan,
    and specification audit before code changes.
-3. **COLLECTOR-SCHEDULE** — IN PROGRESS. Remove the generated GitHub collection
+3. **COLLECTOR-SCHEDULE** — DONE. Remove the generated GitHub collection
    schedule, retain manual dispatch, stop the monthly updater from rewriting
    that workflow, and enable the bounded GitHub Actions queue.
-4. **CLOUDFLARE-TRIGGER** — IN PROGRESS. Change the Worker to an hourly Cron
+4. **CLOUDFLARE-TRIGGER** — DONE. Change the Worker to an hourly Cron
    Trigger, preserve race-day/next-day selection, and test hourly dispatch and
    duplicate protection.
-5. **VERIFY-AND-CUTOVER** — TODO. Run collector and Worker tests, typecheck,
-   local scheduled-handler verification, deploy the Worker, enable dispatch,
-   remove the old GitHub schedule, and verify the workflow plus metadata.
+5. **VERIFY-AND-CUTOVER** — IN PROGRESS. Collector/Worker tests, typecheck,
+   local scheduled-handler verification, deployment, dispatch enablement, old
+   schedule removal, successful manual workflow #23, and metadata verification
+   are DONE. The first live hourly Cron event remains to be observed.
 
 ## Boundaries
 

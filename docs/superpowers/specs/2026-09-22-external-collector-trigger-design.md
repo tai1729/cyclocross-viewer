@@ -4,8 +4,9 @@
 
 The initial external-trigger design was approved in chat on 2026-09-22. This
 revision records the follow-up decision to use an hourly schedule and a GitHub
-Actions queue. Implementation is pending review of this document. No
-Cloudflare or GitHub settings are changed by this design document.
+Actions queue. Implementation is deployed; the first live hourly Cron event is
+pending observation. The deployed collector and Worker changes are recorded in
+collector commits `e71c4ce` and `2ad7334`.
 
 ## Goal
 
