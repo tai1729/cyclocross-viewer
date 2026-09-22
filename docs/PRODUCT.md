@@ -15,9 +15,10 @@
 - The public release includes the three-season historical data expansion and
   the current production race, results, analysis, chart, comparison, filter,
   and rider-first search flows.
-- The home page also reports the collector's last successful public data update
-  time when the additive site metadata artifact is available. Missing metadata
-  does not block the meet list and is shown as an unknown update time.
+- The home page also reports the collector's last successful run time when the
+  additive site metadata artifact is available, including runs that found no
+  new public race data. Missing metadata does not block the meet list and is
+  shown as an unknown update time.
 - External human pre-release participation was not completed because of
   participant availability; it is not a release blocker. Post-release usage
   and feedback are the next validation source.

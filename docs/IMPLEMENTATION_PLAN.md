@@ -7,8 +7,8 @@ Status: COMPLETE — implementation and required verification passed
 1. **FRESHNESS-SPEC** — DONE. Record the cross-repository data flow and
    compatibility boundary in the current design and dated specification.
 2. **FRESHNESS-COLLECTOR** — DONE. Change generated schedule minute,
-   add `site-metadata.json`, publish it only after successful discovery or
-   collection changes, and cover the behavior with collector tests.
+   add `site-metadata.json`, publish it after every successful collector run
+   including no-op runs, and cover the behavior with collector tests.
 3. **FRESHNESS-VIEWER** — DONE. Optionally fetch and validate the metadata,
    preserve meet-list errors and loading behavior, and display the JST value on
    the home page.

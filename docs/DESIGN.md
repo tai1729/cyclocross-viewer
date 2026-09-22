@@ -12,16 +12,17 @@ historical records, not an indication that the public release is pending.
 ### Goal
 
 Move the generated race-day collection trigger away from GitHub Actions' busy
-start-of-hour boundary and expose the last collector data publication time on
-the home page.
+start-of-hour boundary and expose the last successful collector run time on the
+home page.
 
 ### Approved architecture and data flow
 
 The collector keeps `race_days.json` as the date source and generates
 `.github/workflows/collect.yml` entries at minute `7` for the existing
-09:00–23:00 JST window. Successful discovery of a new meet or successful race
-collection writes the small `site-metadata.json` artifact with one UTC ISO 8601
-`updatedAt` value. A no-op check does not change that file.
+09:00–23:00 JST window. Each successful discovery and collection command writes
+the small `site-metadata.json` artifact with one UTC ISO 8601 `updatedAt` value,
+including when no new race data is available. A failed workflow does not publish
+the staged metadata.
 
 The viewer fetches `site-metadata.json` independently of `meets.json`. The
 metadata request is optional: a failure produces `更新日時不明` while the
@@ -46,7 +47,8 @@ introduced. The detailed design is recorded in
 ### Acceptance and verification
 
 - Every generated race-day schedule uses minute `7`.
-- Only successful discovery or collection changes advance `site-metadata.json`.
+- Every successful collector run, including a no-op run, advances
+  `site-metadata.json`; a failed workflow does not publish it.
 - Home freshness is visible in JST and is non-blocking when metadata is absent
   or invalid.
 - Collector and viewer tests, type checks, lint, build, and diff checks pass.
