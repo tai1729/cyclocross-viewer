@@ -7,21 +7,25 @@ The project is publicly available in Production at
 the completed DATA-1 and earlier UX implementation decisions; they are
 historical records, not an indication that the public release is pending.
 
-## Current design — Data freshness and resilient collection schedule (2026-09-21)
+## Current design — Hourly external collection trigger (2026-09-22)
 
 ### Goal
 
-Move the generated race-day collection trigger away from GitHub Actions' busy
-start-of-hour boundary and expose the last successful collector run time on the
-home page.
+Move the race-data collection trigger from GitHub Actions' `schedule` event to
+an independent Cloudflare Worker. Keep the last successful collector run time
+visible on the home page, including after a successful run that finds no new
+race data.
 
 ### Approved architecture and data flow
 
-The collector keeps `race_days.json` as the date source and generates
-`.github/workflows/collect.yml` entries at minute `7` for the existing
-09:00–23:00 JST window on each official race day and the following calendar day.
-Consecutive dates are deduplicated. Each successful discovery and collection
-command writes the small `site-metadata.json` artifact with one UTC ISO 8601 `updatedAt` value,
+The collector keeps `race_days.json` as the date source. The Cloudflare Worker
+runs every hour and, on an official race day or the following calendar day,
+dispatches the collector workflow for every JST hour from 00:00 through 23:00.
+Non-covered dates are skipped by the Worker. The collector workflow retains
+manual `workflow_dispatch`, removes its GitHub `schedule`, and uses a bounded
+GitHub Actions queue so a run that takes longer than an hour does not replace
+the next pending run. Each successful discovery and collection command writes
+the small `site-metadata.json` artifact with one UTC ISO 8601 `updatedAt` value,
 including when no new race data is available. A failed workflow does not publish
 the staged metadata.
 
@@ -32,8 +36,9 @@ existing Asia/Tokyo helper. Race pages continue to show each selected race's
 existing `RaceResult.updatedAt`.
 
 ```text
-calendar -> updateSchedule.ts -> collect.yml minute-7 schedules
-discover/collect successful change -> site-metadata.json
+monthly calendar update -> race_days.json
+Cloudflare Worker hourly -> race-day/next-day check -> workflow_dispatch
+GitHub Actions queue -> discover/collect -> site-metadata.json
 site-metadata.json + meets.json -> viewer useMeetData -> home freshness label
 ```
 
@@ -43,13 +48,14 @@ This is an additive cross-repository artifact. `MeetEntry`, `RaceResult`, rider
 and lap contracts, routes, URL state, race freshness display, and error
 semantics remain unchanged. No new dependency or viewer-side scraping path is
 introduced. The detailed design is recorded in
-`docs/superpowers/specs/2026-09-21-data-freshness-and-resilient-schedule-design.md`.
+`docs/superpowers/specs/2026-09-22-external-collector-trigger-design.md`.
 
 ### Acceptance and verification
 
-- Every generated race-day and following-day schedule uses minute `7`.
-- Each official race day has collection coverage on that day and the following
-  calendar day, with duplicate dates removed.
+- Cloudflare invokes the Worker hourly, and each official race day has 24
+  collection dispatches on that day and 24 on the following calendar day.
+- A covered hourly dispatch remains pending in the GitHub Actions queue when a
+  previous collection is still running, up to the configured queue limit.
 - Every successful collector run, including a no-op run, advances
   `site-metadata.json`; a failed workflow does not publish it.
 - Home freshness is visible in JST and is non-blocking when metadata is absent

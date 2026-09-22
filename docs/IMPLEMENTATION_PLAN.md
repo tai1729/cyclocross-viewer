@@ -1,30 +1,31 @@
-# Data freshness and resilient collection schedule implementation plan
+# Hourly external collector trigger implementation plan
 
-Status: COMPLETE — implementation and required verification passed
+Status: IN PROGRESS — implementation authorized; collector cutover pending
 
 ## Task graph
 
-1. **FRESHNESS-SPEC** — DONE. Record the cross-repository data flow and
-   compatibility boundary in the current design and dated specification.
-2. **FRESHNESS-COLLECTOR** — DONE. Change generated schedule minute and cover
-   each race day plus the following day,
-   add `site-metadata.json`, publish it after every successful collector run
-   including no-op runs, and cover the behavior with collector tests.
-3. **FRESHNESS-VIEWER** — DONE. Optionally fetch and validate the metadata,
-   preserve meet-list errors and loading behavior, and display the JST value on
-   the home page.
-4. **FRESHNESS-DOCS** — DONE. Record final behavior and verification without
-   rewriting historical design or review documents.
-5. **FRESHNESS-VERIFY** — DONE. Collector/viewer tests, type checks, lint,
-   build, diff check, and a focused browser smoke passed.
+1. **TRIGGER-SPEC** — DONE. Record the hourly Cloudflare trigger, race-day plus
+   following-day coverage, GitHub queue behavior, metadata ownership, and
+   rollback boundary in the dated specification.
+2. **STANDARD-DOCS** — DONE. Update the current design, implementation plan,
+   and specification audit before code changes.
+3. **COLLECTOR-SCHEDULE** — IN PROGRESS. Remove the generated GitHub collection
+   schedule, retain manual dispatch, stop the monthly updater from rewriting
+   that workflow, and enable the bounded GitHub Actions queue.
+4. **CLOUDFLARE-TRIGGER** — IN PROGRESS. Change the Worker to an hourly Cron
+   Trigger, preserve race-day/next-day selection, and test hourly dispatch and
+   duplicate protection.
+5. **VERIFY-AND-CUTOVER** — TODO. Run collector and Worker tests, typecheck,
+   local scheduled-handler verification, deploy the Worker, enable dispatch,
+   remove the old GitHub schedule, and verify the workflow plus metadata.
 
 ## Boundaries
 
-- Collector: `lib/raceConfig.ts`, `scripts/updateSchedule.ts`,
-  `scripts/discover.ts`, `scripts/collect.ts`, `.github/workflows/collect.yml`,
-  `site-metadata.json`, and focused tests.
-- Viewer: `lib/types.ts`, `lib/dataSource.ts`, `hooks/useMeetData.ts`,
-  `app/page.tsx`, `components/MeetSelector.tsx`, and focused tests.
+- Collector: `scripts/updateSchedule.ts`, `.github/workflows/collect.yml`,
+  `.github/workflows/update-schedule.yml`,
+  `infra/cloudflare-collector-trigger/`, and focused tests.
+- Viewer: current design/plan/audit documents only; product code and public
+  data contracts remain unchanged.
 - Do not change routes, URL state, `MeetEntry`/`RaceResult` contracts, race
   analysis, existing race-header freshness, dependencies, or unrelated dirty
   files.
@@ -32,10 +33,10 @@ Status: COMPLETE — implementation and required verification passed
 ## Required verification
 
 - Collector: `npm test`, `npx tsc --noEmit`, and `git diff --check`.
-- Viewer: `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
-  `git diff --check`.
-- Browser: home page shows the metadata label, and a metadata fetch failure
-  leaves the meet list usable.
+- Worker: `npm test`, local `wrangler dev --test-scheduled`, and deployed Cron
+  configuration verification.
+- Viewer: existing metadata behavior remains covered by the previous release;
+  no viewer product code changes are planned for this cutover.
 
 ---
 

@@ -1,5 +1,30 @@
 # Specification Audit
 
+## Hourly external collector trigger — resolved
+
+Current Change: move collection triggering from GitHub Actions `schedule` to a
+Cloudflare Worker that invokes the collector workflow every hour.
+
+1. The Worker runs on `0 * * * *` UTC, which covers every JST hour, and checks
+   the current JST date against `race_days.json` plus each following calendar
+   day. Non-covered dates do not dispatch GitHub Actions.
+2. The collector workflow retains manual `workflow_dispatch` but no longer has
+   a generated GitHub `schedule`. The monthly calendar workflow continues to
+   update `race_days.json` and no longer rewrites the collection workflow.
+3. The collector concurrency group uses `queue: max` and
+   `cancel-in-progress: false`, preserving later hourly dispatches in order
+   while serializing generated-data writes. The configured queue limit is 100
+   pending runs, which exceeds the 48 slots in one race-day/next-day window.
+4. The Worker never writes repository data. A successful collector workflow,
+   including a no-op run, writes `site-metadata.json`; its `updatedAt` is the
+   workflow completion time. Worker skips and failed workflows do not advance
+   it.
+5. The GitHub token remains a Cloudflare secret and is never committed or
+   exposed to the viewer. Worker retries and recent-dispatch protection remain
+   bounded and observable.
+
+Audit status: RESOLVED — implementation authorized
+
 ## Data freshness and resilient collection schedule — resolved
 
 Current Change: move generated collection schedules to minute `7` and expose
