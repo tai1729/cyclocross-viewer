@@ -123,16 +123,19 @@ visible in GitHub Actions.
 
 ## Cutover and rollback
 
-1. Test the Worker code locally and deploy it with the Cron Trigger registered.
-2. Confirm Cloudflare records a Cron Event and that a deliberate test dispatch
-   reaches GitHub Actions.
+1. Test the Worker code locally and deploy it with the Cron Trigger registered
+   while `DISPATCH_ENABLED=false`. This permits live Cron Event verification
+   without duplicating the still-active GitHub schedule.
+2. Add the GitHub token, confirm a covered-date Cron Event logs a disabled
+   dispatch decision, then enable dispatch in the Worker.
 3. Remove the active GitHub `schedule` trigger in a collector commit while
    retaining `workflow_dispatch`.
 4. Confirm the next covered slot appears as a `workflow_dispatch` run and that
    `site-metadata.json` advances after success.
-5. If the Worker or token fails, manually run the existing workflow and
-   restore the GitHub schedule from the previous collector commit. Disable the
-   Worker Cron before restoring the old schedule to prevent duplicate runs.
+5. If the Worker or token fails, disable Worker dispatch and manually run the
+   existing workflow. If necessary, restore the GitHub schedule from the
+   previous collector commit. Disable the Worker Cron before restoring the old
+   schedule to prevent duplicate runs.
 
 During the cutover, a manual workflow run is an accepted fallback for a slot
 that would otherwise be missed. No generated race data is deleted during
