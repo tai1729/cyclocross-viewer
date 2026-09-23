@@ -1732,14 +1732,16 @@ viewer contract and the official reference result at
    positions receive the derived value. DNF internal numbering, DNS, absent
    rows, and invalid/out-of-range positions remain without a percentage.
 4. The results table adds only one separate `順位%` column beside `順位`.
+   Numeric columns (`順位`, `順位%`, and `結果`) are right-aligned, while
+   textual columns (`選手` and `状態`) are left-aligned in headers and rows.
    The selected-rider summary repeats the value only inside the existing rank
    block, without changing DNF, lap-down, chart, or error semantics.
 
 ### Verification boundary
 
 Focused and full automated tests cover the formula, cutoff annotation, DNF
-omission, rendered results table, summary output, and invalid bounds. Required
-repository checks remain `npm test`, `npx tsc --noEmit`, `npm run lint`,
-`npm run build`, and `git diff --check`.
+omission, rendered results table, summary output, invalid bounds, and the
+results-table alignment contract. Required repository checks remain `npm test`,
+`npx tsc --noEmit`, `npm run lint`, `npm run build`, and `git diff --check`.
 
 STATUS: CLEAR — LOCAL VERIFICATION PASS

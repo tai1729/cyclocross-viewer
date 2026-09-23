@@ -152,19 +152,19 @@ export function RaceResultsTable({
               </colgroup>
               <thead className="bg-card">
                 <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th scope="col" className="px-2 py-2 font-medium sm:px-3">
+                  <th scope="col" className="px-2 py-2 text-right font-medium sm:px-3">
                     順位
                   </th>
                   <th scope="col" className="px-1 py-2 text-right font-medium sm:px-3">
                     順位%
                   </th>
-                  <th scope="col" className="px-1 py-2 font-medium sm:px-3">
+                  <th scope="col" className="px-1 py-2 text-left font-medium sm:px-3">
                     選手
                   </th>
                   <th scope="col" className="px-1 py-2 text-right font-medium sm:px-3">
                     結果
                   </th>
-                  <th scope="col" className="px-2 py-2 font-medium sm:px-3">
+                  <th scope="col" className="px-2 py-2 text-left font-medium sm:px-3">
                     状態
                   </th>
                 </tr>
@@ -182,7 +182,7 @@ export function RaceResultsTable({
                         isSelected && "bg-accent/70",
                       )}
                     >
-                      <td className="min-w-0 break-words px-2 py-1 font-mono tabular-nums text-foreground sm:px-3">
+                      <td className="min-w-0 break-words px-2 py-1 text-right font-mono tabular-nums text-foreground sm:px-3">
                         {positionLabel(rider, result)}
                       </td>
                       <td className="break-words px-1 py-1 text-right font-mono text-xs tabular-nums text-muted-foreground sm:px-3">
@@ -210,7 +210,7 @@ export function RaceResultsTable({
                       <td className="break-words px-1 py-2 text-right font-mono text-xs tabular-nums text-foreground sm:px-3 sm:text-sm">
                         {resultLabel(result)}
                       </td>
-                      <td className="break-words px-2 py-2 text-xs font-medium text-foreground sm:px-3">
+                      <td className="break-words px-2 py-2 text-left text-xs font-medium text-foreground sm:px-3">
                         {statusLabel(rider, result)}
                       </td>
                     </tr>

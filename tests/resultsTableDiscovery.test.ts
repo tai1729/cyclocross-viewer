@@ -115,6 +115,12 @@ test("result table shows source-style rank percentages and omits them for DNF", 
 
   assert.match(html, /<th[^>]*>\s*順位\s*<\/th>/);
   assert.match(html, /<th[^>]*>\s*順位%\s*<\/th>/);
+  assert.match(html, /<th[^>]*text-right[^>]*>\s*順位\s*<\/th>/);
+  assert.match(html, /<th[^>]*text-right[^>]*>\s*順位%\s*<\/th>/);
+  assert.match(html, /<th[^>]*text-left[^>]*>\s*選手\s*<\/th>/);
+  assert.match(html, /<th[^>]*text-right[^>]*>\s*結果\s*<\/th>/);
+  assert.match(html, /<th[^>]*text-left[^>]*>\s*状態\s*<\/th>/);
+  assert.match(html, /<td[^>]*text-right[^>]*>1<\/td>/);
   assert.match(html, />25%</);
   assert.match(html, />75%</);
   const dnfNameIndex = html.indexOf("DNF Rider");

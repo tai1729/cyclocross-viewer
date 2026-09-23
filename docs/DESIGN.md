@@ -88,11 +88,13 @@ value; no collector fetch or upstream JSON contract change is required.
 ### Presentation and compatibility
 
 The results table adds one focused `順位%` column beside `順位`; no other
-result fields are added. The selected rider's summary repeats the percentage
+result fields are added. Numeric columns (`順位`, `順位%`, and `結果`) are
+right-aligned, while textual columns (`選手` and `状態`) are left-aligned in
+both headers and rows. The selected rider's summary repeats the percentage
 only inside the existing rank block. Existing status, lap, chart, route,
 error, security, and mobile overflow semantics stay unchanged. Tests cover the
-source examples, cutoff annotations, DNF omission, and invalid numeric
-boundaries.
+source examples, cutoff annotations, DNF omission, invalid numeric boundaries,
+and the results-table alignment contract.
 
 ## Historical design record — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
 

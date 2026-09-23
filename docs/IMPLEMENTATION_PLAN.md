@@ -1727,7 +1727,9 @@ semantics. Derive it from the accepted starter rows already present in
    `floor(finalPosition / starterCount * 100)` with safe positive bounds, plus
    a rider-level helper that excludes literal DNF rows.
 2. Add one focused `順位%` column beside `順位` in the results table, with
-   compact widths so the narrow-screen layout stays usable.
+   compact widths so the narrow-screen layout stays usable. Align numeric
+   columns (`順位`, `順位%`, `結果`) to the right and textual columns
+   (`選手`, `状態`) to the left in both headers and rows.
 3. Expose the same value only inside the selected rider's existing rank block.
    Keep annotated official
    labels opaque and use their validated numeric `finalPosition` only for the
@@ -1742,6 +1744,7 @@ semantics. Derive it from the accepted starter rows already present in
 - DNF and absent DNS rows do not receive a rank percentage; DNF internal
   `finalPosition` is never rendered as an official rank.
 - No upstream field, production dependency, route/query key, chart meaning,
-  error taxonomy, or mobile horizontal-overflow contract changes.
+  error taxonomy, or mobile horizontal-overflow contract changes. Other
+  viewer surfaces retain their existing intentional alignment.
 - Run `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
   `git diff --check`.
