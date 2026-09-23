@@ -19,6 +19,37 @@ export function getRiderByPosition(
   return race.riders.find((r) => r.finalPosition === position);
 }
 
+/**
+ * Return the source-style integer rank percentage for a numeric position.
+ * The source uses accepted starters as the denominator and truncates toward
+ * zero; callers decide whether a rider's status is eligible for display.
+ */
+export function getRankPercent(
+  finalPosition: number,
+  starterCount: number,
+): number | null {
+  if (
+    !Number.isSafeInteger(finalPosition) ||
+    finalPosition <= 0 ||
+    !Number.isSafeInteger(starterCount) ||
+    starterCount <= 0 ||
+    finalPosition > starterCount
+  ) {
+    return null;
+  }
+
+  return Math.floor((finalPosition / starterCount) * 100);
+}
+
+/** Return a rider's displayable rank percentage, excluding DNF rows. */
+export function getRiderRankPercent(
+  race: RaceResult,
+  rider: Rider,
+): number | null {
+  if (rider.status === "dnf") return null;
+  return getRankPercent(rider.finalPosition, race.riders.length);
+}
+
 function hasValidCheckpointShape(lap: LapRecord): boolean {
   return (
     Number.isInteger(lap.lapNumber) &&
@@ -803,6 +834,7 @@ export interface RiderSummary {
   /** Original collector label for numeric ranks with an official annotation. */
   officialPositionLabel: string | null;
   totalRiders: number;
+  rankPercent: number | null;
   promotionZoneRank: number | null;
   promotionGapSec: number | null;
   isInPromotionZone: boolean;
@@ -835,6 +867,7 @@ export function getRiderSummary(
         ? rider.officialPositionLabel ?? null
         : null,
     totalRiders: race.riders.length,
+    rankPercent: getRiderRankPercent(race, rider),
     promotionZoneRank: race.promotionZoneRank ?? null,
     promotionGapSec,
     isInPromotionZone:

@@ -7,6 +7,7 @@ import {
   formatGapSec,
   formatSecToClock,
   getRiderResult,
+  getRiderRankPercent,
   type RiderResult,
 } from "@/lib/dataTransform";
 import {
@@ -33,6 +34,16 @@ function positionLabel(rider: Rider, result: RiderResult | null): string {
   return result?.kind === "finished" || result?.kind === "lapped"
     ? String(result.position)
     : "—";
+}
+
+function positionPercentLabel(
+  race: RaceResult,
+  rider: Rider,
+  result: RiderResult | null,
+): string | null {
+  if (positionLabel(rider, result) === "—") return null;
+  const rankPercent = getRiderRankPercent(race, rider);
+  return rankPercent === null ? null : `${rankPercent}%`;
 }
 
 function resultLabel(result: RiderResult | null): string {
@@ -130,18 +141,22 @@ export function RaceResultsTable({
           <div className="border-y border-border">
             <table className="w-full table-fixed border-collapse text-left text-sm">
               <caption className="sr-only">
-                {race.category}の順位、選手、結果、ステータス
+                {race.category}の順位、順位%、選手、結果、ステータス
               </caption>
               <colgroup>
-                <col className="w-[6rem] sm:w-24" />
+                <col className="w-[4rem] sm:w-20" />
+                <col className="w-[3.25rem] sm:w-20" />
                 <col />
-                <col className="w-[4rem] sm:w-28" />
-                <col className="w-[4.5rem] sm:w-36" />
+                <col className="w-[3.75rem] sm:w-28" />
+                <col className="w-[4rem] sm:w-36" />
               </colgroup>
               <thead className="bg-card">
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th scope="col" className="px-2 py-2 font-medium sm:px-3">
                     順位
+                  </th>
+                  <th scope="col" className="px-1 py-2 text-right font-medium sm:px-3">
+                    順位%
                   </th>
                   <th scope="col" className="px-1 py-2 font-medium sm:px-3">
                     選手
@@ -157,6 +172,7 @@ export function RaceResultsTable({
               <tbody>
                 {visibleRows.map(({ rider, result }) => {
                   const isSelected = rider.riderId === selectedRiderId;
+                  const rankPercent = positionPercentLabel(race, rider, result);
 
                   return (
                     <tr
@@ -168,6 +184,9 @@ export function RaceResultsTable({
                     >
                       <td className="min-w-0 break-words px-2 py-1 font-mono tabular-nums text-foreground sm:px-3">
                         {positionLabel(rider, result)}
+                      </td>
+                      <td className="break-words px-1 py-1 text-right font-mono text-xs tabular-nums text-muted-foreground sm:px-3">
+                        {rankPercent ?? "—"}
                       </td>
                       <th scope="row" className="p-0 font-normal">
                         <button

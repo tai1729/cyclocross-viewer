@@ -28,6 +28,7 @@ const finishedSummary: RiderSummary = {
   },
   officialPositionLabel: null,
   totalRiders: 20,
+  rankPercent: 10,
   promotionZoneRank: 3,
   promotionGapSec: 0,
   isInPromotionZone: true,
@@ -39,6 +40,7 @@ test("summary card puts the race story beneath the existing result metrics", () 
   );
 
   assert.match(html, /順位/);
+  assert.match(html, /順位% 10%/);
   assert.match(html, /トップ差/);
   assert.match(html, /昇格圏/);
   assert.match(html, /レース展開/);

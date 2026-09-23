@@ -12,6 +12,7 @@ export function SummaryCard({ summary, raceStory }: SummaryCardProps) {
     result,
     officialPositionLabel,
     totalRiders,
+    rankPercent,
     promotionZoneRank,
     promotionGapSec,
     isInPromotionZone,
@@ -92,6 +93,7 @@ export function SummaryCard({ summary, raceStory }: SummaryCardProps) {
         label="順位"
         value={String(result.position)}
         unit={`/${totalRiders}`}
+        detail={rankPercent === null ? undefined : `順位% ${rankPercent}%`}
       />
       <Separator orientation="vertical" />
       <SummaryItem
@@ -195,11 +197,13 @@ function SummaryItem({
   label,
   value,
   unit,
+  detail,
   emphasize,
 }: {
   label: string;
   value: string;
   unit?: string;
+  detail?: string;
   emphasize?: boolean;
 }) {
   return (
@@ -219,6 +223,9 @@ function SummaryItem({
           </span>
         )}
       </span>
+      {detail ? (
+        <span className="text-xs font-normal text-muted-foreground">{detail}</span>
+      ) : null}
     </div>
   );
 }

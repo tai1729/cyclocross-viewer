@@ -7,7 +7,9 @@ import {
   buildPaceDeltaSeries,
   getLapStatistics,
   getMaximumLapLoss,
+  getRankPercent,
   getRaceLapNumbers,
+  getRiderRankPercent,
   getRiderResult,
   getRiderSummary,
   getMeasuredLapRows,
@@ -233,6 +235,28 @@ test("DNFは内部finalPositionを結果順位として返さない", () => {
   assert.equal(result && "position" in result, false);
 });
 
+test("順位%はスタート人数を分母にして切り捨て、DNFを除外する", () => {
+  assert.equal(getRankPercent(1, 69), 1);
+  assert.equal(getRankPercent(23, 69), 33);
+  assert.equal(getRankPercent(24, 69), 34);
+  assert.equal(getRankPercent(66, 69), 95);
+  assert.equal(getRankPercent(0, 69), null);
+  assert.equal(getRankPercent(70, 69), null);
+
+  const leader = rider("leader", 1, [lap(1, 60, 60)]);
+  const annotated = rider(
+    "annotated",
+    2,
+    [lap(1, 61, 61)],
+    "annotated-rank",
+  );
+  const dnf = rider("dnf", 3, [lap(1, 65, 65)], "dnf");
+  const data = race([leader, annotated, dnf]);
+
+  assert.equal(getRiderRankPercent(data, annotated), 66);
+  assert.equal(getRiderRankPercent(data, dnf), null);
+});
+
 test("annotated-rank summary keeps the official label separate from measured result data", () => {
   const leader = rider("leader", 1, [lap(1, 60, 60, 1)]);
   const annotated = rider("annotated", 2, [lap(1, 61, 61, 2)], "annotated-rank");
@@ -240,6 +264,7 @@ test("annotated-rank summary keeps the official label separate from measured res
 
   const summary = getRiderSummary(race([leader, annotated]), "annotated");
   assert.equal(summary?.officialPositionLabel, "2 LapOut");
+  assert.equal(summary?.rankPercent, 100);
   assert.equal(summary?.result.kind, "finished");
   if (summary?.result.kind === "finished") {
     assert.equal(summary.result.position, 2);

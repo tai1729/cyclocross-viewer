@@ -1711,3 +1711,37 @@ The implementation may touch only the two named components, focused tests,
 and the bounded follow-up report/evidence plus the three standard docs. Do not
 edit collector files, route/data transforms, package/config files, shared
 mobile/disclosure components, or prior history documents for this follow-up.
+
+## RANK-PERCENT-1 — viewer-derived rank percentage (2026-09-23)
+
+### Objective and scope
+
+Add the source-style integer `順位%` to the existing results and selected-rider
+surfaces without changing the collector contract, route state, or status
+semantics. Derive it from the accepted starter rows already present in
+`RaceResult.riders`.
+
+### Implementation units
+
+1. Add a pure rank-percentage transform using
+   `floor(finalPosition / starterCount * 100)` with safe positive bounds, plus
+   a rider-level helper that excludes literal DNF rows.
+2. Add one focused `順位%` column beside `順位` in the results table, with
+   compact widths so the narrow-screen layout stays usable.
+3. Expose the same value only inside the selected rider's existing rank block.
+   Keep annotated official
+   labels opaque and use their validated numeric `finalPosition` only for the
+   derived percentage.
+4. Add focused transform, rendered-table, and summary regression coverage for
+   source examples, cutoff annotations, DNF omission, and invalid bounds.
+
+### Acceptance and verification
+
+- Rank 1/23/24/66 of a 69-starter category render as 1%/33%/34%/95%.
+- Annotated `80%Out` rows receive a percentage from their numeric rank.
+- DNF and absent DNS rows do not receive a rank percentage; DNF internal
+  `finalPosition` is never rendered as an official rank.
+- No upstream field, production dependency, route/query key, chart meaning,
+  error taxonomy, or mobile horizontal-overflow contract changes.
+- Run `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
+  `git diff --check`.

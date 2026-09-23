@@ -62,6 +62,38 @@ introduced. The detailed design is recorded in
   or invalid.
 - Collector and viewer tests, type checks, lint, build, and diff checks pass.
 
+## Current design — Derived rank percentage (2026-09-23)
+
+### Goal
+
+Show the same integer `順位%` that the official result page exposes, in
+addition to the existing numeric rank. This is a viewer-derived presentation
+value; no collector fetch or upstream JSON contract change is required.
+
+### Approved semantics
+
+- The denominator is `race.riders.length`, which matches the accepted starter
+  rows in the current viewer contract: DNS and other unsupported numeric-less
+  rows are absent, while literal DNF rows remain included.
+- For a valid numeric `finalPosition` on a `finished` or `annotated-rank` rider,
+  the viewer computes `floor(finalPosition / race.riders.length * 100)` and
+  renders the integer with `%`.
+- `annotated-rank` keeps its opaque official label (for example `80%Out`),
+  while its numeric prefix supplies the rank percentage. DNF keeps its
+  existing non-ranking presentation and receives no rank percentage. DNS has
+  no viewer rider row and therefore receives no rank percentage.
+- Invalid, non-positive, or out-of-range numeric positions produce no derived
+  percentage rather than a fabricated value.
+
+### Presentation and compatibility
+
+The results table adds one focused `順位%` column beside `順位`; no other
+result fields are added. The selected rider's summary repeats the percentage
+only inside the existing rank block. Existing status, lap, chart, route,
+error, security, and mobile overflow semantics stay unchanged. Tests cover the
+source examples, cutoff annotations, DNF omission, and invalid numeric
+boundaries.
+
 ## Historical design record — DATA-1 Three-Season Historical Data Expansion (2026-09-12)
 
 ### Goal

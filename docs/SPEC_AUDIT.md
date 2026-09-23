@@ -1712,3 +1712,34 @@ start within the named file boundary; final acceptance remains blocked until
 the focused checks and the required repository/browser gates pass.
 
 STATUS: CLEAR — IMPLEMENTATION AUTHORIZED
+
+## RANK-PERCENT-1 specification audit — derived rank percentage (2026-09-23)
+
+The user-approved bounded design is internally consistent with the current
+viewer contract and the official reference result at
+`https://data.cyclocross.jp/race/26788`.
+
+### Resolved semantics
+
+1. The reference category has 69 starters, including numeric cutoff rows and
+   DNF rows, while DNS has no result row. Its displayed values match
+   `floor(numeric rank / 69 * 100)` with truncation, including 1% for rank 1,
+   33% for rank 23, 34% for rank 24 `(80%Out)`, and 95% for rank 66
+   `(80%Out)`.
+2. The viewer derives the percentage from `RaceResult.riders.length`; no
+   upstream payload, collector, route, or new status is introduced.
+3. Only numeric `finished` and `annotated-rank` rows with safe in-range
+   positions receive the derived value. DNF internal numbering, DNS, absent
+   rows, and invalid/out-of-range positions remain without a percentage.
+4. The results table adds only one separate `順位%` column beside `順位`.
+   The selected-rider summary repeats the value only inside the existing rank
+   block, without changing DNF, lap-down, chart, or error semantics.
+
+### Verification boundary
+
+Focused and full automated tests cover the formula, cutoff annotation, DNF
+omission, rendered results table, summary output, and invalid bounds. Required
+repository checks remain `npm test`, `npx tsc --noEmit`, `npm run lint`,
+`npm run build`, and `git diff --check`.
+
+STATUS: CLEAR — LOCAL VERIFICATION PASS
